@@ -1,2 +1,2 @@
 # fracto
-main server for the fracto multiplex
+main server for the fracto mediaplex
