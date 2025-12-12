@@ -1,0 +1,24 @@
+{
+  "name": "fracto",
+  "version": "1.0.0",
+  "description": "Main server for the fracto mediaplex",
+  "homepage": "https://github.com/Fracto-Chaotic-Systems/fracto#readme",
+  "bugs": {
+    "url": "https://github.com/Fracto-Chaotic-Systems/fracto/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Fracto-Chaotic-Systems/fracto.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node --max-old-space-size=16384 index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
