@@ -1,10 +1,24 @@
+import fs from "node:fs";
 import express from 'express'
-import {ALL_SERVICE_NAMES, EXEC_SYNC_OPTIONS, FRACTO_SERVER_PORT, SERVICE_NAME_DATA} from './constants.js'
-import {exec, spawn} from 'child_process'
+import {
+   ALL_SERVICE_NAMES, ASSETS_DIRECTORY,
+   EXEC_SYNC_OPTIONS,
+   FRACTO_SERVER_PORT, TILES_DIRECTORY,
+} from './constants.js'
+import {spawn} from 'child_process'
 import chalk from 'chalk';
 
 import {handle_tile} from "./handlers/main.js";
 import {handle_main_status} from "./handlers/status.js";
+
+if (!fs.existsSync(`./${TILES_DIRECTORY}`)) {
+   console.log(chalk.cyan(`creating tiles directory`))
+   fs.mkdirSync(`./${TILES_DIRECTORY}`)
+}
+if (!fs.existsSync(`./${ASSETS_DIRECTORY}`)) {
+   console.log(chalk.cyan(`creating assets directory`))
+   fs.mkdirSync(`./${ASSETS_DIRECTORY}`)
+}
 
 const app = express();
 
@@ -17,11 +31,13 @@ app.use((req, res, next) => {
 
 const exec_sync_options = JSON.parse(JSON.stringify(EXEC_SYNC_OPTIONS))
 exec_sync_options.shell = true
-ALL_SERVICE_NAMES.forEach((name) => {
-   spawn(
-      `node`,
-      ['./scripts/launch_service', SERVICE_NAME_DATA],
-      exec_sync_options)
+ALL_SERVICE_NAMES.forEach((name, i) => {
+   setTimeout(() => {
+      spawn(
+         `node`,
+         ['./scripts/launch_service', name],
+         exec_sync_options)
+   }, (i+1) * 3000)
 })
 
 // Start the server and listen for incoming requests
