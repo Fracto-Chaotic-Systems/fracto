@@ -1,8 +1,9 @@
 import express from 'express'
-import {FRACTO_SERVER_PORT} from './constants.js'
+import {EXEC_SYNC_OPTIONS, FRACTO_SERVER_PORT, SERVICE_NAME_DATA} from './constants.js'
+import {execSync} from 'child_process'
 
-import {handle_main} from "./handlers/main.js";
-import {handle_status} from "./handlers/status.js";
+import {handle_tile} from "./handlers/main.js";
+import {handle_main_status} from "./handlers/status.js";
 
 const app = express();
 
@@ -13,10 +14,14 @@ app.use((req, res, next) => {
    next();
 });
 
+execSync(
+   `node ./scripts/launch_service ${SERVICE_NAME_DATA}`,
+   EXEC_SYNC_OPTIONS)
+
 // Start the server and listen for incoming requests
 app.listen(FRACTO_SERVER_PORT, () => {
-   console.log(`Server is running on http://localhost:${FRACTO_SERVER_PORT}`);
+   console.log(`Fracto main server is running on http://localhost:${FRACTO_SERVER_PORT}`);
 });
 
-app.get('/', handle_main)
-app.get('/status', handle_status)
+app.get('/', handle_main_status)
+app.get('/status', handle_tile)
