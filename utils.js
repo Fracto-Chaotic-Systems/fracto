@@ -6,7 +6,7 @@ import path from "path";
 const SEPARATOR = path.sep
 
 export const spawn_sync = (command, args, folder) => {
-   const exec_sync_options = JSON.parse(JSON.stringify(EXEC_SYNC_OPTIONS))
+   const exec_sync_options = copy_json(EXEC_SYNC_OPTIONS)
    exec_sync_options.cwd = folder
    exec_sync_options.shell = true
    console.log(chalk.cyan(`${command} ${args.join(' ')}, sync in ${folder.split(SEPARATOR).pop()}`))
@@ -18,7 +18,7 @@ export const spawn_sync = (command, args, folder) => {
 }
 
 export const spawn_async = (command, args, folder) => {
-   const exec_sync_options = JSON.parse(JSON.stringify(EXEC_SYNC_OPTIONS))
+   const exec_sync_options = copy_json(EXEC_SYNC_OPTIONS)
    exec_sync_options.cwd = folder
    exec_sync_options.shell = true
    console.log(chalk.cyan(`${command} ${args.join(' ')}, async in ${folder.split(SEPARATOR).pop()}`))
@@ -36,4 +36,8 @@ export const spawn_async = (command, args, folder) => {
    } catch (e) {
       console.log(chalk.red(`error spawning ${command}`), e.message)
    }
+}
+
+export const copy_json = (json) => {
+   return JSON.parse(JSON.stringify(json));
 }

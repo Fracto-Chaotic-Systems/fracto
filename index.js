@@ -10,6 +10,7 @@ import chalk from 'chalk';
 
 import {handle_tile} from "./handlers/main.js";
 import {handle_main_status} from "./handlers/status.js";
+import {copy_json} from "./utils.js";
 
 if (!fs.existsSync(`./${TILES_DIRECTORY}`)) {
    console.log(chalk.cyan(`creating tiles directory`))
@@ -29,7 +30,7 @@ app.use((req, res, next) => {
    next();
 });
 
-const exec_sync_options = JSON.parse(JSON.stringify(EXEC_SYNC_OPTIONS))
+const exec_sync_options = copy_json(EXEC_SYNC_OPTIONS)
 exec_sync_options.shell = true
 ALL_SERVICE_NAMES.forEach((name, i) => {
    setTimeout(() => {
@@ -37,7 +38,7 @@ ALL_SERVICE_NAMES.forEach((name, i) => {
          `node`,
          ['./scripts/launch_service', name],
          exec_sync_options)
-   }, (i+1) * 3000)
+   }, (i + 1) * 5000)
 })
 
 // Start the server and listen for incoming requests
