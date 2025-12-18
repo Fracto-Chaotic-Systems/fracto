@@ -5,7 +5,7 @@ import {
    EXEC_SYNC_OPTIONS,
    FRACTO_SERVER_PORT, TILES_DIRECTORY,
 } from './constants.js'
-import {spawnSync} from 'child_process'
+import {spawn} from 'child_process'
 import chalk from 'chalk';
 
 import {handle_tile} from "./handlers/main.js";
@@ -34,7 +34,7 @@ const exec_sync_options = copy_json(EXEC_SYNC_OPTIONS)
 exec_sync_options.shell = true
 ALL_SERVICE_NAMES.forEach((name, i) => {
    setTimeout(() => {
-      spawnSync(
+      spawn(
          `node`,
          ['./scripts/launch_service', name],
          exec_sync_options)
