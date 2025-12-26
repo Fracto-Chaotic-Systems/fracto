@@ -1,24 +1,37 @@
 import fs from "node:fs";
 import express from 'express'
 import {
-   ALL_SERVICE_NAMES, ASSETS_DIRECTORY,
+   ALL_SERVICES,
+   ASSETS_DIRECTORY,
    EXEC_SYNC_OPTIONS,
-   FRACTO_SERVER_PORT, TILES_DIRECTORY,
+   FRACTO_SERVER_PORT, LOGS_DIRECTORY,
+   TILES_DIRECTORY,
 } from './constants.js'
-import {spawn} from 'child_process'
+import {spawn, execSync} from 'child_process'
 import chalk from 'chalk';
+import path from "path";
+
+const SEPARATOR = path.sep;
 
 import {handle_tile} from "./handlers/main.js";
 import {handle_main_status} from "./handlers/status.js";
 import {copy_json} from "./utils.js";
 
-if (!fs.existsSync(`./${TILES_DIRECTORY}`)) {
+if (!fs.existsSync(`.${SEPARATOR}${TILES_DIRECTORY}`)) {
    console.log(chalk.cyan(`creating tiles directory`))
-   fs.mkdirSync(`./${TILES_DIRECTORY}`)
+   fs.mkdirSync(`.${SEPARATOR}${TILES_DIRECTORY}`)
 }
-if (!fs.existsSync(`./${ASSETS_DIRECTORY}`)) {
+if (!fs.existsSync(`.${SEPARATOR}${ASSETS_DIRECTORY}`)) {
    console.log(chalk.cyan(`creating assets directory`))
-   fs.mkdirSync(`./${ASSETS_DIRECTORY}`)
+   fs.mkdirSync(`.${SEPARATOR}${ASSETS_DIRECTORY}`)
+}
+if (!fs.existsSync(`.${SEPARATOR}${LOGS_DIRECTORY}`)) {
+   console.log(chalk.cyan(`creating logs directory`))
+   fs.mkdirSync(`.${SEPARATOR}${LOGS_DIRECTORY}`)
+}
+if (!fs.existsSync(`.${SEPARATOR}${LOGS_DIRECTORY}${SEPARATOR}archive`)) {
+   console.log(chalk.cyan(`creating log archive directory`))
+   fs.mkdirSync(`.${SEPARATOR}${LOGS_DIRECTORY}${SEPARATOR}archive`)
 }
 
 const app = express();
@@ -30,13 +43,24 @@ app.use((req, res, next) => {
    next();
 });
 
+
+let move_command = 'mv'
+const platform = process.platform;
+if (platform === 'win32') {
+   move_command = 'move';
+}
+execSync(`${move_command} .${SEPARATOR}${LOGS_DIRECTORY}${SEPARATOR}*.txt .${SEPARATOR}${LOGS_DIRECTORY}${SEPARATOR}archive`)
+
 const exec_sync_options = copy_json(EXEC_SYNC_OPTIONS)
 exec_sync_options.shell = true
-ALL_SERVICE_NAMES.forEach((name, i) => {
+ALL_SERVICES.forEach((service, i) => {
    setTimeout(() => {
-      spawn(
-         `node`,
-         ['./scripts/launch_service', name],
+      spawn(`node`,
+         [
+            './scripts/launch_service',
+            service.name,
+            `>./${LOGS_DIRECTORY}/${service.logfile}`
+         ],
          exec_sync_options)
    }, (i + 1) * 15000)
 })
