@@ -41,3 +41,4 @@ export const spawn_async = (command, args, folder) => {
 export const copy_json = (json) => {
    return JSON.parse(JSON.stringify(json));
 }
+
