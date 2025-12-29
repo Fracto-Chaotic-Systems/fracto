@@ -26,7 +26,9 @@ export const initialize_coverage = (cb) => {
                   needs_update: all_needs_update.length,
                }
                console.log(stats)
-               cb(stats);
+               if (cb) {
+                  cb(stats);
+               }
             })
          })
       })
@@ -66,7 +68,7 @@ export const detect_coverage = (focal_point, scope) => {
    const filtered_tiles_in_scope = tiles_in_scope //.filter(scoped => scoped.tiles.length > 1);
    console.log('filtered_tiles_in_scope', filtered_tiles_in_scope.length)
 
-   const coverage_data = filtered_tiles_in_scope.map(scoped => {
+   let coverage_data = filtered_tiles_in_scope.map(scoped => {
       return {
          level: scoped.level,
          tile_count: scoped.tiles.length,
