@@ -49,7 +49,11 @@ const platform = process.platform;
 if (platform === 'win32') {
    move_command = 'move';
 }
-execSync(`${move_command} .${SEPARATOR}${LOGS_DIRECTORY}${SEPARATOR}*.txt .${SEPARATOR}${LOGS_DIRECTORY}${SEPARATOR}archive`)
+try {
+   execSync(`${move_command} .${SEPARATOR}${LOGS_DIRECTORY}${SEPARATOR}*.txt .${SEPARATOR}${LOGS_DIRECTORY}${SEPARATOR}archive`)
+} catch (e) {
+   console.log(e.message)
+}
 
 const exec_sync_options = copy_json(EXEC_SYNC_OPTIONS)
 exec_sync_options.shell = true
