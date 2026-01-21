@@ -296,6 +296,20 @@ export class FractoUtil {
       return parseInt(b, r) +
          parseInt(a || '0', r) / parseInt('1' + Array(l1).join('0'), r);
    }
+
+   static P_from_r_theta = (r, theta) => {
+      const r_squared = r * r
+      const two_pi_theta = 2 * Math.PI * theta
+      const four_pi_theta = 2 * two_pi_theta
+      const cos_two_pi_theta = Math.cos(two_pi_theta)
+      const cos_four_pi_theta = Math.cos(four_pi_theta)
+      const sin_two_pi_theta = Math.sin(two_pi_theta)
+      const r_by_2 = r / 2
+      const r_squared_by_four = r_squared / 4
+      const x = r_by_2 * cos_two_pi_theta - r_squared_by_four * cos_four_pi_theta
+      const y = -r_by_2 * sin_two_pi_theta * (r * cos_two_pi_theta - 1)
+      return {x, y}
+   }
 }
 
 export default FractoUtil;
