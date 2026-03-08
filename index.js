@@ -56,7 +56,7 @@ try {
 }
 
 const exec_sync_options = copy_json(EXEC_SYNC_OPTIONS)
-exec_sync_options.shell = true
+// exec_sync_options.shell = true
 ALL_SERVICES.forEach((service, i) => {
    setTimeout(() => {
       spawn(`node`,

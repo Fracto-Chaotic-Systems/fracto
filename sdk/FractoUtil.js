@@ -1,5 +1,3 @@
-import styled from "styled-components";
-
 const EPSILON = 0.0000000001;
 const ONE_BY_LOG_TEN_THOUSAND = 1 / Math.log(10000);
 const ONE_BY_LOG_ONE_MILLION = 1 / Math.log(1000000);
@@ -89,7 +87,7 @@ export class FractoUtil {
       return short_form ? `r${root},h${relative_harmonic},o${pattern_octave}` : `root ${root} harmonic ${relative_harmonic} octave ${pattern_octave}`;
    }
 
-   static fracto_pattern_color_hsl = (pattern, iterations= 255, distance_to_center = 0) => {
+   static fracto_pattern_color_hsl = (pattern, iterations = 255, distance_to_center = 0) => {
       if (pattern === -1) {
          return [0, 0, 0]
       }
@@ -310,6 +308,7 @@ export class FractoUtil {
       const y = -r_by_2 * sin_two_pi_theta * (r * cos_two_pi_theta - 1)
       return {x, y}
    }
+
 }
 
 export default FractoUtil;

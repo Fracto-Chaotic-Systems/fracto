@@ -1,9 +1,9 @@
-import network from "../config/network.json";
+import network from "../config/network.json" with {type: "json"};
 import {decompressSync} from "fflate";
 import {Buffer} from "buffer";
 import axios from "axios";
 
-export var CACHED_TILES = {}
+let CACHED_TILES = {}
 
 setInterval(() => {
    FractoTileCache.trim_cache()
@@ -14,33 +14,30 @@ const QUICK_CACHE_TIMEOUT = 1000 * 60;
 const MIN_CACHE = 750
 const MAX_CACHE = 1250
 
-const AXIOS_CONFIG = {
-   responseType: 'blob',
-   headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Expose-Headers': 'Access-Control-*',
-      'Access-Control-Allow-Methods': 'GET,PUT,POST,PATCH,OPTIONS',
-   },
-   mode: 'no-cors',
-   crossdomain: true,
-}
+const downloadAndDecompress = async (url) => {
+   try {
+      const response = await axios.get(url, {
+         responseType: 'arraybuffer', // Crucial for handling binary data
+      });
+      const gzippedBuffer = Buffer.from(response.data);
+      const decompressed = decompressSync(gzippedBuffer);
+      const ascii = Buffer.from(decompressed, 'ascii');
+      return ascii.toString();
+   } catch (error) {
+      console.error('Error during download or decompression:', error);
+      return '[]';
+   }
+};
 
 export class FractoTileCache {
 
    static error_count = 0;
 
    static get_tile_url = async (url) => {
-      try {
-         const response = await axios.get(url, AXIOS_CONFIG);
-         const blob = new Blob([response.data], {type: 'application/gzip'});
-         const arrayBuffer = await blob.arrayBuffer();
-         const buffer = Buffer.from(arrayBuffer);
-         const decompressed = decompressSync(buffer);
-         const ascii = Buffer.from(decompressed, 'ascii');
-         return JSON.parse(ascii.toString());
-      } catch (error) {
-         return null
-      }
+      const result_string = await downloadAndDecompress(url)
+      const parsed = JSON.parse(result_string);
+      console.log('parsed result length', parsed.length);
+      return parsed
    }
 
    static get_tile = async (short_code) => {
