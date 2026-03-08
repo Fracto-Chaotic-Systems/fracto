@@ -189,7 +189,6 @@ export const fill_canvas_buffer = async (
       update_status[FILTER_ALL_TILES] = 1.0
       update_callback(update_status)
    }
-   console.log('all_level_sets', JSON.stringify(all_level_sets))
    if (!all_level_sets.length) {
       return
    }
@@ -286,30 +285,30 @@ export const raster_fill = async (
                   try {
                      tile_data = await FractoTileCache.get_tile(tile.short_code)
                      if (!tile_data) {
-                        console.log(`bad tile: ${tile.short_code}`, tile.bounds)
-                        BAD_TILES[tile.short_code] = true
+                        // console.log(`bad tile: ${tile.short_code}`, tile.bounds)
+                        // BAD_TILES[tile.short_code] = true
                         continue;
                      }
                      const tile_x = Math.floor((x - tile.bounds.left) / level_data_set.tile_increment)
                      if (!tile_data[tile_x]) {
-                        BAD_TILES[tile.short_code] = true
-                        console.log(`bad tile_data[tile_x] short_code ${tile.short_code}`)
+                        // BAD_TILES[tile.short_code] = true
+                        // console.log(`bad tile_data[tile_x] short_code ${tile.short_code}`)
                         continue;
                      }
                      const tile_y = Math.floor((tile.bounds.top - y) / level_data_set.tile_increment)
                      if (!tile_data[tile_x][tile_y]) {
-                        BAD_TILES[tile.short_code] = true
-                        console.log(`bad tile_data[tile_x][tile_y] short_code ${tile.short_code}`)
+                        // BAD_TILES[tile.short_code] = true
+                        // console.log(`bad tile_data[tile_x][tile_y] short_code ${tile.short_code}`)
                         continue;
                      }
                      if (!Array.isArray(tile_data[tile_x][tile_y])) {
-                        BAD_TILES[tile.short_code] = true
-                        console.log(`not an array: tile_data[tile_x][tile_y] short_code ${tile.short_code}`)
+                        // BAD_TILES[tile.short_code] = true
+                        // console.log(`not an array: tile_data[tile_x][tile_y] short_code ${tile.short_code}`)
                         continue;
                      }
                      if (tile_data[tile_x][tile_y].length !== 2) {
-                        BAD_TILES[tile.short_code] = true
-                        console.log(`tile_data[tile_x][tile_y].length !== 2 short_code ${tile.short_code}`)
+                        // BAD_TILES[tile.short_code] = true
+                        // console.log(`tile_data[tile_x][tile_y].length !== 2 short_code ${tile.short_code}`)
                         continue;
                      }
                      canvas_buffer[canvas_x][canvas_y] =
