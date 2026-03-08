@@ -1,4 +1,4 @@
-import FractoUtil from "FractoUtil";
+import FractoUtil from "./FractoUtil";
 
 const MAX_PATTERN = 20000;
 const GREY_BASE = 50;
@@ -80,6 +80,7 @@ export class FractoColors {
 
    static buffer_to_canvas = (canvas_buffer, ctx, scale_factor = 1) => {
       if (!canvas_buffer || !ctx) {
+         console.log('!canvas_buffer || !ctx', canvas_buffer, ctx)
          return;
       }
       const all_not_pattern_pixels = [];
@@ -106,13 +107,15 @@ export class FractoColors {
                   all_inner_pattern_pixels.push({
                      pattern: Math.abs(point_data[0]),
                      iteration: Math.abs(point_data[1]),
-                     canvas_x, canvas_y});
+                     canvas_x, canvas_y
+                  });
                } else {
                   all_outer_pattern_sets[key] = (all_outer_pattern_sets[key] || 0) + 1;
                   all_outer_pattern_pixels.push({
                      pattern: Math.abs(point_data[0]),
                      iteration: Math.abs(point_data[1]),
-                     canvas_x, canvas_y});
+                     canvas_x, canvas_y
+                  });
                }
             }
          }

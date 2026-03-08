@@ -57,6 +57,7 @@ async function streamCsvFromUrl(url, cb) {
          });
    } catch (error) {
       console.error('Fetch operation failed:', error);
+      cb([])
    }
 }
 
