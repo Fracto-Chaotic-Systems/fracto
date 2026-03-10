@@ -82,15 +82,15 @@ export const get_tiles = (
    const height_px = width_px * aspect_ratio
    const tiles_on_edge_x = Math.ceil(width_px / 256) + 1;
    const tiles_on_edge_y = Math.ceil(height_px / 256) + 1;
-   const max_tiles = Math.ceil(resolution_factor * tiles_on_edge_x * tiles_on_edge_y + 1)
-   console.log('max_tiles', max_tiles)
+   const max_tiles = 10 + Math.ceil(1.5 * tiles_on_edge_x * tiles_on_edge_y + 1)
+   console.log(`max_tiles for scope ${scope}`, max_tiles)
    const min_level = 3
    const max_level = 30
    for (let level = min_level; level < max_level; level++) {
       const level_tiles = tiles_in_scope(
          level, focal_point, scope, aspect_ratio);
-      console.log('level_tiles.length', level_tiles.length)
-      if (level_tiles.length > max_tiles + 10) {
+      console.log(`[${level}]: ${level_tiles.length} tiles`, level_tiles.length)
+      if (level_tiles.length > max_tiles && all_tiles.length) {
          break;
       }
       if (level_tiles.length) {
@@ -190,6 +190,7 @@ export const fill_canvas_buffer = async (
       update_callback(update_status)
    }
    if (!all_level_sets.length) {
+      console.log('no level sets for scope', scope)
       return
    }
 
@@ -209,9 +210,9 @@ export const fill_canvas_buffer = async (
    for (const level_set of level_data_sets) {
       for (const tile of level_set.level_tiles) {
          tile_index++
-         if (BAD_TILES[tile.short_code]) {
-            continue;
-         }
+         // if (BAD_TILES[tile.short_code]) {
+         //    continue;
+         // }
          if (update_callback) {
             update_status[FILLING_CANVAS_BUFFER] = 0.0
             update_status[GET_TILES_FROM_CACHE] = (tile_index + 1) / (tile_count + 1)
@@ -260,6 +261,7 @@ export const raster_fill = async (
       vert_scale[vert_y] = Math.abs(focal_point.y - (vert_y - height_px / 2) * canvas_increment)
    }
    let unfound = 0
+   // console.log('level_data_sets',level_data_sets)
    for (let canvas_x = 0; canvas_x < width_px; canvas_x++) {
       if (update_callback) {
          update_status[FILLING_CANVAS_BUFFER] = (canvas_x + 1) / (width_px + 1)
@@ -274,7 +276,6 @@ export const raster_fill = async (
          let found_point = false
          for (let index = 0; index < level_data_sets.length; index++) {
             const level_data_set = level_data_sets[index]
-            // Use for loop for faster search
             for (let t = 0; t < level_data_set.level_tiles.length; t++) {
                const tile = level_data_set.level_tiles[t];
                if (tile.bounds.left <= x && tile.bounds.right >= x && tile.bounds.top >= y && tile.bounds.bottom <= y) {
@@ -285,30 +286,30 @@ export const raster_fill = async (
                   try {
                      tile_data = await FractoTileCache.get_tile(tile.short_code)
                      if (!tile_data) {
-                        // console.log(`bad tile: ${tile.short_code}`, tile.bounds)
+                        console.log(`bad tile_data: ${tile.short_code}`, tile.bounds)
                         // BAD_TILES[tile.short_code] = true
                         continue;
                      }
                      const tile_x = Math.floor((x - tile.bounds.left) / level_data_set.tile_increment)
                      if (!tile_data[tile_x]) {
                         // BAD_TILES[tile.short_code] = true
-                        // console.log(`bad tile_data[tile_x] short_code ${tile.short_code}`)
+                        console.log(`bad tile_data[tile_x] short_code ${tile.short_code}`)
                         continue;
                      }
                      const tile_y = Math.floor((tile.bounds.top - y) / level_data_set.tile_increment)
                      if (!tile_data[tile_x][tile_y]) {
                         // BAD_TILES[tile.short_code] = true
-                        // console.log(`bad tile_data[tile_x][tile_y] short_code ${tile.short_code}`)
+                        console.log(`bad tile_data[tile_x][tile_y] short_code ${tile.short_code}`)
                         continue;
                      }
                      if (!Array.isArray(tile_data[tile_x][tile_y])) {
                         // BAD_TILES[tile.short_code] = true
-                        // console.log(`not an array: tile_data[tile_x][tile_y] short_code ${tile.short_code}`)
+                        console.log(`not an array: tile_data[tile_x][tile_y] short_code ${tile.short_code}`)
                         continue;
                      }
                      if (tile_data[tile_x][tile_y].length !== 2) {
                         // BAD_TILES[tile.short_code] = true
-                        // console.log(`tile_data[tile_x][tile_y].length !== 2 short_code ${tile.short_code}`)
+                        console.log(`tile_data[tile_x][tile_y].length !== 2 short_code ${tile.short_code}`)
                         continue;
                      }
                      canvas_buffer[canvas_x][canvas_y] =
@@ -323,7 +324,10 @@ export const raster_fill = async (
                   break;
                }
             }
-            if (found_point) break;
+            if (found_point) {
+               break
+            }
+            console.log(`not found in level ${level_data_set.level}`)
          }
          const out_of_bounds = (x <= -2) || (x > 0.55) || (y >= 1) || (y <= -1)
          if (!found_point && out_of_bounds) {
