@@ -82,8 +82,8 @@ export const get_tiles = (
    const height_px = width_px * aspect_ratio
    const tiles_on_edge_x = Math.ceil(width_px / 256) + 1;
    const tiles_on_edge_y = Math.ceil(height_px / 256) + 1;
-   const max_tiles = 10 + Math.ceil(1.5 * tiles_on_edge_x * tiles_on_edge_y + 1)
-   console.log(`max_tiles for scope ${scope}`, max_tiles)
+   const max_tiles = Math.ceil(1.618 * tiles_on_edge_x * tiles_on_edge_y + 1)
+   // console.log(`max_tiles for scope ${scope}`, max_tiles)
    const min_level = 3
    const max_level = 30
    for (let level = min_level; level < max_level; level++) {
@@ -267,9 +267,6 @@ export const raster_fill = async (
          update_status[FILLING_CANVAS_BUFFER] = (canvas_x + 1) / (width_px + 1)
          update_callback(update_status)
       }
-      if (canvas_x % 50 === 0) {
-         console.log('canvas_x', canvas_x)
-      }
       const x = horz_scale[canvas_x]
       for (let canvas_y = 0; canvas_y < height_px; canvas_y++) {
          const y = vert_scale[canvas_y]
@@ -327,7 +324,6 @@ export const raster_fill = async (
             if (found_point) {
                break
             }
-            console.log(`not found in level ${level_data_set.level}`)
          }
          const out_of_bounds = (x <= -2) || (x > 0.55) || (y >= 1) || (y <= -1)
          if (!found_point && out_of_bounds) {
@@ -341,4 +337,5 @@ export const raster_fill = async (
    if (unfound) {
       console.log('unfound', unfound)
    }
+   console.log('raster_fill complete')
 }
