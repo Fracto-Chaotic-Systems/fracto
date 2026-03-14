@@ -1,8 +1,14 @@
 import network from "../config/network.json" with {type: "json"};
-import {decompressSync} from "fflate";
-import {Buffer} from "buffer";
-import axios from "axios";
+import zlib from "zlib";
+import path from "path";
+import fs from "fs";
+import https from "https";
 
+const SEPARATOR = path.sep;
+const TILES_DIR = `..${SEPARATOR}tiles`;
+if (!fs.existsSync(TILES_DIR)) {
+   fs.mkdirSync(TILES_DIR)
+}
 let CACHED_TILES = {}
 
 setInterval(() => {
@@ -14,31 +20,78 @@ const QUICK_CACHE_TIMEOUT = 1000 * 60;
 const MIN_CACHE = 750
 const MAX_CACHE = 1250
 
-const downloadAndDecompress = async (url) => {
-   try {
-      const response = await axios.get(url, {
-         responseType: 'arraybuffer', // Crucial for handling binary data
-      });
-      const gzippedBuffer = Buffer.from(response.data);
-      const decompressed = decompressSync(gzippedBuffer);
-      const ascii = Buffer.from(decompressed, 'ascii');
-      return ascii.toString();
-   } catch (error) {
-      console.error('Error during download or decompression:', error);
-      return '[]';
+const dir_from_short_code = (short_code) => {
+   const pieces = short_code.match(/.{1,4}/g);
+   const last_piece = pieces[pieces.length - 1];
+   if (last_piece.length < 4) {
+      pieces.pop()
    }
-};
+   const joined_pieces = pieces.join(SEPARATOR)
+   const level_dir = joined_pieces.length
+      ? `${TILES_DIR}${SEPARATOR}${joined_pieces}`
+      : TILES_DIR
+   if (!fs.existsSync(level_dir)) {
+      fs.mkdirSync(level_dir, {recursive: true})
+   }
+   console.log(`${short_code}: ${level_dir}`)
+   return level_dir;
+}
+
+const https_get = (remote_filepath, localSavePath) => {
+   return new Promise((resolve, reject) => {
+      const fileStream = fs.createWriteStream(localSavePath);
+      const remoteGzUrl = `${network["fracto-prod"]}/${remote_filepath}`
+      https.get(remoteGzUrl, (response) => {
+         response.pipe(fileStream);
+         fileStream.on('finish', () => {
+            fileStream.close();
+            resolve()
+         });
+         fileStream.on('error', (err) => {
+            console.error('Error writing to file:', err);
+            resolve()
+         });
+      }).on('error', (err) => {
+         console.error('Error downloading file:', err);
+         resolve()
+      });
+   })
+}
+
+const store_tile = async (short_code, coded_dir) => {
+   try {
+      const level = short_code.length
+      const naught = level < 10 ? '0' : ''
+      const level_dirname = `L${naught}${level}`
+      const localSavePath = `${coded_dir}${SEPARATOR}${short_code}.gz`
+      const remote_filepath = `${level_dirname}/${short_code}.gz`
+      await https_get(remote_filepath, localSavePath)
+      return await load_tile(short_code)
+   } catch (e) {
+      console.error(`store_tile error ${short_code}`, e.message)
+      return false;
+   }
+}
+
+const load_tile = async (short_code, coded_dir) => {
+   try {
+      const localSavePath = `${coded_dir}${SEPARATOR}${short_code}.gz`
+      if (!fs.existsSync(localSavePath)) {
+         return false
+      }
+      const gzippedData = fs.readFileSync(localSavePath);
+      const decompressedData = zlib.gunzipSync(gzippedData);
+      const jsonString = decompressedData.toString('utf8');
+      return JSON.parse(jsonString);
+   } catch (e) {
+      console.error(`load_tile error ${short_code}`, e.message)
+      return false;
+   }
+}
 
 export class FractoTileCache {
 
    static error_count = 0;
-
-   static get_tile_url = async (url) => {
-      const result_string = await downloadAndDecompress(url)
-      const parsed = JSON.parse(result_string);
-      console.log('parsed result length', parsed.length);
-      return parsed
-   }
 
    static get_tile = async (short_code) => {
       if (CACHED_TILES[short_code]) {
@@ -49,21 +102,28 @@ export class FractoTileCache {
       if (FractoTileCache.error_count > 100) {
          return null;
       }
-      const level = short_code.length
-      const naught = level < 10 ? '0' : ''
-      const url = `${network["fracto-prod"]}/L${naught}${level}/${short_code}.gz`
+      const coded_dir = dir_from_short_code(short_code)
       try {
-         const uncompressed = FractoTileCache.get_tile_url(url)
-         if (uncompressed) {
+         let tile = await load_tile(short_code, coded_dir)
+         if (tile) {
             CACHED_TILES[short_code] = {
-               uncompressed: uncompressed,
+               uncompressed: tile,
                last_access: Date.now(),
                access_count: 1,
             }
-         } else {
-            console.error('failed to decompress');
+            console.log('loaded tile length', tile.length);
+            return tile
          }
-         return uncompressed
+         tile = await store_tile(short_code, coded_dir)
+         if (tile) {
+            CACHED_TILES[short_code] = {
+               uncompressed: tile,
+               last_access: Date.now(),
+               access_count: 1,
+            }
+            console.log('fetched tile length', tile.length);
+            return tile
+         }
       } catch (e) {
          console.error(`get_tile error ${short_code}`, e.message)
          FractoTileCache.error_count++
