@@ -80,17 +80,16 @@ export const get_tiles = (
    }
    const all_tiles = []
    const height_px = width_px * aspect_ratio
-   const tiles_on_edge_x = Math.ceil(width_px / 256) + 1;
-   const tiles_on_edge_y = Math.ceil(height_px / 256) + 1;
-   const max_tiles = Math.ceil(1.618 * tiles_on_edge_x * tiles_on_edge_y + 1)
-   // console.log(`max_tiles for scope ${scope}`, max_tiles)
+   const tiles_on_edge_x = 1 + Math.ceil(width_px / 256);
+   const tiles_on_edge_y = 1 + Math.ceil(height_px / 256);
+   const max_tiles = 1 + Math.ceil(2 * tiles_on_edge_x * tiles_on_edge_y)
    const min_level = 3
    const max_level = 30
    for (let level = min_level; level < max_level; level++) {
       const level_tiles = tiles_in_scope(
          level, focal_point, scope, aspect_ratio);
       console.log(`[${level}]: ${level_tiles.length} tiles`, level_tiles.length)
-      if (level_tiles.length > max_tiles && all_tiles.length) {
+      if (level_tiles.length >= max_tiles && all_tiles.length) {
          break;
       }
       if (level_tiles.length) {
@@ -98,6 +97,8 @@ export const get_tiles = (
             level: level,
             level_tiles: level_tiles
          })
+      } else {
+         break
       }
    }
    // Use a more efficient sort
@@ -283,9 +284,9 @@ export const raster_fill = async (
                   try {
                      tile_data = await FractoTileCache.get_tile(tile.short_code)
                      if (!tile_data) {
-                        console.log(`bad tile_data: ${tile.short_code}`, tile.bounds)
+                        // console.log(`bad tile_data: ${tile.short_code}`, tile.bounds)
                         // BAD_TILES[tile.short_code] = true
-                        continue;
+                        break;
                      }
                      const tile_x = Math.floor((x - tile.bounds.left) / level_data_set.tile_increment)
                      if (!tile_data[tile_x]) {
