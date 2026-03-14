@@ -5,6 +5,8 @@ export const FRACTO_TILES_PORT = 3004;
 export const FRACTO_ADMIN_PORT = 3005;
 export const FRACTO_UI_PORT = 3006;
 
+export const ROOT_DIR = import.meta.dirname
+
 export const SERVICE_NAME_DATA = 'fracto-data-server'
 export const SERVICE_NAME_ASSET = 'fracto-asset-server'
 export const SERVICE_NAME_TILES = 'fracto-tiles-server'
