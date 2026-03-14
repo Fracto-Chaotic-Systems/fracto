@@ -3,9 +3,11 @@ import zlib from "zlib";
 import path from "path";
 import fs from "fs";
 import https from "https";
+import {ROOT_DIR} from "../constants.js";
 
 const SEPARATOR = path.sep;
-const TILES_DIR = `..${SEPARATOR}tiles`;
+const TILES_DIR = `${ROOT_DIR}${SEPARATOR}tiles`;
+console.log('TILES_DIR is', TILES_DIR);
 if (!fs.existsSync(TILES_DIR)) {
    fs.mkdirSync(TILES_DIR)
 }
