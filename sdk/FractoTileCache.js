@@ -33,7 +33,7 @@ const dir_from_short_code = (short_code) => {
    if (!fs.existsSync(level_dir)) {
       fs.mkdirSync(level_dir, {recursive: true})
    }
-   console.log(`${short_code}: ${level_dir}`)
+   // console.log(`${short_code}: ${level_dir}`)
    return level_dir;
 }
 
@@ -66,6 +66,7 @@ const store_tile = async (short_code, coded_dir) => {
       const localSavePath = `${coded_dir}${SEPARATOR}${short_code}.gz`
       const remote_filepath = `${level_dirname}/${short_code}.gz`
       await https_get(remote_filepath, localSavePath)
+      console.log(`fetched: ${short_code}`);
       return await load_tile(short_code)
    } catch (e) {
       console.error(`store_tile error ${short_code}`, e.message)
@@ -82,6 +83,7 @@ const load_tile = async (short_code, coded_dir) => {
       const gzippedData = fs.readFileSync(localSavePath);
       const decompressedData = zlib.gunzipSync(gzippedData);
       const jsonString = decompressedData.toString('utf8');
+      console.log(`loaded: ${short_code}`);
       return JSON.parse(jsonString);
    } catch (e) {
       console.error(`load_tile error ${short_code}`, e.message)
@@ -111,7 +113,7 @@ export class FractoTileCache {
                last_access: Date.now(),
                access_count: 1,
             }
-            console.log('loaded tile length', tile.length);
+            // console.log('loaded tile length', tile.length);
             return tile
          }
          tile = await store_tile(short_code, coded_dir)
@@ -121,7 +123,7 @@ export class FractoTileCache {
                last_access: Date.now(),
                access_count: 1,
             }
-            console.log('fetched tile length', tile.length);
+            // console.log('fetched tile length', tile.length);
             return tile
          }
       } catch (e) {
