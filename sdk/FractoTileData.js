@@ -116,7 +116,7 @@ export const tiles_in_scope = (level, focal_point, scope, aspect_ratio = 1.0, se
    }
    const set_level = FractoIndexedTiles.get_set_level(set_name, level)
    if (!set_level || !set_level.columns.length) {
-      console.log('!set_level || !set_level.columns.length', set_level, set_level.columns.length)
+      // console.log('!set_level || !set_level.columns.length', set_level, set_level.columns.length)
       return []
    }
    // Filter columns in a single pass
