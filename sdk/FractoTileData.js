@@ -75,7 +75,9 @@ export const get_tiles = (
    aspect_ratio,
    resolution_factor = 2.5) => {
 
+   console.log('get_tiles width_px, focal_point, scope, aspect_ratio', width_px, focal_point, scope, aspect_ratio)
    if (!focal_point) {
+      console.log('focal_point undefined', focal_point)
       return []
    }
    const all_tiles = []
@@ -83,7 +85,7 @@ export const get_tiles = (
    const tiles_on_edge_x = 1 + Math.ceil(width_px / 256);
    const tiles_on_edge_y = 1 + Math.ceil(height_px / 256);
    const max_tiles = 1 + Math.ceil(2 * tiles_on_edge_x * tiles_on_edge_y)
-   const min_level = 3
+   const min_level = 4
    const max_level = 30
    for (let level = min_level; level < max_level; level++) {
       const level_tiles = tiles_in_scope(
@@ -97,7 +99,7 @@ export const get_tiles = (
             level: level,
             level_tiles: level_tiles
          })
-      } else {
+      } else if (all_tiles.length) {
          break
       }
    }
@@ -116,7 +118,7 @@ export const tiles_in_scope = (level, focal_point, scope, aspect_ratio = 1.0, se
    }
    const set_level = FractoIndexedTiles.get_set_level(set_name, level)
    if (!set_level || !set_level.columns.length) {
-      // console.log('!set_level || !set_level.columns.length', set_level, set_level.columns.length)
+      console.log('!set_level || !set_level.columns.length', set_level, set_level.columns.length)
       return []
    }
    // Filter columns in a single pass
