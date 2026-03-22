@@ -1,4 +1,4 @@
-import FractoUtil from "./FractoUtil";
+import FractoUtil from "./FractoUtil.js";
 
 const MAX_PATTERN = 20000;
 const GREY_BASE = 50;
