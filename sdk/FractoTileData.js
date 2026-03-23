@@ -278,7 +278,7 @@ export const raster_fill = async (
          let found_point = false
          progress++
          if (progress % five_percent === 0) {
-            const percent = Math.round((progress * 100) / (height_px * width_px)) / 100
+            const percent = Math.round((progress * 10000) / (height_px * width_px)) / 100
             console.log(`${percent}% complete`)
          }
          for (let index = 0; index < level_data_sets.length; index++) {
