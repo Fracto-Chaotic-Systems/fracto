@@ -275,7 +275,7 @@ export const raster_fill = async (
          const y = vert_scale[canvas_y]
          let found_point = false
          const test_factor = (canvas_x + 1) * (canvas_y + 1)
-         if (test_factor % 100000 === 0) {
+         if (test_factor % 250000 === 0) {
             console.log(`${(test_factor * 100) / (height_px * width_px)}% complete`)
          }
          for (let index = 0; index < level_data_sets.length; index++) {
