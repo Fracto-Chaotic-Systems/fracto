@@ -264,7 +264,9 @@ export const raster_fill = async (
       vert_scale[vert_y] = Math.abs(focal_point.y - (vert_y - height_px / 2) * canvas_increment)
    }
    let unfound = 0
-   // console.log('level_data_sets',level_data_sets)
+   let progress = 0
+   const full_progress = height_px * width_px
+   const five_percent = Math.round (full_progress / 20)
    for (let canvas_x = 0; canvas_x < width_px; canvas_x++) {
       if (update_callback) {
          update_status[FILLING_CANVAS_BUFFER] = (canvas_x + 1) / (width_px + 1)
@@ -274,10 +276,11 @@ export const raster_fill = async (
       for (let canvas_y = 0; canvas_y < height_px; canvas_y++) {
          const y = vert_scale[canvas_y]
          let found_point = false
-         // const test_factor = (canvas_x + 1) * (canvas_y + 1)
-         // if (test_factor % 250000 === 0) {
-         //    console.log(`${(test_factor * 100) / (height_px * width_px)}% complete`)
-         // }
+         progress++
+         if (progress % five_percent === 0) {
+            const percent = Math.round((progress * 100) / (height_px * width_px)) / 100
+            console.log(`${percent}% complete`)
+         }
          for (let index = 0; index < level_data_sets.length; index++) {
             const level_data_set = level_data_sets[index]
             for (let t = 0; t < level_data_set.level_tiles.length; t++) {
