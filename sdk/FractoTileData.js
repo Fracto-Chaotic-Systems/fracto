@@ -209,25 +209,25 @@ export const fill_canvas_buffer = async (
       })
       .sort((a, b) => b.level - a.level)
 
-   let tile_index = 0
-   for (const level_set of level_data_sets) {
-      for (const tile of level_set.level_tiles) {
-         tile_index++
-         // if (BAD_TILES[tile.short_code]) {
-         //    continue;
-         // }
-         if (update_callback) {
-            update_status[FILLING_CANVAS_BUFFER] = 0.0
-            update_status[GET_TILES_FROM_CACHE] = (tile_index + 1) / (tile_count + 1)
-            update_callback(update_status)
-         }
-         await FractoTileCache.get_tile(tile.short_code)
-      }
-   }
-   if (update_callback) {
-      update_status[GET_TILES_FROM_CACHE] = 1.0
-      update_callback(update_status)
-   }
+   // let tile_index = 0
+   // for (const level_set of level_data_sets) {
+   //    for (const tile of level_set.level_tiles) {
+   //       tile_index++
+   //       // if (BAD_TILES[tile.short_code]) {
+   //       //    continue;
+   //       // }
+   //       if (update_callback) {
+   //          update_status[FILLING_CANVAS_BUFFER] = 0.0
+   //          update_status[GET_TILES_FROM_CACHE] = (tile_index + 1) / (tile_count + 1)
+   //          update_callback(update_status)
+   //       }
+   //       await FractoTileCache.get_tile(tile.short_code)
+   //    }
+   // }
+   // if (update_callback) {
+   //    update_status[GET_TILES_FROM_CACHE] = 1.0
+   //    update_callback(update_status)
+   // }
 
    await raster_fill(
       canvas_buffer,
@@ -274,6 +274,9 @@ export const raster_fill = async (
       for (let canvas_y = 0; canvas_y < height_px; canvas_y++) {
          const y = vert_scale[canvas_y]
          let found_point = false
+         if ((x + 1) * (y + 1) % 1000 === 0) {
+            console.log(`${(x + 1) * (y + 1) * 100 / (width_px * height_px)}% complete`)
+         }
          for (let index = 0; index < level_data_sets.length; index++) {
             const level_data_set = level_data_sets[index]
             for (let t = 0; t < level_data_set.level_tiles.length; t++) {
