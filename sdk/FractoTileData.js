@@ -197,10 +197,8 @@ export const fill_canvas_buffer = async (
       return
    }
 
-   let tile_count = 0
    const level_data_sets = all_level_sets
       .map(level_set => {
-         tile_count += level_set.level_tiles.length
          const tile_width =
             level_set.level_tiles[0].bounds.right
             - level_set.level_tiles[0].bounds.left
@@ -208,26 +206,6 @@ export const fill_canvas_buffer = async (
          return level_set
       })
       .sort((a, b) => b.level - a.level)
-
-   // let tile_index = 0
-   // for (const level_set of level_data_sets) {
-   //    for (const tile of level_set.level_tiles) {
-   //       tile_index++
-   //       // if (BAD_TILES[tile.short_code]) {
-   //       //    continue;
-   //       // }
-   //       if (update_callback) {
-   //          update_status[FILLING_CANVAS_BUFFER] = 0.0
-   //          update_status[GET_TILES_FROM_CACHE] = (tile_index + 1) / (tile_count + 1)
-   //          update_callback(update_status)
-   //       }
-   //       await FractoTileCache.get_tile(tile.short_code)
-   //    }
-   // }
-   // if (update_callback) {
-   //    update_status[GET_TILES_FROM_CACHE] = 1.0
-   //    update_callback(update_status)
-   // }
 
    await raster_fill(
       canvas_buffer,

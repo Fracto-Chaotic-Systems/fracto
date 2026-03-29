@@ -6,6 +6,8 @@ const GREY_RANGE = (255 - GREY_BASE);
 const COLOR_LUM_BASE_PCT = 15;
 const COLOR_LUM_BASE_RANGE_PCT = 40;
 
+export const FRACTO_COLOR_ITERATIONS = 200;
+
 export class FractoColors {
 
    static pattern_hues = null;
