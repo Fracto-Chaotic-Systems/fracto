@@ -1,7 +1,7 @@
 import Complex from "./math/Complex.js";
 
-const MAX_ORBITAL_SIZE = 5000
-const MIN_ITERATION = 10000000
+const MAX_ORBITAL_SIZE = 1000
+const MIN_ITERATION = 5000000
 
 export class FractoHyperCalc {
 
@@ -55,16 +55,16 @@ export class FractoHyperCalc {
                };
             }
          }
-         //
-         // if (iteration > max_iteration - MAX_ORBITAL_SIZE) {
-         //    estimated = true
-         //    const difference = new Complex(Q_x - first_pos.x, Q_y - first_pos.y)
-         //    const mag_difference = difference.magnitude()
-         //    if (mag_difference < least_magnitude) {
-         //       least_magnitude = mag_difference
-         //       best_orbital = orbital
-         //    }
-         // }
+
+         if (iteration > max_iteration - MAX_ORBITAL_SIZE) {
+            estimated = true
+            const difference = new Complex(Q_x - first_pos.x, Q_y - first_pos.y)
+            const mag_difference = difference.magnitude()
+            if (mag_difference < least_magnitude) {
+               least_magnitude = mag_difference
+               best_orbital = orbital
+            }
+         }
       }
       const orbital_points = []
       for (let i = 0; i < best_orbital + 1; i++) {
