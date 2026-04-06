@@ -11,7 +11,7 @@ export class FractoHyperCalc {
       let Q_x_squared = 0
       let Q_y_squared = 0
       let Q_x = 0
-      let Q_y = 0
+      let Q_y = 1
       let first_pos = {}
       let orbital = 0
       let least_magnitude = 1
