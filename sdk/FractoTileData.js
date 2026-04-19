@@ -5,8 +5,6 @@ import network from "../config/network.json" with {type: "json"};
 import FractoFastCalc from "./FractoFastCalc.js";
 import FractoTileCache from "./FractoTileCache.js";
 
-var BAD_TILES = {};
-
 const FRACTO_PROD = network["fracto-prod"];
 const AXIOS_CONFIG = {
    responseType: 'blob',
@@ -242,9 +240,10 @@ export const raster_fill = async (
       vert_scale[vert_y] = Math.abs(focal_point.y - (vert_y - height_px / 2) * canvas_increment)
    }
    let unfound = 0
+   const BAD_TILES = {};
    let progress = 0
    const full_progress = height_px * width_px
-   const five_percent = Math.round (full_progress / 20)
+   const five_percent = Math.round(full_progress / 20)
    for (let canvas_x = 0; canvas_x < width_px; canvas_x++) {
       if (update_callback) {
          update_status[FILLING_CANVAS_BUFFER] = (canvas_x + 1) / (width_px + 1)
@@ -264,37 +263,37 @@ export const raster_fill = async (
             for (let t = 0; t < level_data_set.level_tiles.length; t++) {
                const tile = level_data_set.level_tiles[t];
                if (tile.bounds.left <= x && tile.bounds.right >= x && tile.bounds.top >= y && tile.bounds.bottom <= y) {
-                  // if (BAD_TILES[tile.short_code]) {
-                  //    continue;
-                  // }
+                  if (BAD_TILES[tile.short_code]) {
+                     continue;
+                  }
                   let tile_data = null
                   try {
                      tile_data = await FractoTileCache.get_tile(tile.short_code)
                      if (!tile_data) {
-                        // console.log(`bad tile_data: ${tile.short_code}`, tile.bounds)
-                        // BAD_TILES[tile.short_code] = true
+                        console.log(`bad tile_data: ${tile.short_code}`, tile.bounds)
+                        BAD_TILES[tile.short_code] = true
                         break;
                      }
                      const tile_x = Math.floor((x - tile.bounds.left) / level_data_set.tile_increment)
                      if (!tile_data[tile_x]) {
-                        // BAD_TILES[tile.short_code] = true
-                        console.log(`bad tile_data[tile_x] short_code ${tile.short_code}`)
+                        BAD_TILES[tile.short_code] = true
+                        console.log(`bad tile_data[${tile_x}] short_code ${tile.short_code}`)
                         continue;
                      }
                      const tile_y = Math.floor((tile.bounds.top - y) / level_data_set.tile_increment)
                      if (!tile_data[tile_x][tile_y]) {
-                        // BAD_TILES[tile.short_code] = true
-                        console.log(`bad tile_data[tile_x][tile_y] short_code ${tile.short_code}`)
+                        BAD_TILES[tile.short_code] = true
+                        console.log(`bad tile_data[${tile_x}][${tile_y}] short_code ${tile.short_code}`)
                         continue;
                      }
                      if (!Array.isArray(tile_data[tile_x][tile_y])) {
-                        // BAD_TILES[tile.short_code] = true
-                        console.log(`not an array: tile_data[tile_x][tile_y] short_code ${tile.short_code}`)
+                        BAD_TILES[tile.short_code] = true
+                        console.log(`not an array: tile_data[${tile_x}][${tile_y}] short_code ${tile.short_code}`)
                         continue;
                      }
                      if (tile_data[tile_x][tile_y].length !== 2) {
-                        // BAD_TILES[tile.short_code] = true
-                        console.log(`tile_data[tile_x][tile_y].length !== 2 short_code ${tile.short_code}`)
+                        BAD_TILES[tile.short_code] = true
+                        console.log(`tile_data[${tile_x}][${tile_y}].length !== 2 short_code ${tile.short_code}`)
                         continue;
                      }
                      canvas_buffer[canvas_x][canvas_y] =
@@ -324,6 +323,10 @@ export const raster_fill = async (
    }
    if (unfound) {
       console.log('unfound', unfound)
+   }
+   const bad_short_codes = Object.keys(BAD_TILES)
+   if (bad_short_codes.length) {
+      console.log(`bad TILES`, bad_short_codes)
    }
    console.log('raster_fill complete')
 }
