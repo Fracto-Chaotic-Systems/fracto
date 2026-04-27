@@ -13,10 +13,6 @@ if (!fs.existsSync(TILES_DIR)) {
 }
 let CACHED_TILES = {}
 
-setInterval(() => {
-   FractoTileCache.trim_cache()
-}, 10000)
-
 const CACHE_TIMEOUT = 2 * 1000 * 60;
 const QUICK_CACHE_TIMEOUT = 1000 * 60;
 const MIN_CACHE = 750
@@ -69,7 +65,14 @@ const store_tile = async (short_code, coded_dir) => {
       const remote_filepath = `${level_dirname}/${short_code}.gz`
       await https_get(remote_filepath, localSavePath)
       console.log(`fetched: ${short_code}`);
-      return await load_tile(short_code)
+
+      const gzippedData = fs.readFileSync(localSavePath);
+      const decompressedData = zlib.gunzipSync(gzippedData);
+      const jsonString = decompressedData.toString('utf8');
+      console.log(`loaded: ${short_code}`);
+      return JSON.parse(jsonString);
+
+      // return await load_tile(short_code)
    } catch (e) {
       console.error(`store_tile error ${short_code}`, e.message)
       return false;
