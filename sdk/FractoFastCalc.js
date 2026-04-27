@@ -2,7 +2,7 @@ import Complex from "./math/Complex.js";
 import BigComplex from "./math/BigComplex.js";
 
 const MAX_ORBITAL_SIZE = 5000
-const MIN_ITERATION = 10000000000
+const MIN_ITERATION = 8000000  // 8 million
 
 export class FractoFastCalc {
 
@@ -71,6 +71,10 @@ export class FractoFastCalc {
       const iteration_factor = (MIN_ITERATION * level / 10) + MAX_ORBITAL_SIZE
       const max_iteration = Math.round(iteration_factor / MAX_ORBITAL_SIZE) * MAX_ORBITAL_SIZE
       for (; iteration < max_iteration; iteration++) {
+         if (iteration % 1000000000 === 0) {
+            console.log('iteration', iteration)
+            console.log('Q_x,Q_y,P_x,P_y', Q_x, Q_y, P_x, P_y)
+         }
          Q_y = 2 * Q_x * Q_y + P_y;
          Q_x = Q_x_squared - Q_y_squared + P_x;
          Q_x_squared = Q_x * Q_x
@@ -200,7 +204,7 @@ export class FractoFastCalc {
       const result = radical.offset(1.0, 0).scale(0.5)
       return {x: result.get_re(), y: result.get_im()}
    }
-   
+
    static get_meridian_point = (m, theta_num, theta_den) => {
       const m_squared = m * m
       const theta = theta_num / theta_den

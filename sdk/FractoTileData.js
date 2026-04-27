@@ -71,7 +71,7 @@ export const get_tiles = (
    focal_point,
    scope,
    aspect_ratio,
-   resolution_factor = 2.5) => {
+   resolution_factor = 2.0) => {
 
    console.log('get_tiles width_px, focal_point, scope, aspect_ratio', width_px, focal_point, scope, aspect_ratio)
    if (!focal_point) {
@@ -82,7 +82,7 @@ export const get_tiles = (
    const height_px = width_px * aspect_ratio
    const tiles_on_edge_x = 1 + Math.ceil(width_px / 256);
    const tiles_on_edge_y = 1 + Math.ceil(height_px / 256);
-   const max_tiles = 1 + Math.ceil(2 * tiles_on_edge_x * tiles_on_edge_y)
+   const max_tiles = 1 + Math.ceil(resolution_factor * tiles_on_edge_x * tiles_on_edge_y)
    const min_level = 4
    const max_level = 30
    for (let level = min_level; level < max_level; level++) {
@@ -243,83 +243,97 @@ export const raster_fill = async (
    const BAD_TILES = {};
    let progress = 0
    const full_progress = height_px * width_px
-   const five_percent = Math.round(full_progress / 20)
-   for (let canvas_x = 0; canvas_x < width_px; canvas_x++) {
-      if (update_callback) {
-         update_status[FILLING_CANVAS_BUFFER] = (canvas_x + 1) / (width_px + 1)
-         update_callback(update_status)
-      }
-      const x = horz_scale[canvas_x]
-      for (let canvas_y = 0; canvas_y < height_px; canvas_y++) {
-         const y = vert_scale[canvas_y]
-         let found_point = false
-         progress++
-         if (progress % five_percent === 0) {
-            const percent = Math.round((progress * 10000) / (height_px * width_px)) / 100
-            console.log(`${percent}% complete`)
+   const ten_percent = Math.round(full_progress / 10)
+   try {
+      for (let canvas_x = 0; canvas_x < width_px; canvas_x++) {
+         if (update_callback) {
+            update_status[FILLING_CANVAS_BUFFER] = (canvas_x + 1) / (width_px + 1)
+            update_callback(update_status)
          }
-         for (let index = 0; index < level_data_sets.length; index++) {
-            const level_data_set = level_data_sets[index]
-            for (let t = 0; t < level_data_set.level_tiles.length; t++) {
-               const tile = level_data_set.level_tiles[t];
-               if (tile.bounds.left <= x && tile.bounds.right >= x && tile.bounds.top >= y && tile.bounds.bottom <= y) {
-                  if (BAD_TILES[tile.short_code]) {
-                     continue;
-                  }
-                  let tile_data = null
-                  try {
-                     tile_data = await FractoTileCache.get_tile(tile.short_code)
-                     if (!tile_data) {
-                        console.log(`bad tile_data: ${tile.short_code}`, tile.bounds)
-                        BAD_TILES[tile.short_code] = true
-                        break;
-                     }
-                     const tile_x = Math.floor((x - tile.bounds.left) / level_data_set.tile_increment)
-                     if (!tile_data[tile_x]) {
-                        BAD_TILES[tile.short_code] = true
-                        console.log(`bad tile_data[${tile_x}] short_code ${tile.short_code}`)
+         const x = horz_scale[canvas_x]
+         for (let canvas_y = 0; canvas_y < height_px; canvas_y++) {
+            const y = vert_scale[canvas_y]
+            let found_point = false
+            progress++
+            if (progress % ten_percent === 0) {
+               const percent = Math.round((progress * 10000) / (height_px * width_px)) / 100
+               console.log(`${percent}% complete`)
+            }
+            for (let index = 0; index < level_data_sets.length; index++) {
+               const level_data_set = level_data_sets[index]
+               for (let t = 0; t < level_data_set.level_tiles.length; t++) {
+                  const tile = level_data_set.level_tiles[t];
+                  if (tile.bounds.left <= x && tile.bounds.right >= x && tile.bounds.top >= y && tile.bounds.bottom <= y) {
+                     if (BAD_TILES[tile.short_code]) {
                         continue;
                      }
-                     const tile_y = Math.floor((tile.bounds.top - y) / level_data_set.tile_increment)
-                     if (!tile_data[tile_x][tile_y]) {
-                        BAD_TILES[tile.short_code] = true
-                        console.log(`bad tile_data[${tile_x}][${tile_y}] short_code ${tile.short_code}`)
-                        continue;
-                     }
-                     if (!Array.isArray(tile_data[tile_x][tile_y])) {
-                        BAD_TILES[tile.short_code] = true
-                        console.log(`not an array: tile_data[${tile_x}][${tile_y}] short_code ${tile.short_code}`)
-                        continue;
-                     }
-                     if (tile_data[tile_x][tile_y].length !== 2) {
-                        BAD_TILES[tile.short_code] = true
-                        console.log(`tile_data[${tile_x}][${tile_y}].length !== 2 short_code ${tile.short_code}`)
-                        continue;
-                     }
-                     canvas_buffer[canvas_x][canvas_y] =
-                        [tile_data[tile_x][tile_y][0], tile_data[tile_x][tile_y][1]]
-                     found_point = true
+                     let tile_data = null
+                     try {
+                        tile_data = await FractoTileCache.get_tile(tile.short_code)
+                        if (!tile_data) {
+                           console.log(`bad tile_data: ${tile.short_code}`, tile.bounds)
+                           BAD_TILES[tile.short_code] = true
+                           break;
+                        }
+                        let tile_x = Math.round((x - tile.bounds.left) / level_data_set.tile_increment)
+                        if (tile_x < 0) {
+                           tile_x = 0
+                        } else if (tile_x > 255) {
+                           tile_x = 255
+                        }
+                        if (!tile_data[tile_x]) {
+                           BAD_TILES[tile.short_code] = true
+                           console.log(`bad tile_data[${tile_x}] short_code ${tile.short_code}`)
+                           continue;
+                        }
+                        let tile_y = Math.round((tile.bounds.top - y) / level_data_set.tile_increment)
+                        if (tile_y < 0) {
+                           tile_y = 0
+                        } else if (tile_y > 255) {
+                           tile_y = 255
+                        }
+                        if (!tile_data[tile_x][tile_y]) {
+                           BAD_TILES[tile.short_code] = true
+                           console.log(`bad tile_data[${tile_x}][${tile_y}] short_code ${tile.short_code}`)
+                           continue;
+                        }
+                        if (!Array.isArray(tile_data[tile_x][tile_y])) {
+                           BAD_TILES[tile.short_code] = true
+                           console.log(`not an array: tile_data[${tile_x}][${tile_y}] short_code ${tile.short_code}`)
+                           continue;
+                        }
+                        if (tile_data[tile_x][tile_y].length !== 2) {
+                           BAD_TILES[tile.short_code] = true
+                           console.log(`tile_data[${tile_x}][${tile_y}].length !== 2 short_code ${tile.short_code}`)
+                           continue;
+                        }
+                        canvas_buffer[canvas_x][canvas_y] =
+                           [tile_data[tile_x][tile_y][0], tile_data[tile_x][tile_y][1]]
+                        found_point = true
 
-                  } catch (e) {
-                     console.log(`exception on tile: ${tile.short_code}`, e.message)
-                     BAD_TILES[tile.short_code] = true
-                     continue;
+                     } catch (e) {
+                        console.log(`exception on tile: ${tile.short_code}`, e.message)
+                        BAD_TILES[tile.short_code] = true
+                        continue;
+                     }
+                     break;
                   }
-                  break;
+               }
+               if (found_point) {
+                  break
                }
             }
-            if (found_point) {
-               break
+            const out_of_bounds = (x <= -2) || (x > 0.55) || (y >= 1) || (y <= -1)
+            if (!found_point && out_of_bounds) {
+               unfound++
+               // console.log(`unfound, calculating[${canvas_x}][${canvas_y}] (${x}, ${y})`)
+               const {pattern, iteration} = FractoFastCalc.calc(x, y)
+               canvas_buffer[canvas_x][canvas_y] = [pattern, iteration]
             }
          }
-         const out_of_bounds = (x <= -2) || (x > 0.55) || (y >= 1) || (y <= -1)
-         if (!found_point && out_of_bounds) {
-            unfound++
-            // console.log(`unfound, calculating[${canvas_x}][${canvas_y}] (${x}, ${y})`)
-            const {pattern, iteration} = FractoFastCalc.calc(x, y)
-            canvas_buffer[canvas_x][canvas_y] = [pattern, iteration]
-         }
       }
+   } catch (error) {
+      console.error('raster_fill error', error)
    }
    if (unfound) {
       console.log('unfound', unfound)

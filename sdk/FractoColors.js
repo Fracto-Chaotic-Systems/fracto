@@ -81,8 +81,12 @@ export class FractoColors {
    }
 
    static buffer_to_canvas = (canvas_buffer, ctx, scale_factor = 1) => {
-      if (!canvas_buffer || !ctx) {
-         console.log('!canvas_buffer || !ctx')
+      if (!canvas_buffer) {
+         console.log('!canvas_buffer')
+         return;
+      }
+      if (!ctx) {
+         console.log('!ctx')
          return;
       }
       const all_not_pattern_pixels = [];
