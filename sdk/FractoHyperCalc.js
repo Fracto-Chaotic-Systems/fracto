@@ -1,7 +1,7 @@
 import Complex from "./math/Complex.js";
 
 const MAX_ORBITAL_SIZE = 1000
-const MIN_ITERATION = 10000000
+const MIN_ITERATION = 100000000
 
 export class FractoHyperCalc {
 
