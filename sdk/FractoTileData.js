@@ -343,4 +343,7 @@ export const raster_fill = async (
       console.log(`bad TILES`, bad_short_codes)
    }
    console.log('raster_fill complete')
+   setTimeout(()=>{
+      FractoTileCache.trim_cache()
+   },1000)
 }

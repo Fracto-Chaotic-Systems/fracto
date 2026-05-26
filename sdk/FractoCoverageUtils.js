@@ -35,7 +35,7 @@ export const initialize_coverage = (cb) => {
    })
 }
 
-const collect_category_tiles = (tile_set_name, cb) => {
+export const collect_category_tiles = (tile_set_name, cb) => {
    const result = []
    for (let level = 0; level < 30; level++) {
       result[level] = new Set()
