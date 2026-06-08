@@ -142,4 +142,5 @@ servers
 config
 tiles
 logs
+backup
 .vs
