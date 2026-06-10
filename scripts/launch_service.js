@@ -33,6 +33,8 @@ if (!fs.existsSync(server_folder)) {
 
 const output_file = `${server_main_folder}`
 
+spawn_sync(`copy`, ['"C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\tiles.csv"', '.'], server_folder)
+
 spawn_sync(`git`, ['pull', 'origin', 'main'], server_folder)
 spawn_sync(`npm.cmd`, ['i', '--legacy-peer-deps'], server_folder)
 spawn_async(`npm.cmd`, ['run', 'start'], server_folder)
