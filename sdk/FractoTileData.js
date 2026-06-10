@@ -1,44 +1,29 @@
-import axios from "axios";
-import {Buffer} from "buffer";
+import fs from "fs";
+import path from "path";
+import {ROOT_DIR} from "../constants.js";
+
 import FractoIndexedTiles, {TILE_SET_INDEXED} from "./FractoIndexedTiles.js";
-import network from "../config/network.json" with {type: "json"};
 import FractoFastCalc from "./FractoFastCalc.js";
 import FractoTileCache from "./FractoTileCache.js";
 
-const FRACTO_PROD = network["fracto-prod"];
-const AXIOS_CONFIG = {
-   responseType: 'blob',
-   headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Expose-Headers': 'Access-Control-*',
-      'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE,PATCH,OPTIONS',
-   },
-   mode: 'no-cors',
-   crossdomain: true,
-}
-
 export const FILTER_ALL_TILES = 'filter_all_tiles'
-export const GET_TILES_FROM_CACHE = 'get_tiles_from_cache'
 export const FILLING_CANVAS_BUFFER = 'filling_canvas_buffer'
-export const CALLBACK_BASIS = {
-   [GET_TILES_FROM_CACHE]: 0,
-   [FILLING_CANVAS_BUFFER]: 0,
-}
 
-export const get_manifest = async (on_update, on_complete) => {
-   const url = `${FRACTO_PROD}/manifest/tiles/${TILE_SET_INDEXED}/packet_manifest.json`
+const SEPARATOR = path.sep;
+const TILES_DIR = `${ROOT_DIR}${SEPARATOR}tiles`;
+const MANIFEST_INDEXED_DIR = `${TILES_DIR}${SEPARATOR}manifest${SEPARATOR}indexed`
+const MANIFEST_FILEPATH = `${MANIFEST_INDEXED_DIR}${SEPARATOR}packet_manifest.json`
+
+export const get_manifest = (on_update, on_complete) => {
    try {
-      const response = await axios.get(url, AXIOS_CONFIG);
-      const blob = new Blob([response.data], {type: 'application/gzip'});
-      const arrayBuffer = await blob.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      const ascii = Buffer.from(buffer, 'ascii');
-      const tile_manifest = JSON.parse(ascii.toString());
+      console.log(`MANIFEST_FILEPATH is ${MANIFEST_FILEPATH}`)
+      const manifest_ascii = fs.readFileSync(MANIFEST_FILEPATH, 'utf-8')
+      const tile_manifest = JSON.parse(manifest_ascii);
       const packet_count = tile_manifest.packet_files.length
       const tile_count = tile_manifest.tile_count
       let packet_index = 0
       for (const manifest_file of tile_manifest.packet_files) {
-         await load_packet(manifest_file)
+         load_packet(manifest_file)
          if (on_update) {
             on_update({manifest_file, packet_index, packet_count, tile_count});
          }
@@ -52,14 +37,10 @@ export const get_manifest = async (on_update, on_complete) => {
 }
 
 const load_packet = async (manifest_file) => {
-   const url = `${FRACTO_PROD}/manifest/tiles/${TILE_SET_INDEXED}/${manifest_file}`
    try {
-      const response = await axios.get(url, AXIOS_CONFIG);
-      const blob = new Blob([response.data], {type: 'application/gzip'});
-      const arrayBuffer = await blob.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      const ascii = Buffer.from(buffer, 'ascii');
-      const packet_data = JSON.parse(ascii.toString());
+      // console.log(`MANIFEST_INDEXED_DIR is ${MANIFEST_INDEXED_DIR}`)
+      const packet_ascii = fs.readFileSync(`${MANIFEST_INDEXED_DIR}/${manifest_file}`, 'utf-8')
+      const packet_data = JSON.parse(packet_ascii);
       FractoIndexedTiles.integrate_tile_packet(TILE_SET_INDEXED, packet_data)
    } catch (e) {
       console.log('error in get_manifest()', e);
@@ -343,7 +324,7 @@ export const raster_fill = async (
       console.log(`bad TILES`, bad_short_codes)
    }
    console.log('raster_fill complete')
-   setTimeout(()=>{
+   setTimeout(() => {
       FractoTileCache.trim_cache()
-   },1000)
+   }, 1000)
 }
