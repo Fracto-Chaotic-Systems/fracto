@@ -40,7 +40,7 @@ async function streamCsvFromUrl(url, cb) {
             // 3. Process each row of data as it comes in
             results.push(data.short_code);
 
-            if (results.length % 100000 === 0) {
+            if (results.length % 1000000 === 0) {
                console.log(`[${results.length}] from csv stream`);
             }
          })
