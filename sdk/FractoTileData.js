@@ -69,9 +69,11 @@ export const get_tiles = (
    for (let level = min_level; level < max_level; level++) {
       const level_tiles = tiles_in_scope(
          level, focal_point, scope, aspect_ratio);
-      console.log(`[${level}]: ${level_tiles.length} tiles`, level_tiles.length)
       if (level_tiles.length >= max_tiles && all_tiles.length) {
          break;
+      }
+      if (level_tiles.length > 10) {
+         console.log(`[${level}]: ${level_tiles.length}`)
       }
       if (level_tiles.length) {
          all_tiles.push({
@@ -236,7 +238,7 @@ export const raster_fill = async (
             const y = vert_scale[canvas_y]
             let found_point = false
             progress++
-            if (progress % ten_percent === 0) {
+            if (width_px > 1500 && progress % ten_percent === 0) {
                const percent = Math.round((progress * 10000) / (height_px * width_px)) / 100
                console.log(`${percent}% complete`)
             }
