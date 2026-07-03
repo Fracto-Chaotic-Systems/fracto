@@ -90,7 +90,7 @@ export const get_tiles = (
 
    const end = performance.now()
    const rounded_time = Math.round((end - start) * 1000) / 1000
-   console.log(chalk.orange(`get_tiles ${width_px}x${height_px} complete in ${rounded_time}ms`))
+   console.log(chalk.yellow(`get_tiles ${width_px}x${height_px} complete in ${rounded_time}ms`))
    return sorted
 }
 
@@ -334,7 +334,7 @@ export const raster_fill = async (
    }
    const end = performance.now()
    const rounded_time = Math.round((end - start) * 1000) / 1000
-   console.log(chalk.orange(`raster_fill ${width_px}x${height_px} complete in ${rounded_time}ms`))
+   console.log(chalk.yellow(`raster_fill ${width_px}x${height_px} complete in ${rounded_time}ms`))
    setTimeout(() => {
       FractoTileCache.trim_cache()
    }, 1000)
