@@ -55,14 +55,21 @@ export const collect_category_tiles = (tile_set_name, cb) => {
    })
 }
 
+const MAX_TILES = 100000
+
 export const detect_coverage = (focal_point, scope) => {
    const tiles_in_scope = [];
    for (let level = 2; level < 30; level++) {
       const level_tiles = FractoIndexedTiles.tiles_in_scope(level, focal_point, scope);
-      tiles_in_scope.push({
-         level: level,
-         tiles: level_tiles
-      });
+      if (level_tiles.length < MAX_TILES) {
+         tiles_in_scope.push({
+            level: level,
+            tiles: level_tiles
+         });
+      }
+      else {
+         break;
+      }
    }
 
    const filtered_tiles_in_scope = tiles_in_scope //.filter(scoped => scoped.tiles.length > 1);
