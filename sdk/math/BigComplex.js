@@ -1,6 +1,6 @@
 import Decimal from "decimal.js";
 
-export const RESOLUTION_DIGITS = 32
+export const RESOLUTION_DIGITS = 64
 const MAX_COMPARE_DIGITS = RESOLUTION_DIGITS;
 
 Decimal.set({precision: RESOLUTION_DIGITS, rounding: 2})
