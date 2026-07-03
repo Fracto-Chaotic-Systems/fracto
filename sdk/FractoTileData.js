@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import {ROOT_DIR} from "../constants.js";
+import chalk from "chalk";
 
 import FractoIndexedTiles, {TILE_SET_INDEXED} from "./FractoIndexedTiles.js";
 import FractoFastCalc from "./FractoFastCalc.js";
@@ -54,7 +55,7 @@ export const get_tiles = (
    aspect_ratio,
    resolution_factor = 2.0) => {
 
-   console.log('get_tiles width_px, focal_point, scope, aspect_ratio', width_px, focal_point, scope, aspect_ratio)
+   const start = performance.now()
    if (!focal_point) {
       console.log('focal_point undefined', focal_point)
       return []
@@ -85,7 +86,12 @@ export const get_tiles = (
       }
    }
    // Use a more efficient sort
-   return all_tiles.sort((a, b) => a.level - b.level)
+   const sorted = all_tiles.sort((a, b) => a.level - b.level)
+
+   const end = performance.now()
+   const rounded_time = Math.round((end - start) * 1000) / 1000
+   console.log(chalk.orange(`get_tiles ${width_px}x${height_px} complete in ${rounded_time}ms`))
+   return sorted
 }
 
 export const tiles_in_scope = (level, focal_point, scope, aspect_ratio = 1.0, set_name = TILE_SET_INDEXED) => {
@@ -212,6 +218,7 @@ export const raster_fill = async (
    if (!canvas_buffer) {
       return;
    }
+   const start = performance.now()
    const canvas_increment = scope / width_px
    const height_px = width_px * aspect_ratio
    const horz_scale = new Array(width_px)
@@ -325,7 +332,9 @@ export const raster_fill = async (
    if (bad_short_codes.length) {
       console.log(`bad TILES`, bad_short_codes)
    }
-   console.log('raster_fill complete')
+   const end = performance.now()
+   const rounded_time = Math.round((end - start) * 1000) / 1000
+   console.log(chalk.orange(`raster_fill ${width_px}x${height_px} complete in ${rounded_time}ms`))
    setTimeout(() => {
       FractoTileCache.trim_cache()
    }, 1000)
