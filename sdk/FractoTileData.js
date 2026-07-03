@@ -55,7 +55,6 @@ export const get_tiles = (
    aspect_ratio,
    resolution_factor = 2.0) => {
 
-   const start = performance.now()
    if (!focal_point) {
       console.log('focal_point undefined', focal_point)
       return []
@@ -86,12 +85,7 @@ export const get_tiles = (
       }
    }
    // Use a more efficient sort
-   const sorted = all_tiles.sort((a, b) => a.level - b.level)
-
-   const end = performance.now()
-   const rounded_time = Math.round((end - start) * 1000) / 1000
-   console.log(chalk.yellow(`get_tiles ${width_px}x${height_px} complete in ${rounded_time}ms`))
-   return sorted
+   return all_tiles.sort((a, b) => a.level - b.level)
 }
 
 export const tiles_in_scope = (level, focal_point, scope, aspect_ratio = 1.0, set_name = TILE_SET_INDEXED) => {
