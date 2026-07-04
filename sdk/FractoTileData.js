@@ -12,7 +12,17 @@ export const FILLING_CANVAS_BUFFER = 'filling_canvas_buffer'
 
 const SEPARATOR = path.sep;
 const TILES_DIR = `${ROOT_DIR}${SEPARATOR}tiles`;
-const MANIFEST_INDEXED_DIR = `${TILES_DIR}${SEPARATOR}manifest${SEPARATOR}indexed`
+const MANIFEST_DIR = `${TILES_DIR}${SEPARATOR}manifest`
+const MANIFEST_INDEXED_DIR = `${MANIFEST_DIR}${SEPARATOR}indexed`
+
+if (!fs.existsSync(MANIFEST_DIR)) {
+   console.log(chalk.cyan(`creating manifest directory`))
+   fs.mkdirSync(MANIFEST_DIR)
+}
+if (!fs.existsSync(MANIFEST_INDEXED_DIR)) {
+   console.log(chalk.cyan(`creating manifest index directory`))
+   fs.mkdirSync(MANIFEST_INDEXED_DIR)
+}
 const MANIFEST_FILEPATH = `${MANIFEST_INDEXED_DIR}${SEPARATOR}packet_manifest.json`
 
 export const get_manifest = (on_update, on_complete) => {
