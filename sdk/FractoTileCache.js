@@ -64,15 +64,11 @@ const store_tile = async (short_code, coded_dir) => {
       const localSavePath = `${coded_dir}${SEPARATOR}${short_code}.gz`
       const remote_filepath = `${level_dirname}/${short_code}.gz`
       await https_get(remote_filepath, localSavePath)
-      console.log(`fetched: ${short_code}`);
-
       const gzippedData = fs.readFileSync(localSavePath);
       const decompressedData = zlib.gunzipSync(gzippedData);
       const jsonString = decompressedData.toString('utf8');
-      console.log(`loaded: ${short_code}`);
+      console.log(`fetched: ${short_code}`);
       return JSON.parse(jsonString);
-
-      // return await load_tile(short_code)
    } catch (e) {
       console.error(`store_tile error ${short_code}`, e.message)
       return false;
