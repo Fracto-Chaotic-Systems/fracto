@@ -1,40 +1,52 @@
-import * as fs from "node:fs";
-import path from 'path';
-import chalk from "chalk";
-import {fileURLToPath} from 'url';
-import {spawn_async, spawn_sync} from "../utils.js";
+import fs from 'node:fs'
+import path from 'node:path'
+import {spawn} from 'node:child_process'
 
-import {ALL_SERVICES, SERVICE_NAME_ADMIN} from "../constants.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const SEPARATOR = path.sep
+import {ALL_SERVICES, SERVICE_NAME_UI} from '../constants.js'
 
 const service_name = process.argv[2]
+const service = ALL_SERVICES.find(candidate => candidate.name === service_name)
 
-const service = ALL_SERVICES.find(service => service.name === service_name)
 if (!service) {
-   console.log(chalk.red('bad service name'), service_name)
-   process.exit(1);
+   console.error(`Unknown service: ${service_name || '<missing>'}`)
+   process.exit(1)
 }
 
-const server_main_folder = `${__dirname}${SEPARATOR}..${SEPARATOR}servers`
-if (!fs.existsSync(server_main_folder)) {
-   console.log(chalk.cyan(`creating server_main_folder: ${server_main_folder}`))
-   fs.mkdirSync(server_main_folder)
+const service_folder = path.join(import.meta.dirname, '..', 'servers', service.name)
+const package_file = path.join(service_folder, 'package.json')
+const modules_folder = path.join(service_folder, 'node_modules')
+
+if (!fs.existsSync(package_file)) {
+   console.error(`Missing ${package_file}. Check out the service before starting Fracto.`)
+   process.exit(1)
+}
+if (!fs.existsSync(modules_folder)) {
+   console.error(`Missing dependencies for ${service.name}. Run npm install in ${service_folder}.`)
+   process.exit(1)
 }
 
-const server_folder = (`${server_main_folder}${SEPARATOR}${service_name}`)
-if (!fs.existsSync(server_folder)) {
-   console.log(chalk.cyan(`cloning into server_folder: ${server_folder}`))
-   const repo_url = `https://github.com/Fracto-Chaotic-Systems/${service_name}.git`
-   spawn_sync(`git`, ['clone', repo_url], server_main_folder)
+const command = process.execPath
+const args = service.name === SERVICE_NAME_UI
+   ? [path.join('node_modules', 'vite', 'bin', 'vite.js')]
+   : ['--max-old-space-size=16384', 'index.js']
+
+const child = spawn(command, args, {
+   cwd: service_folder,
+   stdio: 'inherit',
+   shell: false,
+})
+
+child.once('error', error => {
+   console.error(`Unable to start ${service.name}:`, error.message)
+   process.exit(1)
+})
+child.once('exit', (code, signal) => {
+   process.exitCode = code ?? (signal ? 1 : 0)
+})
+
+const shutdown = signal => {
+   if (!child.killed) child.kill(signal)
 }
 
-const output_file = `${server_main_folder}`
-
-spawn_sync(`copy`, ['"C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\tiles.csv"', '.'], server_folder)
-
-spawn_sync(`git`, ['pull', 'origin', 'main'], server_folder)
-spawn_sync(`npm.cmd`, ['i', '--legacy-peer-deps'], server_folder)
-spawn_async(`npm.cmd`, ['run', 'start'], server_folder)
+process.once('SIGINT', () => shutdown('SIGINT'))
+process.once('SIGTERM', () => shutdown('SIGTERM'))
