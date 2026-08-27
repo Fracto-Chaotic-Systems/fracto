@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import {spawn} from 'node:child_process'
+import {spawn, spawnSync} from 'node:child_process'
 
 import chalk from 'chalk'
 import express from 'express'
@@ -17,7 +17,7 @@ import {handle_tile} from './handlers/main.js'
 import {handle_main_status} from './handlers/status.js'
 import {validate_startup} from './scripts/startup_preflight.js'
 
-const STARTUP_TIMEOUT_MS = Number(process.env.FRACTO_STARTUP_TIMEOUT_MS || 120000)
+const STARTUP_TIMEOUT_MS = Number(process.env.FRACTO_STARTUP_TIMEOUT_MS || 300000)
 const HEALTH_POLL_MS = 500
 const child_processes = new Map()
 let shutting_down = false
@@ -38,7 +38,16 @@ const shutdown = signal => {
    shutting_down = true
    console.log(chalk.yellow(`Received ${signal}; stopping services.`))
    child_processes.forEach(({child, log_stream}) => {
-      if (!child.killed) child.kill(signal)
+      if (!child.killed) {
+         if (process.platform === 'win32') {
+            spawnSync('taskkill.exe', ['/pid', String(child.pid), '/t', '/f'], {
+               stdio: 'ignore',
+               shell: false,
+            })
+         } else {
+            child.kill(signal)
+         }
+      }
       log_stream.end()
    })
 }
@@ -126,9 +135,9 @@ const tile_service = ALL_SERVICES.find(service => service.name === SERVICE_NAME_
 const remaining_services = ALL_SERVICES.filter(service => service.name !== SERVICE_NAME_TILES)
 
 try {
-   console.log(chalk.cyan('Loading tile index before starting any server...'))
+   console.log(chalk.cyan('Loading compiled tile index before starting any server...'))
    await start_service(tile_service, true)
-   console.log(chalk.green('Tile index is ready. Starting Fracto servers.'))
+   console.log(chalk.green('Compiled tile index is ready. Starting Fracto servers.'))
 
    server = create_main_server()
    for (const service of remaining_services) {

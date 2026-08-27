@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import {spawn} from 'node:child_process'
+import {spawn, spawnSync} from 'node:child_process'
 
 import {ALL_SERVICES, SERVICE_NAME_UI} from '../constants.js'
 
@@ -45,7 +45,15 @@ child.once('exit', (code, signal) => {
 })
 
 const shutdown = signal => {
-   if (!child.killed) child.kill(signal)
+   if (child.killed) return
+   if (process.platform === 'win32') {
+      spawnSync('taskkill.exe', ['/pid', String(child.pid), '/t', '/f'], {
+         stdio: 'ignore',
+         shell: false,
+      })
+   } else {
+      child.kill(signal)
+   }
 }
 
 process.once('SIGINT', () => shutdown('SIGINT'))
