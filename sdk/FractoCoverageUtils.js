@@ -6,24 +6,28 @@ let all_blank_tiles = []
 let all_interior_tiles = []
 let all_needs_update = []
 
+const count_tiles = level_sets => level_sets.reduce((total, level_set) => {
+   return total + level_set.size
+}, 0)
+
 export const initialize_coverage = (cb) => {
    collect_category_tiles('indexed', result => {
-      console.log('indexed load complete', result.length);
+      console.log('indexed load complete', count_tiles(result));
       all_indexed_tiles = result;
       collect_category_tiles('blank', result => {
-         console.log('blank load complete', result.length);
+         console.log('blank load complete', count_tiles(result));
          all_blank_tiles = result;
          collect_category_tiles('interior', result => {
-            console.log('interior load complete', result.length);
+            console.log('interior load complete', count_tiles(result));
             all_interior_tiles = result;
             collect_category_tiles('needs_update', result => {
-               console.log('needs_update load complete', result.length);
+               console.log('needs_update load complete', count_tiles(result));
                all_needs_update = result;
                const stats = {
-                  indexed: all_indexed_tiles.length,
-                  blank: all_blank_tiles.length,
-                  interior: all_interior_tiles.length,
-                  needs_update: all_needs_update.length,
+                  indexed: count_tiles(all_indexed_tiles),
+                  blank: count_tiles(all_blank_tiles),
+                  interior: count_tiles(all_interior_tiles),
+                  needs_update: count_tiles(all_needs_update),
                }
                console.log(stats)
                if (cb) {

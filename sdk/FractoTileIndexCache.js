@@ -35,6 +35,10 @@ const cache_paths = fingerprint => {
    return {directory, metadata_file: path.join(directory, 'metadata.json')}
 }
 
+const count_packet_tiles = packet_data => packet_data.columns.reduce((total, column) => {
+   return total + column.tiles.length
+}, 0)
+
 const reset_tile_sets = () => {
    FractoIndexedTiles.tile_set = null
    FractoIndexedTiles.tile_sets_loaded = []
@@ -46,17 +50,42 @@ export const build_tile_index_cache = (on_progress = null) => {
    const {directory, metadata_file} = cache_paths(fingerprint)
    if (fs.existsSync(metadata_file)) {
       const metadata = JSON.parse(fs.readFileSync(metadata_file, 'utf8'))
-      if (metadata.schema === TILE_INDEX_CACHE_SCHEMA &&
-         metadata.packet_count === manifest.packet_files.length) {
+      if (metadata.schema !== TILE_INDEX_CACHE_SCHEMA ||
+         metadata.packet_count !== manifest.packet_files.length) {
+         throw new Error(`Incomplete cache exists at ${directory}; remove it and rebuild`)
+      }
+      if (metadata.source_manifest_tile_count !== undefined) {
          return {...metadata, reused: true}
       }
-      throw new Error(`Incomplete cache exists at ${directory}; remove it and rebuild`)
+
+      let computed_tile_count = 0
+      manifest.packet_files.forEach((packet_file, packet_index) => {
+         const cache_file = path.join(directory, `${packet_index.toString().padStart(4, '0')}.bin`)
+         const packet_data = deserialize(fs.readFileSync(cache_file))
+         computed_tile_count += count_packet_tiles(packet_data)
+         on_progress?.({
+            level: packet_data.level,
+            packet_file,
+            packet_index: packet_index + 1,
+            packet_count: manifest.packet_files.length,
+         })
+      })
+      const corrected_metadata = {
+         ...metadata,
+         tile_count: computed_tile_count,
+         source_manifest_tile_count: manifest.tile_count,
+         tile_count_difference: computed_tile_count - manifest.tile_count,
+         verified_at: new Date().toISOString(),
+      }
+      fs.writeFileSync(metadata_file, JSON.stringify(corrected_metadata, null, 2))
+      return {...corrected_metadata, reused: true, corrected: true}
    }
 
    fs.mkdirSync(TILE_INDEX_CACHE_DIRECTORY, {recursive: true})
    const temporary_directory = `${directory}.tmp-${process.pid}`
    fs.mkdirSync(temporary_directory, {recursive: false})
    let binary_bytes = 0
+   let computed_tile_count = 0
 
    try {
       manifest.packet_files.forEach((packet_file, packet_index) => {
@@ -66,6 +95,7 @@ export const build_tile_index_cache = (on_progress = null) => {
          const cache_file = `${packet_index.toString().padStart(4, '0')}.bin`
          fs.writeFileSync(path.join(temporary_directory, cache_file), binary)
          binary_bytes += binary.length
+         computed_tile_count += count_packet_tiles(packet_data)
          on_progress?.({
             level: packet_data.level,
             packet_file,
@@ -79,7 +109,9 @@ export const build_tile_index_cache = (on_progress = null) => {
          fingerprint,
          created_at: new Date().toISOString(),
          packet_count: manifest.packet_files.length,
-         tile_count: manifest.tile_count,
+         tile_count: computed_tile_count,
+         source_manifest_tile_count: manifest.tile_count,
+         tile_count_difference: computed_tile_count - manifest.tile_count,
          binary_bytes,
       }
       fs.writeFileSync(
