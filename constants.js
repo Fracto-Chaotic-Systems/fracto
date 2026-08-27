@@ -29,22 +29,27 @@ export const LOGFILE_NAME_UI = `${SERVICE_NAME_UI}-log-${formattedDate}.txt`
 export const ALL_SERVICES = [
    {
       name:SERVICE_NAME_DATA,
+      port: FRACTO_DATA_PORT,
       logfile: LOGFILE_NAME_DATA
    },
    {
       name:SERVICE_NAME_ASSET,
+      port: FRACTO_ASSET_PORT,
       logfile: LOGFILE_NAME_ASSET
    },
    {
       name:SERVICE_NAME_ADMIN,
+      port: FRACTO_ADMIN_PORT,
       logfile: LOGFILE_NAME_ADMIN
    },
    {
       name:SERVICE_NAME_UI,
+      port: FRACTO_UI_PORT,
       logfile: LOGFILE_NAME_UI
    },
    {
       name:SERVICE_NAME_TILES,
+      port: FRACTO_TILES_PORT,
       logfile: LOGFILE_NAME_TILES
    },
 ]
