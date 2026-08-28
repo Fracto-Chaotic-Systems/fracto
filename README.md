@@ -57,11 +57,27 @@ docker compose run --rm index-refresh
 
 The database step creates the configured database and loads every SQL dump from the
 local `backup/` directory. It is guarded against replacing an existing non-empty
-database; set `FRACTO_DB_INIT_CONFIRM=reset` only when intentionally reloading one.
+database. To intentionally reload an existing database from PowerShell, set the
+confirmation for that command and then clear it:
+
+```powershell
+$env:FRACTO_DB_INIT_CONFIRM = "reset"
+docker compose run --build --rm database-init
+Remove-Item Env:FRACTO_DB_INIT_CONFIRM
+```
+
+From Command Prompt, use `set FRACTO_DB_INIT_CONFIRM=reset` for the duration of the
+command. This drops and recreates the tables represented by the SQL dumps.
 The Windows equivalent is:
 
 ```powershell
 .\scripts\initialize-database.bat
+```
+
+To reload an existing database with an interactive confirmation prompt, run:
+
+```powershell
+.\scripts\reset-database.bat
 ```
 
 The index refresh downloads the current manifest from
