@@ -246,6 +246,20 @@ From PowerShell or Command Prompt on Windows:
 .\scripts\launch-development.bat
 ```
 
+### Clean build dependencies
+
+To recover local disk space or resolve a corrupted dependency/build cache, use:
+
+```powershell
+.\scripts\clean-build.bat
+```
+
+After an explicit confirmation, this removes `node_modules` from the root and all
+five service repositories and clears Docker’s builder cache. It preserves images,
+containers, named volumes, tile data, and tile indexes. Rebuild the desired image
+afterward; the development launcher will recreate its container dependency volumes
+when run with `--renew-anon-volumes`.
+
 Source changes under the root application, SDK, handlers, internal servers, or UI are
 visible inside the container immediately. Vite updates the browser; Node restarts
 affected backend processes. Open the development UI at `http://localhost:3106`.
