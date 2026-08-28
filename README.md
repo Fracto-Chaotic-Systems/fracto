@@ -108,6 +108,40 @@ refreshes are built as isolated generations and are published only after the sou
 packets and binary cache both complete. The current and previous completed
 generations are retained.
 
+### Download the latest tiles
+
+The `tiles:backup` action compares the current compiled tile index with the local
+production cache and downloads any indexed tiles that are not already present from
+`https://fracto.mikehallstudio.com`. It is safe to run while production is serving
+requests; downloads are written atomically so the server never reads a partial tile.
+Run it inside the running production container:
+
+```powershell
+docker compose exec fracto npm run tiles:backup
+```
+
+It can also run as a separate maintenance container sharing the production volumes:
+
+```powershell
+docker compose run --rm --no-deps fracto npm run tiles:backup
+```
+
+The same standalone operation is available from any working directory on Windows:
+
+```powershell
+.\scripts\backup-tiles.bat
+```
+
+The maintenance form runs in the foreground and may take a long time. Rebuild the
+production image first if the latest backup script is not yet included:
+
+```powershell
+docker compose build fracto
+```
+
+Run this action only against production. Development mounts the shared tile cache
+read-only and cannot persist downloaded tiles.
+
 The `fracto-tile-data` volume is a demand-filled installation cache. A tile is read
 locally when present; otherwise it is downloaded, validated, and atomically stored.
 New downloads stop before the filesystem falls below 1 GiB free; override that floor
