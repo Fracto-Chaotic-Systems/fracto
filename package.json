@@ -23,7 +23,8 @@
     "prestart": "node scripts/update_repositories.js",
     "update:repos": "node scripts/update_repositories.js",
     "tiles:index": "node --max-old-space-size=16384 scripts/build_tile_index.js",
-    "tiles:refresh": "node --max-old-space-size=16384 scripts/refresh_tile_index.js"
+    "tiles:refresh": "node --max-old-space-size=16384 scripts/refresh_tile_index.js",
+    "tiles:backup": "node --max-old-space-size=16384 servers/fracto-tiles-server/backup.js"
   },
   "dependencies": {
     "axios": "^1.16.1",
