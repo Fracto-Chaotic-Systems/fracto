@@ -38,6 +38,19 @@ services:
         max-size: "20m"
         max-file: "5"
 
+  tile-cache-migrate:
+    image: fracto:local
+    profiles: ["maintenance"]
+    command: ["sh", "scripts/migrate_tile_cache.sh", "/legacy-tiles", "/var/lib/fracto/tiles"]
+    volumes:
+      - ./tiles:/legacy-tiles
+      - fracto-tile-data:/var/lib/fracto/tiles
+    restart: "no"
+    logging:
+      options:
+        max-size: "20m"
+        max-file: "5"
+
 volumes:
   fracto-tile-data:
   fracto-tile-index:

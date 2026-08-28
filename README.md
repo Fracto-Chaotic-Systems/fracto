@@ -46,6 +46,28 @@ successfully before launching production or development. Otherwise startup stops
 with `No completed tile index generation is installed.` This setup is required only
 when the index volume is new or has been deliberately deleted.
 
+If this installation already has a non-Docker `tiles/` demand cache, migrate it
+after building the image and before launching either service. The migration stops
+production and development, moves only numeric tile paths into the Docker volume,
+and excludes the obsolete `tiles/cache` and `tiles/manifest` index data:
+
+```powershell
+.\scripts\migrate-tile-cache.bat
+```
+
+On a POSIX shell:
+
+```sh
+sh scripts/migrate-tile-cache.sh
+```
+
+Migration is optional when there is no existing cache. It merges with tiles already
+in the Docker volume and consumes the legacy numeric tile files; make a backup first
+if the original cache must be retained. A cache containing millions of files can
+take a long time to move; allow the command to finish before starting production or
+development. If the source and Docker volume use different filesystems, Docker may
+temporarily copy one file at a time before removing the source file.
+
 After the refresh completes, choose either production or development below. Do not
 use `docker compose down --volumes` during normal operation; that option deletes the
 shared tile cache and index.
