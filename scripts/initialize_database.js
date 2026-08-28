@@ -57,6 +57,14 @@ if (tables.length && process.env.FRACTO_DB_INIT_CONFIRM !== 'reset') {
       `Database ${database} is not empty; set FRACTO_DB_INIT_CONFIRM=reset to reload its tables`,
    )
 }
+if (tables.length) {
+   await connection.query('SET FOREIGN_KEY_CHECKS=0')
+   for (const table of tables) {
+      const table_name = Object.values(table)[0]
+      await connection.query(`DROP TABLE IF EXISTS ${identifier(table_name)}`)
+   }
+   await connection.query('SET FOREIGN_KEY_CHECKS=1')
+}
 
 for (const filename of backup_files) {
    const filepath = path.join(backup_directory, filename)
