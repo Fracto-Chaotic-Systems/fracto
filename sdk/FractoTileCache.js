@@ -19,6 +19,7 @@ const QUICK_CACHE_TIMEOUT = 1000 * 60;
 const MIN_CACHE = 750
 const MAX_CACHE = 1250
 const MIN_FREE_BYTES = Number(process.env.FRACTO_TILE_MIN_FREE_BYTES || 1024 ** 3)
+const CACHE_READ_ONLY = process.env.FRACTO_TILE_CACHE_READ_ONLY === 'true'
 
 if (!Number.isFinite(MIN_FREE_BYTES) || MIN_FREE_BYTES < 0) {
    throw new Error('FRACTO_TILE_MIN_FREE_BYTES must be a non-negative number')
@@ -44,7 +45,7 @@ const dir_from_short_code = (short_code) => {
    const level_dir = joined_pieces.length
       ? `${TILES_DIR}${SEPARATOR}${joined_pieces}`
       : TILES_DIR
-   if (!fs.existsSync(level_dir)) {
+   if (!CACHE_READ_ONLY && !fs.existsSync(level_dir)) {
       fs.mkdirSync(level_dir, {recursive: true})
    }
    // console.log(`${short_code}: ${level_dir}`)
@@ -91,16 +92,38 @@ const https_get = (remote_filepath, localSavePath) => {
    })
 }
 
+const https_load = (remote_filepath) => {
+   return new Promise((resolve, reject) => {
+      const remoteGzUrl = `${network["fracto-prod"]}/${remote_filepath}`
+      https.get(remoteGzUrl, (response) => {
+         if (response.statusCode !== 200) {
+            response.resume()
+            reject(new Error(`Tile download returned HTTP ${response.statusCode}`))
+            return
+         }
+         const chunks = []
+         response.on('data', chunk => chunks.push(chunk))
+         response.on('end', () => resolve(Buffer.concat(chunks)))
+         response.on('error', reject)
+      }).on('error', reject)
+   })
+}
+
 const store_tile = async (short_code, coded_dir) => {
    try {
-      assert_cache_capacity()
       const level = short_code.length
       const naught = level < 10 ? '0' : ''
       const level_dirname = `L${naught}${level}`
       const localSavePath = `${coded_dir}${SEPARATOR}${short_code}.gz`
       const remote_filepath = `${level_dirname}/${short_code}.gz`
-      await https_get(remote_filepath, localSavePath)
-      const gzippedData = fs.readFileSync(localSavePath);
+      let gzippedData
+      if (CACHE_READ_ONLY) {
+         gzippedData = await https_load(remote_filepath)
+      } else {
+         assert_cache_capacity()
+         await https_get(remote_filepath, localSavePath)
+         gzippedData = fs.readFileSync(localSavePath)
+      }
       const decompressedData = zlib.gunzipSync(gzippedData);
       const jsonString = decompressedData.toString('utf8');
       console.log(`fetched: ${short_code}`);

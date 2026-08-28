@@ -27,11 +27,12 @@ if (!static_ui && !fs.existsSync(modules_folder)) {
 }
 
 const command = process.execPath
+const watch_args = process.env.FRACTO_WATCH === 'true' ? ['--watch'] : []
 const args = static_ui
    ? [path.join('scripts', 'serve_ui.js')]
    : service.name === SERVICE_NAME_UI
       ? [path.join('node_modules', 'vite', 'bin', 'vite.js')]
-      : ['--max-old-space-size=16384', 'index.js']
+      : [...watch_args, '--max-old-space-size=16384', 'index.js']
 
 const child = spawn(command, args, {
    cwd: static_ui ? path.join(import.meta.dirname, '..') : service_folder,
