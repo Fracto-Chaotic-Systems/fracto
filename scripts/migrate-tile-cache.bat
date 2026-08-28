@@ -11,7 +11,7 @@ if not exist "tiles\" (
 docker compose -f compose.yaml -f compose.dev.yaml stop fracto fracto-dev
 if errorlevel 1 goto stop_failed
 
-docker compose run --rm tile-cache-migrate
+docker compose run --build --rm tile-cache-migrate
 set "migration_exit_code=%ERRORLEVEL%"
 popd
 

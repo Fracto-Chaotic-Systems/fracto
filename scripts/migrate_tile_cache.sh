@@ -35,12 +35,16 @@ find "$source_directory" -type f -print | while IFS= read -r source_file; do
     rm -f "$source_file"
     skipped_count=$((skipped_count + 1))
   else
-    mv "$source_file" "$destination_file"
+    temporary_file="$destination_file.migrating-$$"
+    rm -f "$temporary_file"
+    cp "$source_file" "$temporary_file"
+    mv -f "$temporary_file" "$destination_file"
+    rm -f "$source_file"
     moved_count=$((moved_count + 1))
   fi
 
   total_count=$((moved_count + skipped_count))
-  if [ $((total_count % 10000)) -eq 0 ]; then
+  if [ $((total_count % 100000)) -eq 0 ]; then
     echo "Processed $total_count tile files"
   fi
 done
