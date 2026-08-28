@@ -8,6 +8,8 @@ services:
       FRACTO_UI_MODE: vite
       FRACTO_WATCH: "true"
       FRACTO_TILE_CACHE_READ_ONLY: "true"
+      FRACTO_MYSQL_HOST: host.docker.internal
+      FRACTO_MYSQL_PORT: "3306"
       FRACTO_SERVER_PORT: 3101
       FRACTO_DATA_PORT: 3102
       FRACTO_ASSET_PORT: 3103
