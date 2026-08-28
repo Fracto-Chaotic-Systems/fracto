@@ -1,4 +1,4 @@
-const environment = globalThis.process?.env ?? import.meta.env ?? {}
+const environment = import.meta.env ?? globalThis.process?.env ?? {}
 const port = (name, fallback) => Number(environment[name] ?? environment[`VITE_${name}`] ?? fallback)
 
 export const FRACTO_SERVER_PORT = port('FRACTO_SERVER_PORT', 3001)
@@ -16,7 +16,6 @@ export const SERVICE_NAME_TILES = 'fracto-tiles-server'
 export const SERVICE_NAME_ADMIN = 'fracto-admin-server'
 export const SERVICE_NAME_UI = 'fracto-ui'
 
-export const TILES_DIRECTORY = 'tiles'
 export const ASSETS_DIRECTORY = 'assets'
 export const LOGS_DIRECTORY = 'logs'
 
