@@ -1,0 +1,12 @@
+/.git
+**/.git
+**/node_modules
+**/dist
+/.idea
+/backup
+/config
+/logs
+/assets
+/tiles
+**/tiles.csv
+npm-debug.log*

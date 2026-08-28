@@ -22,13 +22,17 @@ export const validate_startup = () => {
          errors.push(`${service.name}: missing package.json`)
          continue
       }
-      if (!fs.existsSync(path.join(service_folder, 'node_modules'))) {
+      const static_ui = service.name === SERVICE_NAME_UI && process.env.FRACTO_UI_MODE === 'static'
+      if (!static_ui && !fs.existsSync(path.join(service_folder, 'node_modules'))) {
          errors.push(`${service.name}: missing node_modules (run npm install in ${service_folder})`)
       }
       if (service.name === SERVICE_NAME_UI) {
          const manifest = JSON.parse(fs.readFileSync(package_file, 'utf8'))
          if (!manifest.scripts?.start) {
             errors.push(`${service.name}: package.json has no start script`)
+         }
+         if (static_ui && !fs.existsSync(path.join(service_folder, 'dist', 'index.html'))) {
+            errors.push(`${service.name}: production build is missing dist/index.html`)
          }
       } else if (!fs.existsSync(path.join(service_folder, 'index.js'))) {
          errors.push(`${service.name}: missing index.js`)

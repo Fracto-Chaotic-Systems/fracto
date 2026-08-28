@@ -1,19 +1,18 @@
 import fs from "fs";
 import path from "path";
-import {ROOT_DIR} from "../constants.js";
 import chalk from "chalk";
 
 import FractoIndexedTiles, {TILE_SET_INDEXED} from "./FractoIndexedTiles.js";
 import FractoFastCalc from "./FractoFastCalc.js";
 import FractoTileCache from "./FractoTileCache.js";
+import {tile_index_paths} from './FractoTilePaths.js'
 
 export const FILTER_ALL_TILES = 'filter_all_tiles'
 export const FILLING_CANVAS_BUFFER = 'filling_canvas_buffer'
 
 const SEPARATOR = path.sep;
-const TILES_DIR = `${ROOT_DIR}${SEPARATOR}tiles`;
-const MANIFEST_DIR = `${TILES_DIR}${SEPARATOR}manifest`
-const MANIFEST_INDEXED_DIR = `${MANIFEST_DIR}${SEPARATOR}indexed`
+const MANIFEST_INDEXED_DIR = tile_index_paths().source
+const MANIFEST_DIR = path.dirname(MANIFEST_INDEXED_DIR)
 
 if (!fs.existsSync(MANIFEST_DIR)) {
    console.log(chalk.cyan(`creating manifest directory`))

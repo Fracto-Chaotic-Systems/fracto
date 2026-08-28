@@ -3,19 +3,17 @@ import fs from 'node:fs'
 import path from 'node:path'
 import {deserialize, serialize} from 'node:v8'
 
-import {ROOT_DIR} from '../constants.js'
 import FractoIndexedTiles, {TILE_SET_INDEXED} from './FractoIndexedTiles.js'
+import {tile_index_paths} from './FractoTilePaths.js'
 
 export const TILE_INDEX_CACHE_SCHEMA = 1
-export const TILE_INDEX_SOURCE_DIRECTORY = path.join(ROOT_DIR, 'tiles', 'manifest', 'indexed')
-export const TILE_INDEX_MANIFEST_FILE = path.join(TILE_INDEX_SOURCE_DIRECTORY, 'packet_manifest.json')
-export const TILE_INDEX_CACHE_DIRECTORY = path.join(ROOT_DIR, 'tiles', 'cache', 'indexed')
-
 const read_source_descriptor = () => {
-   if (!fs.existsSync(TILE_INDEX_MANIFEST_FILE)) {
-      throw new Error(`Missing tile manifest: ${TILE_INDEX_MANIFEST_FILE}`)
+   const {source} = tile_index_paths({require_complete: false})
+   const manifest_file = path.join(source, 'packet_manifest.json')
+   if (!fs.existsSync(manifest_file)) {
+      throw new Error(`Missing tile manifest: ${manifest_file}`)
    }
-   const manifest_text = fs.readFileSync(TILE_INDEX_MANIFEST_FILE, 'utf8')
+   const manifest_text = fs.readFileSync(manifest_file, 'utf8')
    const manifest = JSON.parse(manifest_text)
    if (!Array.isArray(manifest.packet_files) || !manifest.packet_files.length) {
       throw new Error('Tile manifest contains no packet files')
@@ -23,15 +21,15 @@ const read_source_descriptor = () => {
 
    const hash = crypto.createHash('sha256').update(manifest_text)
    for (const packet_file of manifest.packet_files) {
-      const packet_path = path.join(TILE_INDEX_SOURCE_DIRECTORY, packet_file)
+      const packet_path = path.join(source, packet_file)
       const stats = fs.statSync(packet_path)
       hash.update(`${packet_file}\0${stats.size}\0${stats.mtimeMs}\n`)
    }
-   return {manifest, fingerprint: hash.digest('hex')}
+   return {manifest, fingerprint: hash.digest('hex'), source}
 }
 
-const cache_paths = fingerprint => {
-   const directory = path.join(TILE_INDEX_CACHE_DIRECTORY, fingerprint)
+const cache_paths = (cache, fingerprint) => {
+   const directory = path.join(cache, fingerprint)
    return {directory, metadata_file: path.join(directory, 'metadata.json')}
 }
 
@@ -46,8 +44,9 @@ const reset_tile_sets = () => {
 }
 
 export const build_tile_index_cache = (on_progress = null) => {
-   const {manifest, fingerprint} = read_source_descriptor()
-   const {directory, metadata_file} = cache_paths(fingerprint)
+   const {manifest, fingerprint, source} = read_source_descriptor()
+   const {cache} = tile_index_paths({require_complete: false})
+   const {directory, metadata_file} = cache_paths(cache, fingerprint)
    if (fs.existsSync(metadata_file)) {
       const metadata = JSON.parse(fs.readFileSync(metadata_file, 'utf8'))
       if (metadata.schema !== TILE_INDEX_CACHE_SCHEMA ||
@@ -81,7 +80,7 @@ export const build_tile_index_cache = (on_progress = null) => {
       return {...corrected_metadata, reused: true, corrected: true}
    }
 
-   fs.mkdirSync(TILE_INDEX_CACHE_DIRECTORY, {recursive: true})
+   fs.mkdirSync(cache, {recursive: true})
    const temporary_directory = `${directory}.tmp-${process.pid}`
    fs.mkdirSync(temporary_directory, {recursive: false})
    let binary_bytes = 0
@@ -89,7 +88,7 @@ export const build_tile_index_cache = (on_progress = null) => {
 
    try {
       manifest.packet_files.forEach((packet_file, packet_index) => {
-         const source_path = path.join(TILE_INDEX_SOURCE_DIRECTORY, packet_file)
+         const source_path = path.join(source, packet_file)
          const packet_data = JSON.parse(fs.readFileSync(source_path, 'utf8'))
          const binary = serialize(packet_data)
          const cache_file = `${packet_index.toString().padStart(4, '0')}.bin`
@@ -122,7 +121,7 @@ export const build_tile_index_cache = (on_progress = null) => {
       return {...metadata, reused: false}
    } catch (error) {
       const resolved_temporary = path.resolve(temporary_directory)
-      const resolved_cache = `${path.resolve(TILE_INDEX_CACHE_DIRECTORY)}${path.sep}`
+      const resolved_cache = `${path.resolve(cache)}${path.sep}`
       if (resolved_temporary.startsWith(resolved_cache)) {
          fs.rmSync(resolved_temporary, {recursive: true, force: true})
       }
@@ -132,9 +131,10 @@ export const build_tile_index_cache = (on_progress = null) => {
 
 export const load_tile_index_cache = (on_progress = null) => {
    const {manifest, fingerprint} = read_source_descriptor()
-   const {directory, metadata_file} = cache_paths(fingerprint)
+   const {cache} = tile_index_paths()
+   const {directory, metadata_file} = cache_paths(cache, fingerprint)
    if (!fs.existsSync(metadata_file)) {
-      throw new Error(`Tile index cache is missing or stale. Run npm run tiles:index from ${ROOT_DIR}`)
+      throw new Error('Tile index cache is missing or stale. Run npm run tiles:refresh')
    }
    const metadata = JSON.parse(fs.readFileSync(metadata_file, 'utf8'))
    if (metadata.schema !== TILE_INDEX_CACHE_SCHEMA) {

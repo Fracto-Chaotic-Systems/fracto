@@ -18,11 +18,12 @@
     "start": "node --max-old-space-size=16384 index.js",
     "check": "npm run check:syntax && npm test",
     "check:syntax": "node scripts/check_syntax.js",
-    "test": "node --test test/math.test.js",
+    "test": "node --test test/math.test.js test/tile_paths.test.js",
     "start:check": "node scripts/startup_preflight.js",
     "prestart": "node scripts/update_repositories.js",
     "update:repos": "node scripts/update_repositories.js",
-    "tiles:index": "node --max-old-space-size=16384 scripts/build_tile_index.js"
+    "tiles:index": "node --max-old-space-size=16384 scripts/build_tile_index.js",
+    "tiles:refresh": "node --max-old-space-size=16384 scripts/refresh_tile_index.js"
   },
   "dependencies": {
     "axios": "^1.16.1",
