@@ -5,6 +5,9 @@ services:
       args:
         VITE_FRACTO_PROD_URL: ${FRACTO_PROD_URL:-https://fracto.mikehallstudio.com}
     image: fracto:local
+    environment:
+      FRACTO_MYSQL_HOST: ${FRACTO_MYSQL_HOST:-host.docker.internal}
+      FRACTO_MYSQL_PORT: ${FRACTO_MYSQL_PORT:-3306}
     ports:
       - "3001:3001"
       - "3002:3002"

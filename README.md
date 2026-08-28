@@ -29,6 +29,14 @@ The browser-visible production tile URL is supplied separately through the
 non-secret `FRACTO_PROD_URL` build setting and defaults to
 `https://fracto.mikehallstudio.com`.
 
+The data server’s MySQL credentials remain in the local, Git-ignored
+`config/mysql.json`. Because `localhost` inside a container refers to the container
+itself, Compose defaults the database host to `host.docker.internal` so it can reach
+a MySQL server running on the Docker host. Set `FRACTO_MYSQL_HOST` (and optionally
+`FRACTO_MYSQL_PORT`) in the environment before launching if MySQL runs elsewhere.
+The MySQL server must accept connections from Docker and the host firewall must
+allow the configured port.
+
 ### First-ever Docker run
 
 Both production and development require a completed tile index in the shared
