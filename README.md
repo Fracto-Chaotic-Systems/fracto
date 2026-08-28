@@ -37,6 +37,12 @@ a MySQL server running on the Docker host. Set `FRACTO_MYSQL_HOST` (and optional
 The MySQL server must accept connections from Docker and the host firewall must
 allow the configured port.
 
+Verify the host and port injected into the production container with:
+
+```powershell
+.\scripts\verify-mysql.bat
+```
+
 ### First-ever Docker run
 
 Both production and development require a completed tile index in the shared
