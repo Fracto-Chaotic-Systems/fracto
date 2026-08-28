@@ -15,23 +15,26 @@ if (!service) {
 const service_folder = path.join(import.meta.dirname, '..', 'servers', service.name)
 const package_file = path.join(service_folder, 'package.json')
 const modules_folder = path.join(service_folder, 'node_modules')
+const static_ui = service.name === SERVICE_NAME_UI && process.env.FRACTO_UI_MODE === 'static'
 
 if (!fs.existsSync(package_file)) {
    console.error(`Missing ${package_file}. Check out the service before starting Fracto.`)
    process.exit(1)
 }
-if (!fs.existsSync(modules_folder)) {
+if (!static_ui && !fs.existsSync(modules_folder)) {
    console.error(`Missing dependencies for ${service.name}. Run npm install in ${service_folder}.`)
    process.exit(1)
 }
 
 const command = process.execPath
-const args = service.name === SERVICE_NAME_UI
-   ? [path.join('node_modules', 'vite', 'bin', 'vite.js')]
-   : ['--max-old-space-size=16384', 'index.js']
+const args = static_ui
+   ? [path.join('scripts', 'serve_ui.js')]
+   : service.name === SERVICE_NAME_UI
+      ? [path.join('node_modules', 'vite', 'bin', 'vite.js')]
+      : ['--max-old-space-size=16384', 'index.js']
 
 const child = spawn(command, args, {
-   cwd: service_folder,
+   cwd: static_ui ? path.join(import.meta.dirname, '..') : service_folder,
    stdio: 'inherit',
    shell: false,
 })
