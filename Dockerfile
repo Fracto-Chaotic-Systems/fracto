@@ -21,6 +21,33 @@ COPY servers/fracto-tiles-server/package.json servers/fracto-tiles-server/packag
 RUN npm ci --prefix servers/fracto-tiles-server
 COPY servers/fracto-ui/package.json servers/fracto-ui/package-lock.json servers/fracto-ui/.npmrc servers/fracto-ui/
 RUN npm ci --prefix servers/fracto-ui
+RUN chown -R node:node \
+    /app/node_modules \
+    /app/servers/fracto-admin-server/node_modules \
+    /app/servers/fracto-asset-server/node_modules \
+    /app/servers/fracto-data-server/node_modules \
+    /app/servers/fracto-tiles-server/node_modules \
+    /app/servers/fracto-ui/node_modules
+
+FROM dependencies AS development
+
+ENV NODE_ENV=development \
+    FRACTO_UI_MODE=vite \
+    FRACTO_WATCH=true \
+    FRACTO_TILE_DATA_DIR=/var/lib/fracto/tiles \
+    FRACTO_TILE_INDEX_DIR=/var/lib/fracto/index \
+    FRACTO_TILE_INDEX_GENERATIONS_TO_KEEP=2 \
+    FRACTO_TILE_MIN_FREE_BYTES=1073741824
+
+COPY --chown=node:node . .
+RUN mkdir -p /var/lib/fracto/tiles /var/lib/fracto/index /app/assets /app/logs \
+    && chown -R node:node /var/lib/fracto /app/assets /app/logs \
+    && chmod +x /app/docker-entrypoint.sh
+
+USER node
+EXPOSE 3001 3002 3003 3004 3005 3006
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
+CMD ["node", "--watch", "--max-old-space-size=16384", "index.js"]
 
 FROM dependencies AS build
 ARG VITE_FRACTO_PROD_URL=https://fracto.mikehallstudio.com
