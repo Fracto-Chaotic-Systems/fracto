@@ -29,12 +29,33 @@ The browser-visible production tile URL is supplied separately through the
 non-secret `FRACTO_PROD_URL` build setting and defaults to
 `https://fracto.mikehallstudio.com`.
 
-Build the image, create the first tile index generation, and start the application:
+### First-ever Docker run
+
+Both production and development require a completed tile index in the shared
+`fracto-tile-index` volume. Before launching either service for the first time,
+build the production image and create the initial index generation:
+
+```powershell
+docker compose build fracto
+docker compose run --rm index-refresh
+```
+
+The index refresh downloads the current manifest from
+`fracto.mikehallstudio.com` and can take about an hour. Wait for it to finish
+successfully before launching production or development. Otherwise startup stops
+with `No completed tile index generation is installed.` This setup is required only
+when the index volume is new or has been deliberately deleted.
+
+After the refresh completes, choose either production or development below. Do not
+use `docker compose down --volumes` during normal operation; that option deletes the
+shared tile cache and index.
+
+### Docker production
+
+Start production directly with Compose:
 
 ```sh
-docker compose build
-docker compose run --rm index-refresh
-docker compose up -d
+docker compose up --build -d fracto
 ```
 
 After the initial index exists, production can also be built and launched from any
@@ -44,9 +65,13 @@ working directory with:
 sh scripts/launch-production.sh
 ```
 
-The initial index refresh downloads the current manifest from
-`fracto.mikehallstudio.com` and can take about an hour. Refreshes can run while the
-application serves requests:
+From PowerShell or Command Prompt on Windows:
+
+```powershell
+.\scripts\launch-production.bat
+```
+
+Later index refreshes can run while the application serves requests:
 
 ```sh
 docker compose run --rm index-refresh
@@ -77,7 +102,8 @@ Development shares the production tile cache and compiled index read-only. Cache
 tiles are reused, but only production can add tiles to the installation cache. When
 development requests an uncached tile, it downloads and validates that tile for the
 current process without storing it. Development assets and logs use their own named
-volumes.
+volumes. Complete the first-ever index procedure above before starting development;
+development cannot initialize the read-only index volume itself.
 
 ```sh
 docker compose -f compose.yaml -f compose.dev.yaml up --build fracto-dev
@@ -88,6 +114,12 @@ directory, is:
 
 ```sh
 sh scripts/launch-development.sh
+```
+
+From PowerShell or Command Prompt on Windows:
+
+```powershell
+.\scripts\launch-development.bat
 ```
 
 Source changes under the root application, SDK, handlers, internal servers, or UI are

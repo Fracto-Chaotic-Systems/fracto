@@ -11,8 +11,8 @@ import {
    FRACTO_SERVER_PORT,
    LOGS_DIRECTORY,
    SERVICE_NAME_TILES,
-   TILES_DIRECTORY,
 } from './constants.js'
+import {TILE_DATA_DIRECTORY, TILE_INDEX_ROOT} from './sdk/FractoTilePaths.js'
 import {handle_tile} from './handlers/main.js'
 import {handle_main_status} from './handlers/status.js'
 import {validate_startup} from './scripts/startup_preflight.js'
@@ -28,8 +28,13 @@ if (!Number.isFinite(STARTUP_TIMEOUT_MS) || STARTUP_TIMEOUT_MS <= 0) {
 }
 
 const ensure_runtime_directories = () => {
-   [TILES_DIRECTORY, ASSETS_DIRECTORY, LOGS_DIRECTORY].forEach(directory => {
-      fs.mkdirSync(path.join(import.meta.dirname, directory), {recursive: true})
+   [
+      TILE_DATA_DIRECTORY,
+      TILE_INDEX_ROOT,
+      path.join(import.meta.dirname, ASSETS_DIRECTORY),
+      path.join(import.meta.dirname, LOGS_DIRECTORY),
+   ].forEach(directory => {
+      fs.mkdirSync(directory, {recursive: true})
    })
 }
 
