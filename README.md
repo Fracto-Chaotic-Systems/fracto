@@ -86,6 +86,30 @@ successfully before launching production or development. Otherwise startup stops
 with `No completed tile index generation is installed.` This setup is required only
 when the index volume is new or has been deliberately deleted.
 
+After cloning the root repository, checking out the five service repositories, and
+adding the local secret files under `config/`, the complete Windows first-run setup
+can be performed with:
+
+```powershell
+.\scripts\first-run.bat
+```
+
+This builds the production image, initializes MySQL from `backup/*.sql`, refreshes
+the tile index, and starts production. It is safe to rerun after a failed step;
+database initialization will refuse to replace a non-empty database unless the
+explicit reset workflow is used. Once this finishes, development can be started with
+the development launcher below.
+
+#### Rerunning after an error
+
+The first-run script can be rerun after correcting an error. An image-build failure,
+MySQL connection failure before tables are loaded, index-refresh failure, or startup
+failure can be retried directly. If database initialization fails after creating any
+tables, it will refuse to overwrite the non-empty database on the next run. Use
+`scripts/reset-database.bat` only when intentionally reloading all SQL dumps. An
+interrupted index refresh is safe to retry because incomplete generations are never
+published. The workflow does not delete the tile cache or index volumes.
+
 If this installation already has a non-Docker `tiles/` demand cache, migrate it
 after building the image and before launching either service. The migration stops
 production and development, moves only numeric tile paths into the Docker volume,
