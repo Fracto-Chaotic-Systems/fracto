@@ -54,6 +54,23 @@ services:
         max-size: "20m"
         max-file: "5"
 
+  database-init:
+    image: fracto:local
+    profiles: ["maintenance"]
+    command: ["npm", "run", "db:init"]
+    environment:
+      FRACTO_MYSQL_HOST: ${FRACTO_MYSQL_HOST:-host.docker.internal}
+      FRACTO_MYSQL_PORT: ${FRACTO_MYSQL_PORT:-3306}
+      FRACTO_MYSQL_DATABASE: ${FRACTO_MYSQL_DATABASE:-fracto}
+    volumes:
+      - ./config:/app/config:ro
+      - ./backup:/app/backup:ro
+    restart: "no"
+    logging:
+      options:
+        max-size: "20m"
+        max-file: "5"
+
 volumes:
   fracto-tile-data:
   fracto-tile-index:

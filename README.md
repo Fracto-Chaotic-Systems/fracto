@@ -51,7 +51,17 @@ build the production image and create the initial index generation:
 
 ```powershell
 docker compose build fracto
+docker compose run --rm database-init
 docker compose run --rm index-refresh
+```
+
+The database step creates the configured database and loads every SQL dump from the
+local `backup/` directory. It is guarded against replacing an existing non-empty
+database; set `FRACTO_DB_INIT_CONFIRM=reset` only when intentionally reloading one.
+The Windows equivalent is:
+
+```powershell
+.\scripts\initialize-database.bat
 ```
 
 The index refresh downloads the current manifest from
