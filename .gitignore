@@ -1,5 +1,6 @@
 # IDE metadata (existing tracked files remain tracked)
 .idea/
+build-info.json
 
 # Logs
 logs

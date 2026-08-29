@@ -223,6 +223,14 @@ node scripts/run_logged.js example npm run db:validate
 The wrapper returns the child command's exit code. Supervisor-managed services do
 not use it, preventing duplicate log entries.
 
+### Build identity and launch scripts
+
+`write_build_info.js` records the root and service repository revisions in the
+Git-ignored `build-info.json` file. The production and development launchers run
+it before building, so the root `/healthz` response and Admin Status page can show
+which revisions are running. This is a deployment-consistency check; it does not
+contact GitHub or determine whether a revision is current upstream.
+
 ## Validation, testing, and diagnostics
 
 ### `check_syntax.js`

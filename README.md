@@ -59,6 +59,10 @@ counts, average/max latency, and process start time. Cache download bytes and
 download duration are included in `/cache_status`. See
 [servers/README.md](D:\mediaplex\fracto\servers\README.md) for the complete
 field reference and interpretation guidance.
+The launch scripts generate a Git-ignored `build-info.json` manifest before each
+image build. The root health response and Admin Status page expose the recorded
+root and service revisions for deployment consistency; no upstream GitHub check is
+performed.
 For a read-only report of persistent cache size, temporary files, free space, and
 the active index generation, run `npm run tiles:status` (add `-- --json` for
 machine-readable output). The command scans the cache only when explicitly run.
