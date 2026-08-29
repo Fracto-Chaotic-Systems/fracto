@@ -122,6 +122,9 @@ The supervisor exposes `/healthz` for liveness and `/readyz` for readiness. Both
 return JSON with uptime and each service state (`pending`, `starting`, `healthy`,
 `failed`, or `stopped`); `/readyz` returns HTTP 503 until every service is healthy.
 The Docker `HEALTHCHECK` uses `/readyz`.
+The data service's startup probe uses `/healthz`, so the supervisor waits for a
+working MySQL connection rather than treating an HTTP process-only response as
+ready.
 
 ## Troubleshooting
 
