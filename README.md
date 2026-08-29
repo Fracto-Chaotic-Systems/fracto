@@ -23,6 +23,8 @@ Stop the root process with Ctrl+C to forward shutdown to every child service.
 The production image runs the root supervisor and all five internal services in one
 container. Downloaded tiles, generated index generations, assets, and logs use named
 volumes and survive ordinary container replacement and `docker compose down`.
+Docker sets `FORCE_COLOR=1` so supervisor and service health messages retain Chalk
+colors in Compose logs.
 The Git-ignored `config/` directory is excluded from the image and mounted read-only
 at `/app/config` for the application and index-refresh job.
 The browser-visible production tile URL is supplied separately through the
