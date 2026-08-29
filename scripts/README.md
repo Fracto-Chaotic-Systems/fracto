@@ -37,6 +37,10 @@ npm run update:repos
 It aborts for tracked/staged changes, detached heads, missing upstreams,
 divergent branches, or network/Git failures. It preserves untracked runtime
 files and never installs packages, rebases, resets, or creates merge commits.
+Fetch and fast-forward merge commands inherit the console output, so the full
+Git progress and summary are visible just as they are at the command line. Git
+color is forced for these visible operations, including colored additions and
+deletions where Git emits them.
 The one permitted unstaged exception is the tracked IDE metadata file
 `.idea/fracto.iml`; this avoids blocking cold boot on local IntelliJ folder
 exclusions. All other tracked or staged changes still abort the update.
