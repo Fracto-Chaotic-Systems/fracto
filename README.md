@@ -52,13 +52,19 @@ The browser-visible production tile URL is supplied separately through the
 non-secret `FRACTO_PROD_URL` build setting and defaults to
 `https://fracto.mikehallstudio.com`.
 
-The data server’s MySQL credentials remain in the local, Git-ignored
+The data server's MySQL credentials remain in the local, Git-ignored
 `config/mysql.json`. Because `localhost` inside a container refers to the container
 itself, Compose defaults the database host to `host.docker.internal` so it can reach
 a MySQL server running on the Docker host. Set `FRACTO_MYSQL_HOST` (and optionally
 `FRACTO_MYSQL_PORT`) in the environment before launching if MySQL runs elsewhere.
 The MySQL server must accept connections from Docker and the host firewall must
 allow the configured port.
+By default, startup requires MySQL. To allow the rest of the stack to start while
+the data service is temporarily unavailable, set `FRACTO_ALLOW_DEGRADED_DB=true`.
+The data service is then reported as `degraded`, the supervisor remains not ready
+(`/readyz` returns 503), and database-dependent requests continue to report their
+own failures until MySQL is restored. The supervisor automatically changes the
+service back to `healthy` when its database probe succeeds.
 
 Verify the host and port injected into the production container with:
 
