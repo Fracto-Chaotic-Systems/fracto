@@ -32,8 +32,12 @@ current state as JSON.
 Child-service output is kept colored on the terminal, while the dated files under
 `logs/` have ANSI control codes removed so they remain readable in editors and
 safe to process with text-search tools. Each persisted line is a JSON record with
-`timestamp`, `service`, `level`, and `message` fields, making the logs suitable for
+`timestamp`, `service`, `source`, `level`, and `message` fields, making the logs suitable for
 automated filtering without sacrificing plain-file portability.
+Maintenance commands use the same tee behavior: their Docker stdout/stderr still
+appears normally in Compose, with one additional structured copy in the persistent
+`logs` volume. Supervisor-managed service output is not tee-wrapped, so it is not
+duplicated.
 An opt-in Docker smoke test builds the production image, starts the stack, checks
 `/readyz`, the tile diagnostics, and the UI, then runs ordinary `docker compose
 down`. It refuses to run while production is already running and never uses

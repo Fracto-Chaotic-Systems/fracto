@@ -31,10 +31,11 @@ services:
   index-refresh:
     image: fracto:local
     profiles: ["maintenance"]
-    command: ["npm", "run", "tiles:refresh"]
+    command: ["node", "scripts/run_logged.js", "index-refresh", "node", "--max-old-space-size=16384", "scripts/refresh_tile_index.js"]
     volumes:
       - ./config:/app/config:ro
       - fracto-tile-index:/var/lib/fracto/index
+      - fracto-logs:/app/logs
     restart: "no"
     logging:
       options:
@@ -44,10 +45,11 @@ services:
   tile-cache-migrate:
     image: fracto:local
     profiles: ["maintenance"]
-    command: ["sh", "scripts/migrate_tile_cache.sh", "/legacy-tiles", "/var/lib/fracto/tiles"]
+    command: ["node", "scripts/run_logged.js", "tile-cache-migrate", "sh", "scripts/migrate_tile_cache.sh", "/legacy-tiles", "/var/lib/fracto/tiles"]
     volumes:
       - ./tiles:/legacy-tiles
       - fracto-tile-data:/var/lib/fracto/tiles
+      - fracto-logs:/app/logs
     restart: "no"
     logging:
       options:
@@ -57,7 +59,7 @@ services:
   database-init:
     image: fracto:local
     profiles: ["maintenance"]
-    command: ["npm", "run", "db:init"]
+    command: ["node", "scripts/run_logged.js", "database-init", "node", "scripts/initialize_database.js"]
     environment:
       FRACTO_MYSQL_HOST: ${FRACTO_MYSQL_HOST:-host.docker.internal}
       FRACTO_MYSQL_PORT: ${FRACTO_MYSQL_PORT:-3306}
@@ -66,6 +68,7 @@ services:
       - ./config:/app/config:ro
       - ./backup:/app/backup:ro
       - ./database/migrations:/app/database/migrations:ro
+      - fracto-logs:/app/logs
     restart: "no"
     logging:
       options:
