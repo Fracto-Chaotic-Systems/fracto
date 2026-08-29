@@ -169,8 +169,9 @@ cache or index volumes.
 
 If this installation already has a non-Docker `tiles/` demand cache, migrate it
 after building the image and before launching either service. The migration stops
-production and development, moves only numeric tile paths into the Docker volume,
-and excludes the obsolete `tiles/cache` and `tiles/manifest` index data:
+production and development, uses the completed tile index to locate legacy tiles,
+and first promotes whole top-level directories when an atomic rename is possible,
+then safely merges remaining files:
 
 ```powershell
 .\scripts\migrate-tile-cache.bat
@@ -188,9 +189,12 @@ if the original cache must be retained. A cache containing millions of files can
 take a long time to move; allow the command to finish before starting production or
 development. If the source and Docker volume use different filesystems, Docker may
 temporarily copy one file at a time before removing the source file.
-Progress is reported after every 100 tile files.
-Files are collected into per-level bins, so lower tile levels transfer before
-higher levels without globally sorting the file list.
+Progress is reported after every 100 indexed tiles, with an approximate rate
+reported once per minute. Set `FRACTO_MIGRATION_CONCURRENCY` to tune the bounded
+number of concurrent file operations (the default is 8). The index-driven pass
+avoids scanning or sorting the legacy directory. If the completed index is
+unavailable, the POSIX `migrate_tile_cache.sh` scanner remains available as a
+fallback.
 The migration is restartable: stopping it between files leaves the source intact;
 the next run retries any incomplete file and removes completed duplicates.
 

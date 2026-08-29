@@ -26,6 +26,7 @@
     "tiles:index": "node --max-old-space-size=16384 scripts/build_tile_index.js",
     "tiles:refresh": "node --max-old-space-size=16384 scripts/refresh_tile_index.js",
     "tiles:backup": "node --max-old-space-size=16384 servers/fracto-tiles-server/backup.js",
+    "tiles:migrate:index": "node scripts/migrate_tile_cache_index.js",
     "tiles:status": "node scripts/tile_cache_status.js",
     "db:init": "node scripts/initialize_database.js",
     "db:migrate": "node scripts/initialize_database.js",

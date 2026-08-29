@@ -45,10 +45,14 @@ services:
   tile-cache-migrate:
     image: fracto:local
     profiles: ["maintenance"]
-    command: ["node", "scripts/run_logged.js", "tile-cache-migrate", "sh", "scripts/migrate_tile_cache.sh", "/legacy-tiles", "/var/lib/fracto/tiles"]
+    command: ["node", "scripts/run_logged.js", "tile-cache-migrate", "node", "scripts/migrate_tile_cache_index.js", "/legacy-tiles", "/var/lib/fracto/tiles"]
+    environment:
+      FRACTO_TILE_INDEX_DIR: /var/lib/fracto/index
+      FRACTO_MIGRATION_CONCURRENCY: ${FRACTO_MIGRATION_CONCURRENCY:-8}
     volumes:
       - ./tiles:/legacy-tiles
       - fracto-tile-data:/var/lib/fracto/tiles
+      - fracto-tile-index:/var/lib/fracto/index:ro
       - fracto-logs:/app/logs
     restart: "no"
     logging:
