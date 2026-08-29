@@ -1,31 +1,13 @@
 # Fracto scripts
 
-These scripts support validation, repository updates, tile-cache compilation, and process startup. Run their npm aliases from the repository root unless a section explicitly shows a direct invocation.
-
-Database initialization bootstraps only an empty database from `backup/*.sql`.
-For existing installations it applies numbered files under
-`database/migrations/` and records checksums in `fracto_schema_migrations`.
-Never edit an applied migration; add the next numbered migration instead.
-Run `npm run db:validate` to check migration filenames, duplicate versions,
-required baseline presence, empty files, and prohibited destructive statements.
-This static validation is included in `npm run check` and the GitHub workflow;
-it does not connect to MySQL.
-
-## `tile_cache_status.js`
-
-Reports persistent tile-cache file count, tile count, disk usage, temporary
-files, oldest/newest timestamps, filesystem free space, and the active tile-index
-generation. It performs a full scan only when invoked:
-
-```powershell
-npm run tiles:status
-npm run tiles:status -- --json
-```
-
-The scan may take time on a cache containing millions of files. It is read-only
-and safe to run while the tile service is operating.
+These scripts are grouped by the work they perform rather than by file type.
+Run commands from the repository root. Files under `config/`, `backup/`,
+`tiles/`, `logs/`, and each service repository retain their existing ownership
+and persistence rules.
 
 ## Normal workflow
+
+For a normal local launch:
 
 ```powershell
 npm run tiles:index
@@ -34,78 +16,43 @@ npm run check
 npm start
 ```
 
-The automated test suite includes an HTTP integration test for the supervisor
-health contract. Run it with `npm test`; it verifies that `/healthz` remains
-available while services start and that `/readyz` returns 503 until every
-service reports `healthy`.
+`npm start` runs `update:repos` through the `prestart` hook. Tile-index building,
+database initialization, and Docker maintenance are explicit operations because
+they can be long-running or change persistent data.
 
-`npm start` automatically runs `update:repos` through the `prestart` npm hook. Building the tile index remains an explicit operation because the source corpus and generated cache are several gigabytes.
+The root supervisor starts the tile service first, then the root server and the
+remaining services sequentially. It waits for health endpoints before continuing.
+See the root README for Docker production/development and first-run workflows.
 
-## `update_repositories.js`
+## Repository and startup orchestration
 
-Fetches and fast-forwards the root repository and all five repositories under `servers/` before startup.
+### `update_repositories.js`
+
+Fetches and fast-forwards the root and five service repositories:
 
 ```powershell
 npm run update:repos
 ```
 
-The script performs all local safety checks and fetches before changing a working tree. It aborts when a repository:
+It aborts for tracked/staged changes, detached heads, missing upstreams,
+divergent branches, or network/Git failures. It preserves untracked runtime
+files and never installs packages, rebases, resets, or creates merge commits.
 
-- has tracked or staged changes;
-- is missing its `.git` directory or configured upstream;
-- is on a detached HEAD; or
-- has diverged from its upstream branch.
+### `startup_preflight.js`
 
-Untracked runtime files are preserved. Updates use `git merge --ff-only`; the script never creates merge commits, rebases, resets, or installs dependencies. A network or Git failure prevents server startup.
-
-## `build_tile_index.js`
-
-Compiles the JSON tile packet corpus into a fingerprinted V8 binary cache.
-
-```powershell
-npm run tiles:index
-```
-
-Sources are read from `tiles/manifest/indexed/`. Generated files are written under `tiles/cache/indexed/<fingerprint>/`, which is ignored by Git through the root `tiles/` rule.
-
-The builder:
-
-- fingerprints the manifest and packet file metadata;
-- serializes packets individually to stay below Node buffer limits;
-- publishes a cache directory only after every packet succeeds;
-- reuses a current cache instead of rebuilding it; and
-- verifies the tile count from packet contents rather than trusting the manifest total.
-
-Run this command after the packet manifest or any packet changes. Startup fails with a rebuild instruction when the cache is absent or stale. The current corpus requires substantial disk space and may take several minutes to compile.
-
-## `startup_preflight.js`
-
-Checks local startup prerequisites without opening ports or launching services. In
-addition to service files, ports, and dependencies, it connects to MySQL with a
-five-second timeout and runs `SELECT 1`. The same `FRACTO_MYSQL_HOST`,
-`FRACTO_MYSQL_PORT`, and `FRACTO_MYSQL_DATABASE` overrides used by the data
-server are honored, so connection failures are reported before any service is
-started.
+Checks service package files, ports, entry points, dependencies, and the MySQL
+connection (`SELECT 1`) without opening service ports:
 
 ```powershell
 npm run start:check
 ```
 
-It validates unique service ports, service `package.json` files, installed `node_modules`, backend entry points, and the UI start script. It does not check remote repositories or build the tile cache.
+It honors `FRACTO_MYSQL_HOST`, `FRACTO_MYSQL_PORT`, and
+`FRACTO_MYSQL_DATABASE`. Database errors identify the endpoint and likely fix.
 
-## `check_syntax.js`
+### `launch_service.js` and `serve_ui.js`
 
-Runs `node --check` over root JavaScript files and the `handlers/`, `scripts/`, and `sdk/` trees.
-
-```powershell
-npm run check:syntax
-```
-
-The broader `npm run check` command runs this syntax check followed by the Node test suite.
-
-## `launch_service.js`
-
-Launches one named service from its existing checkout and dependency installation. It is normally called by the root supervisor in `index.js`.
+`launch_service.js` launches one existing service checkout for the supervisor:
 
 ```powershell
 node scripts/launch_service.js fracto-data-server
@@ -115,54 +62,149 @@ node scripts/launch_service.js fracto-admin-server
 node scripts/launch_service.js fracto-ui
 ```
 
-Backends run directly through Node with a 16 GB heap allowance. The UI runs Vite directly through Node, avoiding platform-specific npm shell behavior. On shutdown, signals are forwarded on POSIX systems; Windows terminates the explicitly tracked child process tree with `taskkill` to avoid orphaned services.
+Backends run directly through Node; the UI is launched through Vite. The
+launcher does not update repositories, install packages, copy data, or retry.
+`serve_ui.js` is the standalone static UI server used when serving a built UI
+without the root supervisor.
 
-The launcher does not clone, pull, install packages, copy data, or retry failed services. Those responsibilities belong to the explicit update/setup phases and the root supervisor.
+### Platform launchers
 
-## Startup sequence
+- `launch-production.bat` / `launch-production.sh`: build and start production.
+- `launch-development.bat` / `launch-development.sh`: start the Vite-based
+  development stack on ports 3101–3106.
+- `first-run.bat`: Windows first-run workflow; builds the image, bootstraps or
+  migrates the database, refreshes the index, and starts production. It is safe
+  to rerun after correcting an error.
 
-The root supervisor uses these scripts in this order:
+## Database setup and schema changes
 
-1. npm runs `update_repositories.js` through `prestart`.
-2. `startup_preflight.js` validates local service prerequisites and the MySQL connection.
-3. `launch_service.js` starts the tile server, which validates and loads the compiled cache before opening port 3004.
-4. The root server opens port 3001.
-5. Remaining services start sequentially, with a health check before each next service.
+### `initialize_database.js` and `initialize-database.bat`
 
-The health timeout defaults to 300 seconds and can be overridden for one invocation:
+Bootstraps an empty database from `backup/*.sql`, or applies pending numbered
+migrations from `database/migrations/` to an existing database. Existing tables
+are never dropped or replaced. The batch file runs the Docker maintenance form.
+
+### `reset-database.bat`
+
+Despite its historical name, this now applies pending versioned migrations only.
+It does not reset, drop, or reload tables.
+
+### `validate_migrations.js`
+
+Validates migration filenames, numeric versions, the required baseline,
+non-empty SQL, and prohibited destructive statements:
 
 ```powershell
-$env:FRACTO_STARTUP_TIMEOUT_MS = 600000
-npm start
+npm run db:validate
 ```
 
-The supervisor exposes `/healthz` for liveness and `/readyz` for readiness. Both
-return JSON with uptime and each service state (`pending`, `starting`, `healthy`,
-`failed`, or `stopped`); `/readyz` returns HTTP 503 until every service is healthy.
-The Docker `HEALTHCHECK` uses `/readyz`.
-The data service's startup probe uses `/healthz`, so the supervisor waits for a
-working MySQL connection rather than treating an HTTP process-only response as
-ready.
-Run the opt-in Docker smoke test with `npm run test:docker`. It requires an
-initialized database and completed tile-index volume, refuses to interrupt an
-already-running production container, and always cleans up with ordinary
-`docker compose down` (persistent volumes are retained). Set
-`FRACTO_DOCKER_SMOKE_TIMEOUT_MS` to change its five-minute readiness timeout.
-Set `FRACTO_ALLOW_DEGRADED_DB=true` only when graceful degradation is desired.
-In that mode a 503 data-service health response allows startup to continue with a
-`degraded` service state, but `/readyz` remains 503 until MySQL recovers.
+This is included in `npm run check` and requires no MySQL connection. See
+`database/migrations/README.md` for the complete table/column/index workflow.
 
-Child output is persisted as newline-delimited JSON under `logs/`. Each record
-contains an ISO timestamp, service name, `info`/`error` level, and ANSI-free
-message. The interactive console continues to receive the original colored output.
-At startup, generated dated log files older than 30 days are removed. Override
-the interval for a deployment with `FRACTO_LOG_RETENTION_DAYS`; the cleanup only
-matches Fracto service-log filenames and does not remove unrelated files.
+### `verify-mysql.bat`
+
+Prints the MySQL host and port injected into the production Docker container.
+It does not modify the database.
+
+## Tile index and persistent tile cache
+
+### `build_tile_index.js` and `refresh_tile_index.js`
+
+`build_tile_index.js` compiles source packets into a fingerprinted binary cache:
+
+```powershell
+npm run tiles:index
+```
+
+`refresh_tile_index.js` downloads the current manifest and publishes a complete
+generation atomically:
+
+```powershell
+npm run tiles:refresh
+```
+
+Incomplete generations are not published. Startup rejects missing or stale
+generations. Refreshing can take about an hour.
+
+### `tile_cache_status.js`
+
+Performs a read-only scan of the persistent cache and reports file/tile counts,
+bytes, temporary files, oldest/newest timestamps, free space, and active index
+generation:
+
+```powershell
+npm run tiles:status
+npm run tiles:status -- --json
+```
+
+The scan happens only when invoked and may be slow for millions of files.
+
+### Tile backup and migration
+
+- `backup-tiles.bat` runs the standalone tile backup operation in Docker.
+- `migrate_tile_cache.sh` is the POSIX migration implementation.
+- `migrate-tile-cache.sh` is the POSIX Docker wrapper.
+- `migrate-tile-cache.bat` is the Windows Docker wrapper.
+
+Migration moves legacy numeric tile files into the persistent Docker volume,
+preserves restart safety, and reports progress every 100,000 files. It excludes
+the obsolete source manifest/index directories. Stop production and development
+before migrating; ordinary `docker compose down` does not remove the destination
+volume.
+
+## Validation, testing, and diagnostics
+
+### `check_syntax.js`
+
+Runs `node --check` over root JavaScript, handlers, scripts, and SDK files:
+
+```powershell
+npm run check:syntax
+```
+
+### Automated tests
+
+`npm test` runs the numerical, tile-path, and HTTP health integration tests.
+`npm run check` combines syntax validation, migration validation, and tests.
+
+### `docker_smoke_test.js`
+
+`npm run test:docker` builds production, starts it, checks `/readyz`, tile cache
+diagnostics, and UI availability, then runs ordinary `docker compose down`.
+It refuses to interrupt a running production container and never removes volumes.
+Use `FRACTO_DOCKER_SMOKE_TIMEOUT_MS` to change its five-minute timeout. It
+requires an initialized database and completed tile-index volume.
+
+## Build and cleanup maintenance
+
+### `clean-build.bat`
+
+After confirmation, removes host `node_modules` directories and prunes Docker
+builder cache. It preserves images, containers, named volumes, tile data, and
+tile-index data.
+
+### Runtime logging and health behavior
+
+The supervisor writes newline-delimited JSON records under `logs/`, with
+timestamp, service, level, and ANSI-free message fields. Console output remains
+colored. Generated dated service logs older than 30 days are removed at startup;
+set `FRACTO_LOG_RETENTION_DAYS` to change that interval.
+
+The supervisor exposes `/healthz` and `/readyz`. The data service probe checks
+MySQL. Set `FRACTO_ALLOW_DEGRADED_DB=true` to allow startup with a degraded data
+service while keeping `/readyz` at HTTP 503 until MySQL recovers.
 
 ## Troubleshooting
 
 - **Tracked changes block updates:** commit, stash, or revert them in the named repository.
-- **Missing `node_modules`:** run `npm install` or `npm ci` in the named service repository.
-- **Missing or stale tile cache:** run `npm run tiles:index` from the root.
-- **Service health timeout:** inspect its dated file under `logs/`; increase `FRACTO_STARTUP_TIMEOUT_MS` only when initialization is legitimately slow.
-- **Port already in use:** stop the existing Fracto process tree before starting another instance.
+- **Missing dependencies:** run `npm ci` in the affected service repository.
+- **Missing/stale tile index:** run `npm run tiles:refresh`.
+- **Database failure:** run `npm run start:check` and inspect the configured host, port, credentials, and initialization state.
+- **Service health timeout:** inspect the dated JSON log under `logs/`; adjust `FRACTO_STARTUP_TIMEOUT_MS` only when initialization is legitimately slow.
+- **Port already in use:** stop the existing supervisor or isolated service.
+- **Docker cache concern:** use ordinary `docker compose down`; do not use `down --volumes` unless deleting persistent data is intentional.
+
+`README.md` itself is not executable, but it is part of the operational design
+context used when maintaining this system. Any manual edits to it must remain
+accurate and synchronized with the scripts, Docker configuration, and documented
+workflows.
