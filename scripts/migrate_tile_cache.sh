@@ -21,13 +21,27 @@ echo "Existing Docker-cached tiles will be preserved and removed from the legacy
 
 moved_count=0
 skipped_count=0
-find "$source_directory" -type f -print | while IFS= read -r source_file; do
+processed_count=0
+current_level=
+find "$source_directory" -type f -print \
+  | awk -F/ '{name=$NF; if (name ~ /^[0-9]+\.gz$/) {sub(/\.gz$/, "", name); print length(name) "\t" $0}}' \
+  | sort -n -k1,1 -k2,2 \
+  | cut -f2- \
+  | while IFS= read -r source_file; do
   relative_path=${source_file#"$source_directory"/}
   top_level=${relative_path%%/*}
   case "$top_level" in
     [0-9]*) ;;
     *) continue ;;
   esac
+
+  shortcode=${source_file##*/}
+  shortcode=${shortcode%.gz}
+  level=${#shortcode}
+  if [ "$level" != "$current_level" ]; then
+    echo "Starting level $level tiles"
+    current_level=$level
+  fi
 
   destination_file="$destination_directory/$relative_path"
   mkdir -p "$(dirname "$destination_file")"
@@ -43,9 +57,9 @@ find "$source_directory" -type f -print | while IFS= read -r source_file; do
     moved_count=$((moved_count + 1))
   fi
 
-  total_count=$((moved_count + skipped_count))
-  if [ $((total_count % 100)) -eq 0 ]; then
-    echo "Processed $total_count tile files"
+  processed_count=$((processed_count + 1))
+  if [ $((processed_count % 100)) -eq 0 ]; then
+    echo "Processed $processed_count tile files"
   fi
 done
 
