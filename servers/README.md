@@ -111,7 +111,9 @@ After port 3004 opens, coverage initialization downloads category CSV files from
 The tile service exposes `GET /cache_status` for cache observability. It returns
 JSON counters for requests, in-memory hits, persistent-disk loads, source
 downloads, read-only downloads, failures, coalesced requests, evictions, and
-currently in-flight work. Production should show persistent loads after a cache
+currently in-flight work. It also includes a `history` array containing the most
+recent 60 snapshots, recorded by the tile service every five seconds; older
+snapshots are discarded continuously. Production should show persistent loads after a cache
 has been warmed; development may show read-only downloads when a tile is absent.
 `GET /metrics` separately reports tile-service HTTP request totals, response
 status counts, and average/max latency.
@@ -146,6 +148,7 @@ Invoke-RestMethod http://localhost:3004/metrics
 | `read_only` | Whether this process can write the tile cache. |
 | `cache_directory` | Effective local tile-cache path. |
 | `limits` | Configured in-memory trim thresholds (`min` and `max`). |
+| `history` | Up to 60 five-second snapshots with a `timestamp` and the fields above. |
 
 `downloads` includes `readonly_downloads`, so the latter is a subset rather than
 an additional download count. Counters are process-local and reset whenever the
