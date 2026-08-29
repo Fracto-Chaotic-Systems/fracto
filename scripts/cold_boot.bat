@@ -2,6 +2,15 @@
 setlocal
 
 pushd "%~dp0.." || exit /b 1
+set "cold_boot_mode=%~1"
+if not defined cold_boot_mode set "cold_boot_mode=prod"
+if /I "%cold_boot_mode%"=="prod" goto mode_valid
+if /I "%cold_boot_mode%"=="dev" goto mode_valid
+echo Usage: scripts\cold_boot.bat [prod^|dev]
+popd
+exit /b 2
+
+:mode_valid
 
 echo [1/4] Refreshing the root and service repositories...
 call npm run update:repos
@@ -21,13 +30,25 @@ docker compose run --rm index-refresh
 if errorlevel 1 goto failed
 
 :start_production
-echo [4/4] Starting the production server with Docker Compose...
+echo [4/4] Starting the %cold_boot_mode% server with Docker Compose...
+if /I "%cold_boot_mode%"=="dev" goto start_dev
 docker compose up -d fracto
 if errorlevel 1 goto failed
+set "cold_boot_log_service=fracto"
+set "cold_boot_log_compose=docker compose"
+goto stream_logs
 
-echo Cold boot complete. Production is running on http://localhost:3006.
-echo Streaming Docker logs; press Ctrl+C to stop viewing logs (production stays running).
-docker compose logs -f fracto
+:start_dev
+docker compose -f compose.yaml -f compose.dev.yaml up -d fracto-dev
+if errorlevel 1 goto failed
+set "cold_boot_log_service=fracto-dev"
+set "cold_boot_log_compose=docker compose -f compose.yaml -f compose.dev.yaml"
+
+:stream_logs
+if /I "%cold_boot_mode%"=="dev" (set "cold_boot_url=http://localhost:3106") else (set "cold_boot_url=http://localhost:3006")
+echo Cold boot complete. %cold_boot_mode% is running on %cold_boot_url%.
+echo Streaming Docker logs; press Ctrl+C to stop viewing logs (the server stays running).
+%cold_boot_log_compose% logs -f %cold_boot_log_service%
 popd
 exit /b 0
 

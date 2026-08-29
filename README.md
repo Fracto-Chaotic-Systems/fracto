@@ -131,6 +131,9 @@ After a normally operating Docker host is restarted, run:
 .\scripts\cold_boot.bat
 ```
 
+Use `.\scripts\cold_boot.bat dev` to run the same workflow but launch the
+development Compose target on ports 3101–3106 instead of production.
+
 This refreshes the root and service repositories, rebuilds the production image,
 optionally refreshes the cloud-backed tile index, and finally runs `docker compose
 up -d fracto`. The script asks `Refresh the compiled tile index now? [y/N]`; Enter
