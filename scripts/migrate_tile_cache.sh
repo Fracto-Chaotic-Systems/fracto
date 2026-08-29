@@ -44,7 +44,7 @@ find "$source_directory" -type f -print | while IFS= read -r source_file; do
   fi
 
   total_count=$((moved_count + skipped_count))
-  if [ $((total_count % 1000)) -eq 0 ]; then
+  if [ $((total_count % 100)) -eq 0 ]; then
     echo "Processed $total_count tile files"
   fi
 done
