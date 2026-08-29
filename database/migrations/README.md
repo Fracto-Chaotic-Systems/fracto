@@ -46,6 +46,17 @@ backup/rename process and reviewed separately.
 
 ## Test and apply
 
+Before committing a migration, run the static validator:
+
+```powershell
+npm run db:validate
+```
+
+Validation requires `001_baseline.sql`, enforces the numbered filename format,
+rejects duplicate numeric versions and empty files, and blocks `DROP DATABASE`
+and `TRUNCATE` statements. CI runs the same check automatically. This does not
+replace testing the migration against a disposable MySQL database.
+
 Review the SQL, then run the normal database command from the repository root:
 
 ```powershell

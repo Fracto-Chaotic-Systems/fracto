@@ -34,6 +34,14 @@ Child-service output is kept colored on the terminal, while the dated files unde
 safe to process with text-search tools. Each persisted line is a JSON record with
 `timestamp`, `service`, `level`, and `message` fields, making the logs suitable for
 automated filtering without sacrificing plain-file portability.
+An opt-in Docker smoke test builds the production image, starts the stack, checks
+`/readyz`, the tile diagnostics, and the UI, then runs ordinary `docker compose
+down`. It refuses to run while production is already running and never uses
+`--volumes`, so persistent tile and index volumes are preserved:
+
+```powershell
+npm run test:docker
+```
 Generated log files are cleaned up at supervisor startup. Retention defaults to
 30 days and can be changed with `FRACTO_LOG_RETENTION_DAYS`; only files matching
 Fracto's dated service-log names are eligible for removal.

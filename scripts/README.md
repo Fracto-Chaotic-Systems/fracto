@@ -6,6 +6,10 @@ Database initialization bootstraps only an empty database from `backup/*.sql`.
 For existing installations it applies numbered files under
 `database/migrations/` and records checksums in `fracto_schema_migrations`.
 Never edit an applied migration; add the next numbered migration instead.
+Run `npm run db:validate` to check migration filenames, duplicate versions,
+required baseline presence, empty files, and prohibited destructive statements.
+This static validation is included in `npm run check` and the GitHub workflow;
+it does not connect to MySQL.
 
 ## Normal workflow
 
@@ -125,6 +129,11 @@ The Docker `HEALTHCHECK` uses `/readyz`.
 The data service's startup probe uses `/healthz`, so the supervisor waits for a
 working MySQL connection rather than treating an HTTP process-only response as
 ready.
+Run the opt-in Docker smoke test with `npm run test:docker`. It requires an
+initialized database and completed tile-index volume, refuses to interrupt an
+already-running production container, and always cleans up with ordinary
+`docker compose down` (persistent volumes are retained). Set
+`FRACTO_DOCKER_SMOKE_TIMEOUT_MS` to change its five-minute readiness timeout.
 Set `FRACTO_ALLOW_DEGRADED_DB=true` only when graceful degradation is desired.
 In that mode a 503 data-service health response allows startup to continue with a
 `degraded` service state, but `/readyz` remains 503 until MySQL recovers.
