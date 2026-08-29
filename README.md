@@ -31,7 +31,12 @@ which remains unhealthy until every internal service has passed its startup chec
 current state as JSON.
 Child-service output is kept colored on the terminal, while the dated files under
 `logs/` have ANSI control codes removed so they remain readable in editors and
-safe to process with text-search tools.
+safe to process with text-search tools. Each persisted line is a JSON record with
+`timestamp`, `service`, `level`, and `message` fields, making the logs suitable for
+automated filtering without sacrificing plain-file portability.
+Generated log files are cleaned up at supervisor startup. Retention defaults to
+30 days and can be changed with `FRACTO_LOG_RETENTION_DAYS`; only files matching
+Fracto's dated service-log names are eligible for removal.
 The tile service also exposes `/cache_status`, reporting request counts, memory
 hits, disk loads, downloads, read-only downloads, failures, coalesced requests,
 evictions, in-flight work, and cache mode. This is useful for confirming whether

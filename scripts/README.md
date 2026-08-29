@@ -126,6 +126,13 @@ The data service's startup probe uses `/healthz`, so the supervisor waits for a
 working MySQL connection rather than treating an HTTP process-only response as
 ready.
 
+Child output is persisted as newline-delimited JSON under `logs/`. Each record
+contains an ISO timestamp, service name, `info`/`error` level, and ANSI-free
+message. The interactive console continues to receive the original colored output.
+At startup, generated dated log files older than 30 days are removed. Override
+the interval for a deployment with `FRACTO_LOG_RETENTION_DAYS`; the cleanup only
+matches Fracto service-log filenames and does not remove unrelated files.
+
 ## Troubleshooting
 
 - **Tracked changes block updates:** commit, stash, or revert them in the named repository.
