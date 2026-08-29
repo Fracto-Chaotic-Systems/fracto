@@ -72,6 +72,8 @@ without the root supervisor.
 - `launch-production.bat` / `launch-production.sh`: build and start production.
 - `launch-development.bat` / `launch-development.sh`: start the Vite-based
   development stack on ports 3101–3106.
+- `cold_boot.bat`: after a host restart, refreshes Git, rebuilds the image,
+  refreshes the tile index, and starts production with Compose.
 - `first-run.bat`: Windows first-run workflow; builds the image, bootstraps or
   migrates the database, refreshes the index, and starts production. It is safe
   to rerun after correcting an error.
@@ -127,6 +129,23 @@ npm run tiles:refresh
 
 Incomplete generations are not published. Startup rejects missing or stale
 generations. Refreshing can take about an hour.
+
+### `cold_boot.bat`
+
+Use this after a normally operating Docker host has been restarted:
+
+```powershell
+.\scripts\cold_boot.bat
+```
+
+It runs `npm run update:repos`, `docker compose build fracto`,
+optionally `docker compose run --rm index-refresh`, and finally
+`docker compose up -d fracto`, in that order. It does not initialize/reset
+MySQL, migrate legacy tiles, or delete named volumes. If a stage fails, correct
+the issue and rerun the script; the existing published tile-index generation
+remains available until a replacement completes. Tile refresh is opt-in: pressing
+Enter or answering anything other than `Y` skips it and starts production with the
+currently published generation.
 
 ### `tile_cache_status.js`
 

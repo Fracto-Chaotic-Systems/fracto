@@ -123,6 +123,22 @@ successfully before launching production or development. Otherwise startup stops
 with `No completed tile index generation is installed.` This setup is required only
 when the index volume is new or has been deliberately deleted.
 
+### Cold boot after a computer restart
+
+After a normally operating Docker host is restarted, run:
+
+```powershell
+.\scripts\cold_boot.bat
+```
+
+This refreshes the root and service repositories, rebuilds the production image,
+optionally refreshes the cloud-backed tile index, and finally runs `docker compose
+up -d fracto`. The script asks `Refresh the compiled tile index now? [y/N]`; Enter
+or any answer other than `Y` skips the refresh. It does not initialize/reset
+MySQL, migrate legacy tiles, or remove named volumes. The index refresh can take
+about an hour; an existing published generation remains available until the
+replacement completes.
+
 After cloning the root repository, checking out the five service repositories, and
 adding the local secret files under `config/`, the complete Windows first-run setup
 can be performed with:
