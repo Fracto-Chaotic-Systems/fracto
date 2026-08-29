@@ -197,8 +197,10 @@ The scan happens only when invoked and may be slow for millions of files.
 - `migrate-tile-cache.bat` is the Windows Docker wrapper.
 
 Migration moves legacy numeric tile files into the persistent Docker volume,
-preserves restart safety, and reports progress every 100,000 files. It excludes
-the obsolete source manifest/index directories. Stop production and development
+preserves restart safety, and reports progress every 100 files. It excludes
+the obsolete source manifest/index directories. Numeric `.gz` tiles are sorted by
+shortcode length, so lower levels are transferred before higher levels. Stop
+production and development
 before migrating; ordinary `docker compose down` does not remove the destination
 volume.
 
