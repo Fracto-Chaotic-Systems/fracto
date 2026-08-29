@@ -62,10 +62,10 @@ services:
       FRACTO_MYSQL_HOST: ${FRACTO_MYSQL_HOST:-host.docker.internal}
       FRACTO_MYSQL_PORT: ${FRACTO_MYSQL_PORT:-3306}
       FRACTO_MYSQL_DATABASE: ${FRACTO_MYSQL_DATABASE:-fracto}
-      FRACTO_DB_INIT_CONFIRM: ${FRACTO_DB_INIT_CONFIRM:-}
     volumes:
       - ./config:/app/config:ro
       - ./backup:/app/backup:ro
+      - ./database/migrations:/app/database/migrations:ro
     restart: "no"
     logging:
       options:

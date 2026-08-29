@@ -17,12 +17,8 @@ echo Building the production image...
 docker compose build fracto
 if errorlevel 1 goto failed
 
-choice /C YN /N /M "If the database is non-empty, reload its tables from backup? [Y/N] "
-if errorlevel 2 goto initialize_database
-set "FRACTO_DB_INIT_CONFIRM=reset"
-
 :initialize_database
-echo Initializing the database from backup\*.sql...
+echo Initializing the database from backup\*.sql or applying pending migrations...
 docker compose run --build --rm database-init
 if errorlevel 1 goto failed
 

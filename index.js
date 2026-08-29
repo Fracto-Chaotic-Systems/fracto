@@ -134,7 +134,7 @@ for (const signal of ['SIGINT', 'SIGTERM']) {
 }
 
 ensure_runtime_directories()
-validate_startup()
+await validate_startup()
 
 const tile_service = ALL_SERVICES.find(service => service.name === SERVICE_NAME_TILES)
 const remaining_services = ALL_SERVICES.filter(service => service.name !== SERVICE_NAME_TILES)

@@ -12,7 +12,7 @@ npm run start:check
 npm start
 ```
 
-`npm run start:check` verifies all five service checkouts, entry points, ports, start scripts, and dependency directories without launching processes.
+`npm run start:check` verifies all five service checkouts, entry points, ports, start scripts, dependency directories, and the MySQL connection without launching processes. Database failures identify the configured endpoint and suggest the relevant Docker, firewall, credential, or initialization fix.
 
 `npm run tiles:index` compiles the source JSON tile packets into a fingerprinted binary cache under `tiles/cache/indexed/`. Run it whenever the source manifest or packets change. `npm start` first updates the root and all five service repositories, then validates and loads that compiled cache while no HTTP server is listening. A missing or stale cache aborts startup with instructions to rebuild it. Use `npm run update:repos` to run only the repository-update phase. After the tile service becomes healthy, it starts the root server and remaining services sequentially, waiting for each health endpoint before continuing. Tile-index progress is shown in the console. The default health timeout is 300 seconds and can be changed with `FRACTO_STARTUP_TIMEOUT_MS`. Service output is appended to dated files under `logs/`.
 
@@ -58,25 +58,18 @@ docker compose run --rm index-refresh
 ```
 
 The database step creates the configured database and loads every SQL dump from the
-local `backup/` directory. It is guarded against replacing an existing non-empty
-database. To intentionally reload an existing database from PowerShell, set the
-confirmation for that command and then clear it:
-
-```powershell
-$env:FRACTO_DB_INIT_CONFIRM = "reset"
-docker compose run --build --rm database-init
-Remove-Item Env:FRACTO_DB_INIT_CONFIRM
-```
-
-From Command Prompt, use `set FRACTO_DB_INIT_CONFIRM=reset` for the duration of the
-command. This drops and recreates the tables represented by the SQL dumps.
+local `backup/` directory only when the database has no tables. Existing databases
+are baselined and receive only pending numbered migrations from
+`database/migrations/`; tables are never dropped or replaced by this command.
+See [database/migrations/README.md](D:\mediaplex\fracto\database\migrations\README.md)
+for the complete workflow and examples for adding tables, columns, and indexes.
 The Windows equivalent is:
 
 ```powershell
 .\scripts\initialize-database.bat
 ```
 
-To reload an existing database with an interactive confirmation prompt, run:
+To apply pending migrations manually, run:
 
 ```powershell
 .\scripts\reset-database.bat
@@ -96,20 +89,16 @@ can be performed with:
 .\scripts\first-run.bat
 ```
 
-This builds the production image, initializes MySQL from `backup/*.sql`, refreshes
-the tile index, and starts production. It is safe to rerun after a failed step;
-the script asks whether a non-empty database may be reloaded before initialization.
-Answer `N` to preserve an existing database; initialization then stops safely if
-tables are already present. Once this finishes, development can be started with the
-development launcher below.
+This builds the production image, bootstraps an empty MySQL database (or applies
+pending migrations), refreshes the tile index, and starts production. It is safe to
+rerun after a failed step; existing tables are preserved. Once this finishes,
+development can be started with the development launcher below.
 
 #### Rerunning after an error
 
 The first-run script can be rerun after correcting an error. An image-build failure,
-MySQL connection failure before tables are loaded, index-refresh failure, or startup
-failure can be retried directly. If database initialization fails after creating any
-tables, answer `Y` to the reload prompt on the next run only when intentionally
-reloading all SQL dumps. An interrupted index refresh is safe to retry because
+MySQL connection failure, migration failure, index-refresh failure, or startup
+failure can be retried directly. An interrupted index refresh is safe to retry because
 incomplete generations are never published. The workflow does not delete the tile
 cache or index volumes.
 
