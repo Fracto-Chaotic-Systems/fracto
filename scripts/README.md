@@ -148,7 +148,8 @@ MySQL, migrate legacy tiles, or delete named volumes. If a stage fails, correct
 the issue and rerun the script; the existing published tile-index generation
 remains available until a replacement completes. Tile refresh is opt-in: pressing
 Enter or answering anything other than `Y` skips it and starts production with the
-currently published generation.
+currently published generation. After startup, the script follows the production
+Compose log stream; press Ctrl+C to end log viewing without stopping the container.
 
 ### `tile_cache_status.js`
 

@@ -26,6 +26,8 @@ docker compose up -d fracto
 if errorlevel 1 goto failed
 
 echo Cold boot complete. Production is running on http://localhost:3006.
+echo Streaming Docker logs; press Ctrl+C to stop viewing logs (production stays running).
+docker compose logs -f fracto
 popd
 exit /b 0
 

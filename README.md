@@ -140,6 +140,8 @@ about an hour; an existing published generation remains available until the
 replacement completes.
 The repository refresh permits the known local IntelliJ metadata change in
 `.idea/fracto.iml`; any other tracked or staged change still stops the workflow.
+After `docker compose up -d fracto`, the script follows the Docker log stream.
+Press Ctrl+C to stop viewing logs; production continues running.
 
 After cloning the root repository, checking out the five service repositories, and
 adding the local secret files under `config/`, the complete Windows first-run setup
