@@ -16,6 +16,11 @@ The root repository intentionally ignores `servers/`. Changes inside a service m
 
 The root supervisor listens on port 3001 and is located one directory above this folder.
 
+The data service exposes `GET /healthz`, which runs a bounded `SELECT 1` against
+the configured MySQL database. It returns HTTP 200 only when the database is
+available and HTTP 503 with a redacted error code when the database cannot be
+reached. Credentials are never included in the response.
+
 ## Repository ownership
 
 Do not treat this directory as a conventional monorepo workspace:

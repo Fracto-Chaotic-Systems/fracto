@@ -70,7 +70,7 @@ const exit_after_shutdown = exit_code => {
 
 const wait_for_health = async (service, child) => {
    const deadline = Date.now() + STARTUP_TIMEOUT_MS
-   const health_url = `http://127.0.0.1:${service.port}/`
+   const health_url = `http://127.0.0.1:${service.port}${service.health_path || '/'}`
    let last_error = 'no response'
    while (Date.now() < deadline) {
       if (child.exitCode !== null) {
