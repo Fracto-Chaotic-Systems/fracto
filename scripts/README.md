@@ -141,9 +141,16 @@ Use this after a normally operating Docker host has been restarted:
 .\scripts\cold_boot.bat
 ```
 
+Pass `dev` to launch the development Compose target instead:
+
+```powershell
+.\scripts\cold_boot.bat dev
+```
+
 It runs `npm run update:repos`, `docker compose build fracto`,
 optionally `docker compose run --rm index-refresh`, and finally
-`docker compose up -d fracto`, in that order. It does not initialize/reset
+`docker compose up -d fracto` (or the development `fracto-dev` target when
+`dev` is passed), in that order. It does not initialize/reset
 MySQL, migrate legacy tiles, or delete named volumes. If a stage fails, correct
 the issue and rerun the script; the existing published tile-index generation
 remains available until a replacement completes. Tile refresh is opt-in: pressing
