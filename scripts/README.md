@@ -125,6 +125,9 @@ The Docker `HEALTHCHECK` uses `/readyz`.
 The data service's startup probe uses `/healthz`, so the supervisor waits for a
 working MySQL connection rather than treating an HTTP process-only response as
 ready.
+Set `FRACTO_ALLOW_DEGRADED_DB=true` only when graceful degradation is desired.
+In that mode a 503 data-service health response allows startup to continue with a
+`degraded` service state, but `/readyz` remains 503 until MySQL recovers.
 
 Child output is persisted as newline-delimited JSON under `logs/`. Each record
 contains an ISO timestamp, service name, `info`/`error` level, and ANSI-free

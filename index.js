@@ -23,6 +23,7 @@ const HEALTH_POLL_MS = 500
 const LOG_RETENTION_DAYS = Number(process.env.FRACTO_LOG_RETENTION_DAYS || 30)
 const ANSI_ESCAPE_PATTERN = /\u001B(?:\][^\u0007]*(?:\u0007|\u001B\\)|\[[0-?]*[ -/]*[@-~])/g
 const child_processes = new Map()
+const degraded_monitors = new Map()
 const service_states = new Map(ALL_SERVICES.map(service => [service.name, 'pending']))
 let shutting_down = false
 let server
@@ -78,6 +79,8 @@ const shutdown = signal => {
          }
       }
    })
+   degraded_monitors.forEach(timer => clearInterval(timer))
+   degraded_monitors.clear()
 }
 
 const exit_after_shutdown = exit_code => {
@@ -99,6 +102,10 @@ const wait_for_health = async (service, child) => {
       try {
          const response = await fetch(health_url, {signal: AbortSignal.timeout(2000)})
          if (response.ok) return
+         if (response.status === 503 && service.degraded_health_env === 'FRACTO_ALLOW_DEGRADED_DB' && process.env.FRACTO_ALLOW_DEGRADED_DB === 'true') {
+            console.log(chalk.yellow(`${service.name} is degraded; continuing without its database dependency.`))
+            return 'degraded'
+         }
          last_error = `HTTP ${response.status}`
       } catch (error) {
          last_error = error.message
@@ -145,7 +152,7 @@ const start_service = async (service, show_output = false) => {
    child.once('close', () => log_stream.end())
    child_processes.set(service.name, {child, log_stream})
    child.once('error', error => console.error(`${service.name}: ${error.message}`))
-   await wait_for_health(service, child)
+   const health_state = await wait_for_health(service, child)
    child.once('exit', (code, signal) => {
       service_states.set(service.name, code === 0 ? 'stopped' : 'failed')
       if (!shutting_down) {
@@ -154,8 +161,26 @@ const start_service = async (service, show_output = false) => {
          exit_after_shutdown(1)
       }
    })
-   service_states.set(service.name, 'healthy')
-   console.log(chalk.green(`${service.name} is healthy on port ${service.port}`))
+   service_states.set(service.name, health_state || 'healthy')
+   if (health_state === 'degraded') {
+      const timer = setInterval(async () => {
+         try {
+            const response = await fetch(`http://127.0.0.1:${service.port}${service.health_path || '/'}`, {
+               signal: AbortSignal.timeout(2000),
+            })
+            if (response.ok) {
+               service_states.set(service.name, 'healthy')
+               clearInterval(timer)
+               degraded_monitors.delete(service.name)
+               console.log(chalk.green(`${service.name} recovered and is healthy.`))
+            }
+         } catch {
+            // The dependency is still unavailable.
+         }
+      }, 5000)
+      degraded_monitors.set(service.name, timer)
+   }
+   console.log(chalk[health_state === 'degraded' ? 'yellow' : 'green'](`${service.name} is ${health_state || 'healthy'} on port ${service.port}`))
 }
 
 const create_main_server = () => {

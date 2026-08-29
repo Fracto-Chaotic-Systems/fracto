@@ -33,6 +33,7 @@ export const ALL_SERVICES = [
       name:SERVICE_NAME_DATA,
       port: FRACTO_DATA_PORT,
       health_path: '/healthz',
+      degraded_health_env: 'FRACTO_ALLOW_DEGRADED_DB',
       logfile: LOGFILE_NAME_DATA
    },
    {
