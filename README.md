@@ -43,7 +43,9 @@ evictions, in-flight work, and cache mode. This is useful for confirming whether
 tiles are being loaded from the persistent cache or fetched from the source.
 The tile service's `/metrics` endpoint reports request totals, response status
 counts, average/max latency, and process start time. Cache download bytes and
-download duration are included in `/cache_status`.
+download duration are included in `/cache_status`. See
+[servers/README.md](D:\mediaplex\fracto\servers\README.md) for the complete
+field reference and interpretation guidance.
 The Git-ignored `config/` directory is excluded from the image and mounted read-only
 at `/app/config` for the application and index-refresh job.
 The browser-visible production tile URL is supplied separately through the

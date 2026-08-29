@@ -116,6 +116,50 @@ has been warmed; development may show read-only downloads when a tile is absent.
 `GET /metrics` separately reports tile-service HTTP request totals, response
 status counts, and average/max latency.
 
+### Tile metrics reference
+
+Query the endpoints from PowerShell:
+
+```powershell
+Invoke-RestMethod http://localhost:3004/cache_status
+Invoke-RestMethod http://localhost:3004/metrics
+```
+
+`/cache_status` returns:
+
+| Field | Meaning |
+| --- | --- |
+| `requests` | Calls to `FractoTileCache.get_tile`. |
+| `memory_hits` | Requests served from the decompressed in-memory cache. |
+| `disk_hits` | Requests loaded from a persistent `.gz` tile file. |
+| `downloads` | Successful source downloads, including read-only downloads. |
+| `readonly_downloads` | Downloads made without writing to disk (development mode). |
+| `failures` | Tile load, download, decompression, or parsing failures. |
+| `coalesced_requests` | Requests that joined an existing download in progress. |
+| `evictions` | In-memory entries removed by cache trimming. |
+| `download_bytes` | Compressed bytes received for successful downloads. |
+| `download_duration_ms` | Aggregate elapsed time for successful downloads. |
+| `last_download_at` | ISO timestamp of the most recent successful download, or `null`. |
+| `in_memory` | Current number of decompressed entries in memory. |
+| `in_flight` | Current number of unique tile downloads in progress. |
+| `error_count` | Legacy consecutive-error circuit-breaker count. |
+| `read_only` | Whether this process can write the tile cache. |
+| `cache_directory` | Effective local tile-cache path. |
+| `limits` | Configured in-memory trim thresholds (`min` and `max`). |
+
+`downloads` includes `readonly_downloads`, so the latter is a subset rather than
+an additional download count. Counters are process-local and reset whenever the
+tile service restarts. Compare two snapshots to calculate rates or hit ratios;
+for example, persistent cache effectiveness is represented by
+`disk_hits / requests`, while remote fetch activity is represented by
+`downloads`.
+
+`/metrics` returns `started_at`, `requests`, `responses_by_status`,
+`duration_ms`, `max_duration_ms`, and `average_duration_ms` for all tile-service
+HTTP requests, including diagnostic requests. Latencies are measured inside the
+Express process and are reported in milliseconds; they do not include time spent
+before the request reaches the container or after the response leaves it.
+
 ## Validation
 
 Root SDK and startup validation:
