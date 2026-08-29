@@ -83,6 +83,8 @@ without the root supervisor.
 Bootstraps an empty database from `backup/*.sql`, or applies pending numbered
 migrations from `database/migrations/` to an existing database. Existing tables
 are never dropped or replaced. The batch file runs the Docker maintenance form.
+The Docker maintenance form tees output to the persistent `logs` volume while
+leaving stdout/stderr unchanged for Compose output.
 
 ### `reset-database.bat`
 
@@ -152,6 +154,21 @@ the obsolete source manifest/index directories. Stop production and development
 before migrating; ordinary `docker compose down` does not remove the destination
 volume.
 
+### `run_logged.js`
+
+Runs a command while preserving its stdout/stderr and writing a second,
+ANSI-free structured copy to `logs/<label>-log-YYYY-MM-DD.txt`. Each record includes
+the workflow label and source script filename. It is used only by
+maintenance wrappers (`database-init`, index refresh, tile migration, and tile
+backup), which are not already captured by the root supervisor:
+
+```powershell
+node scripts/run_logged.js example npm run db:validate
+```
+
+The wrapper returns the child command's exit code. Supervisor-managed services do
+not use it, preventing duplicate log entries.
+
 ## Validation, testing, and diagnostics
 
 ### `check_syntax.js`
@@ -186,7 +203,7 @@ tile-index data.
 ### Runtime logging and health behavior
 
 The supervisor writes newline-delimited JSON records under `logs/`, with
-timestamp, service, level, and ANSI-free message fields. Console output remains
+timestamp, service, source script, level, and ANSI-free message fields. Console output remains
 colored. Generated dated service logs older than 30 days are removed at startup;
 set `FRACTO_LOG_RETENTION_DAYS` to change that interval.
 
