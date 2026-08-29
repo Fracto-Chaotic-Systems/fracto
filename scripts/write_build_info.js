@@ -25,8 +25,10 @@ const repositories_info = Object.fromEntries(repositories.map(repository => [rep
    dirty: Boolean(git(repository.directory, ['status', '--porcelain'])),
 }]))
 
+const generated_at = new Date().toISOString()
 fs.writeFileSync(path.join(root, 'build-info.json'), JSON.stringify({
-   generated_at: new Date().toISOString(),
+   version: generated_at.replace(/[-:.TZ]/g, '').slice(0, 14),
+   generated_at,
    repositories: repositories_info,
 }, null, 2) + '\n')
 console.log('Build information written to build-info.json')
