@@ -20,6 +20,7 @@ import {validate_startup} from './scripts/startup_preflight.js'
 const STARTUP_TIMEOUT_MS = Number(process.env.FRACTO_STARTUP_TIMEOUT_MS || 300000)
 const HEALTH_POLL_MS = 500
 const child_processes = new Map()
+const service_states = new Map(ALL_SERVICES.map(service => [service.name, 'pending']))
 let shutting_down = false
 let server
 
@@ -68,6 +69,7 @@ const exit_after_shutdown = exit_code => {
 const wait_for_health = async (service, child) => {
    const deadline = Date.now() + STARTUP_TIMEOUT_MS
    const health_url = `http://127.0.0.1:${service.port}/`
+   let last_error = 'no response'
    while (Date.now() < deadline) {
       if (child.exitCode !== null) {
          throw new Error(`${service.name} exited with code ${child.exitCode}`)
@@ -75,15 +77,17 @@ const wait_for_health = async (service, child) => {
       try {
          const response = await fetch(health_url, {signal: AbortSignal.timeout(2000)})
          if (response.ok) return
-      } catch {
-         // The service is still starting.
+         last_error = `HTTP ${response.status}`
+      } catch (error) {
+         last_error = error.message
       }
       await new Promise(resolve => setTimeout(resolve, HEALTH_POLL_MS))
    }
-   throw new Error(`${service.name} was not healthy after ${STARTUP_TIMEOUT_MS}ms`)
+   throw new Error(`${service.name} was not healthy after ${STARTUP_TIMEOUT_MS}ms (${last_error})`)
 }
 
 const start_service = async (service, show_output = false) => {
+   service_states.set(service.name, 'starting')
    console.log(chalk.cyan(`Starting ${service.name}...`))
    const log_path = path.join(import.meta.dirname, LOGS_DIRECTORY, service.logfile)
    const log_stream = fs.createWriteStream(log_path, {flags: 'a'})
@@ -102,12 +106,14 @@ const start_service = async (service, show_output = false) => {
    child.once('error', error => console.error(`${service.name}: ${error.message}`))
    await wait_for_health(service, child)
    child.once('exit', (code, signal) => {
+      service_states.set(service.name, code === 0 ? 'stopped' : 'failed')
       if (!shutting_down) {
          console.error(chalk.red(`${service.name} stopped unexpectedly (code=${code}, signal=${signal})`))
          shutdown('SIGTERM')
          exit_after_shutdown(1)
       }
    })
+   service_states.set(service.name, 'healthy')
    console.log(chalk.green(`${service.name} is healthy on port ${service.port}`))
 }
 
@@ -120,6 +126,17 @@ const create_main_server = () => {
       next()
    })
    app.get('/', handle_main_status)
+   const health_response = (req, res) => {
+      const services = Object.fromEntries(service_states)
+      const ready = [...service_states.values()].every(state => state === 'healthy')
+      res.status(req.path === '/readyz' && !ready ? 503 : 200).json({
+         status: ready ? 'ready' : 'starting',
+         uptime_seconds: Math.round(process.uptime()),
+         services,
+      })
+   }
+   app.get('/healthz', health_response)
+   app.get('/readyz', health_response)
    app.get('/status', handle_tile)
    return app.listen(FRACTO_SERVER_PORT, () => {
       console.log(chalk.green(`Fracto main server is running on http://localhost:${FRACTO_SERVER_PORT}`))
