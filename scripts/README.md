@@ -2,6 +2,11 @@
 
 These scripts support validation, repository updates, tile-cache compilation, and process startup. Run their npm aliases from the repository root unless a section explicitly shows a direct invocation.
 
+Database initialization bootstraps only an empty database from `backup/*.sql`.
+For existing installations it applies numbered files under
+`database/migrations/` and records checksums in `fracto_schema_migrations`.
+Never edit an applied migration; add the next numbered migration instead.
+
 ## Normal workflow
 
 ```powershell
@@ -52,7 +57,12 @@ Run this command after the packet manifest or any packet changes. Startup fails 
 
 ## `startup_preflight.js`
 
-Checks local startup prerequisites without opening ports or launching services.
+Checks local startup prerequisites without opening ports or launching services. In
+addition to service files, ports, and dependencies, it connects to MySQL with a
+five-second timeout and runs `SELECT 1`. The same `FRACTO_MYSQL_HOST`,
+`FRACTO_MYSQL_PORT`, and `FRACTO_MYSQL_DATABASE` overrides used by the data
+server are honored, so connection failures are reported before any service is
+started.
 
 ```powershell
 npm run start:check
@@ -91,7 +101,7 @@ The launcher does not clone, pull, install packages, copy data, or retry failed 
 The root supervisor uses these scripts in this order:
 
 1. npm runs `update_repositories.js` through `prestart`.
-2. `startup_preflight.js` validates local service prerequisites.
+2. `startup_preflight.js` validates local service prerequisites and the MySQL connection.
 3. `launch_service.js` starts the tile server, which validates and loads the compiled cache before opening port 3004.
 4. The root server opens port 3001.
 5. Remaining services start sequentially, with a health check before each next service.
