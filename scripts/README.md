@@ -77,6 +77,9 @@ without the root supervisor.
   development stack on ports 3101–3106.
 - `cold_boot.bat`: after a host restart, refreshes Git, rebuilds the image,
   refreshes the tile index, and starts production with Compose.
+- `ensure_exclusive.bat` / `ensure_exclusive.sh`: check for the other Docker
+  mode before launch and, after confirmation, gracefully stop it with
+  `docker compose stop`.
 - `first-run.bat`: Windows first-run workflow; builds the image, bootstraps or
   migrates the database, refreshes the index, and starts production. It is safe
   to rerun after correcting an error.
@@ -157,6 +160,8 @@ remains available until a replacement completes. Tile refresh is opt-in: pressin
 Enter or answering anything other than `Y` skips it and starts production with the
 currently published generation. After startup, the script follows the production
 Compose log stream; press Ctrl+C to end log viewing without stopping the container.
+Before launching, it asks whether the other mode may be stopped when both modes
+are running. Answering `N` leaves the other mode untouched and aborts the launch.
 
 ### `tile_cache_status.js`
 

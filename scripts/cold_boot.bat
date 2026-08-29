@@ -31,6 +31,8 @@ if errorlevel 1 goto failed
 
 :start_production
 echo [4/4] Starting the %cold_boot_mode% server with Docker Compose...
+call scripts\ensure_exclusive.bat %cold_boot_mode%
+if errorlevel 1 goto failed
 if /I "%cold_boot_mode%"=="dev" goto start_dev
 docker compose up -d fracto
 if errorlevel 1 goto failed
