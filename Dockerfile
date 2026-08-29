@@ -32,6 +32,7 @@ RUN chown -R node:node \
 FROM dependencies AS development
 
 ENV NODE_ENV=development \
+    FORCE_COLOR=1 \
     FRACTO_UI_MODE=vite \
     FRACTO_WATCH=true \
     FRACTO_TILE_DATA_DIR=/var/lib/fracto/tiles \
@@ -70,6 +71,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production \
+    FORCE_COLOR=1 \
     FRACTO_UI_MODE=static \
     FRACTO_TILE_DATA_DIR=/var/lib/fracto/tiles \
     FRACTO_TILE_INDEX_DIR=/var/lib/fracto/index \
