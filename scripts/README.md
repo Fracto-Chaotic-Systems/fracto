@@ -11,6 +11,20 @@ required baseline presence, empty files, and prohibited destructive statements.
 This static validation is included in `npm run check` and the GitHub workflow;
 it does not connect to MySQL.
 
+## `tile_cache_status.js`
+
+Reports persistent tile-cache file count, tile count, disk usage, temporary
+files, oldest/newest timestamps, filesystem free space, and the active tile-index
+generation. It performs a full scan only when invoked:
+
+```powershell
+npm run tiles:status
+npm run tiles:status -- --json
+```
+
+The scan may take time on a cache containing millions of files. It is read-only
+and safe to run while the tile service is operating.
+
 ## Normal workflow
 
 ```powershell
