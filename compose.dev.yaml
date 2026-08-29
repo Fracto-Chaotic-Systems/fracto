@@ -38,15 +38,15 @@ services:
       - ./handlers:/app/handlers:ro
       - ./scripts:/app/scripts:ro
       - ./sdk:/app/sdk:ro
-      - ./servers/fracto-admin-server:/app/servers/fracto-admin-server:ro
+      - ./servers/fracto-admin-server:/app/servers/fracto-admin-server
       - /app/servers/fracto-admin-server/node_modules
-      - ./servers/fracto-asset-server:/app/servers/fracto-asset-server:ro
+      - ./servers/fracto-asset-server:/app/servers/fracto-asset-server
       - /app/servers/fracto-asset-server/node_modules
-      - ./servers/fracto-data-server:/app/servers/fracto-data-server:ro
+      - ./servers/fracto-data-server:/app/servers/fracto-data-server
       - /app/servers/fracto-data-server/node_modules
-      - ./servers/fracto-tiles-server:/app/servers/fracto-tiles-server:ro
+      - ./servers/fracto-tiles-server:/app/servers/fracto-tiles-server
       - /app/servers/fracto-tiles-server/node_modules
-      - ./servers/fracto-ui:/app/servers/fracto-ui:ro
+      - ./servers/fracto-ui:/app/servers/fracto-ui
       - /app/servers/fracto-ui/node_modules
       - fracto-tile-data:/var/lib/fracto/tiles:ro
       - fracto-tile-index:/var/lib/fracto/index:ro
