@@ -302,6 +302,10 @@ From PowerShell or Command Prompt on Windows:
 .\scripts\launch-development.bat
 ```
 
+The production/development launchers enforce mutual exclusion: before starting one mode, they
+detect whether the other Docker mode is running and ask for confirmation before
+gracefully stopping it. Answer `N` to leave the running mode untouched.
+
 ### Clean build dependencies
 
 To recover local disk space or resolve a corrupted dependency/build cache, use:
