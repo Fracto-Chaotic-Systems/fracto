@@ -305,6 +305,10 @@ From PowerShell or Command Prompt on Windows:
 The production/development launchers enforce mutual exclusion: before starting one mode, they
 detect whether the other Docker mode is running and ask for confirmation before
 gracefully stopping it. Answer `N` to leave the running mode untouched.
+To shut down either mode, or both, use `scripts\shutdown.bat prod`,
+`scripts\shutdown.bat dev`, or `scripts\shutdown.bat` with no parameter. It
+detects which requested containers are running, asks for confirmation, and stops
+them gracefully without removing volumes.
 
 ### Clean build dependencies
 
