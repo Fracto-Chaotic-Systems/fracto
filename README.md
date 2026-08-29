@@ -32,6 +32,10 @@ current state as JSON.
 Child-service output is kept colored on the terminal, while the dated files under
 `logs/` have ANSI control codes removed so they remain readable in editors and
 safe to process with text-search tools.
+The tile service also exposes `/cache_status`, reporting request counts, memory
+hits, disk loads, downloads, read-only downloads, failures, coalesced requests,
+evictions, in-flight work, and cache mode. This is useful for confirming whether
+tiles are being loaded from the persistent cache or fetched from the source.
 The Git-ignored `config/` directory is excluded from the image and mounted read-only
 at `/app/config` for the application and index-refresh job.
 The browser-visible production tile URL is supplied separately through the
