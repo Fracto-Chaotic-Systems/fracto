@@ -103,6 +103,12 @@ The command writes a fingerprinted binary cache beneath `tiles/cache/indexed/`. 
 
 After port 3004 opens, coverage initialization downloads category CSV files from the configured production endpoint. Coverage data is separate from the compiled local tile index and may represent a newer dataset.
 
+The tile service exposes `GET /cache_status` for cache observability. It returns
+JSON counters for requests, in-memory hits, persistent-disk loads, source
+downloads, read-only downloads, failures, coalesced requests, evictions, and
+currently in-flight work. Production should show persistent loads after a cache
+has been warmed; development may show read-only downloads when a tile is absent.
+
 ## Validation
 
 Root SDK and startup validation:

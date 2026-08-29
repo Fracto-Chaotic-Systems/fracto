@@ -13,7 +13,16 @@ if (!fs.existsSync(TILES_DIR)) {
 }
 let CACHED_TILES = {}
 const IN_FLIGHT_DOWNLOADS = new Map()
-
+const CACHE_STATS = {
+   requests: 0,
+   memory_hits: 0,
+   disk_hits: 0,
+   downloads: 0,
+   readonly_downloads: 0,
+   failures: 0,
+   coalesced_requests: 0,
+   evictions: 0,
+}
 const CACHE_TIMEOUT = 2 * 1000 * 60;
 const QUICK_CACHE_TIMEOUT = 1000 * 60;
 const MIN_CACHE = 750
@@ -118,6 +127,7 @@ const store_tile = async (short_code, coded_dir) => {
       const remote_filepath = `${level_dirname}/${short_code}.gz`
       let gzippedData
       if (CACHE_READ_ONLY) {
+         CACHE_STATS.readonly_downloads++
          gzippedData = await https_load(remote_filepath)
       } else {
          assert_cache_capacity()
@@ -126,9 +136,11 @@ const store_tile = async (short_code, coded_dir) => {
       }
       const decompressedData = zlib.gunzipSync(gzippedData);
       const jsonString = decompressedData.toString('utf8');
+      CACHE_STATS.downloads++
       console.log(`fetched: ${short_code}`);
       return JSON.parse(jsonString);
    } catch (e) {
+      CACHE_STATS.failures++
       console.error(`store_tile error ${short_code}`, e.message)
       return false;
    }
@@ -143,9 +155,11 @@ const load_tile = async (short_code, coded_dir) => {
       const gzippedData = fs.readFileSync(localSavePath);
       const decompressedData = zlib.gunzipSync(gzippedData);
       const jsonString = decompressedData.toString('utf8');
+      CACHE_STATS.disk_hits++
       console.log(`loaded: ${short_code}`);
       return JSON.parse(jsonString);
    } catch (e) {
+      CACHE_STATS.failures++
       console.error(`load_tile error ${short_code}`, e.message)
       return false;
    }
@@ -156,7 +170,9 @@ export class FractoTileCache {
    static error_count = 0;
 
    static get_tile = async (short_code) => {
+      CACHE_STATS.requests++
       if (CACHED_TILES[short_code]) {
+         CACHE_STATS.memory_hits++
          CACHED_TILES[short_code].last_access = Date.now()
          CACHED_TILES[short_code].access_count++
          return CACHED_TILES[short_code].uncompressed;
@@ -165,6 +181,7 @@ export class FractoTileCache {
          return null;
       }
       if (IN_FLIGHT_DOWNLOADS.has(short_code)) {
+         CACHE_STATS.coalesced_requests++
          return IN_FLIGHT_DOWNLOADS.get(short_code)
       }
       const load_or_download = (async () => {
@@ -191,6 +208,7 @@ export class FractoTileCache {
                return tile
             }
          } catch (e) {
+            CACHE_STATS.failures++
             console.error(`get_tile error ${short_code}`, e.message)
             FractoTileCache.error_count++
             return null
@@ -217,6 +235,7 @@ export class FractoTileCache {
          if (CACHED_TILES[short_code].last_access < Date.now() - timeout + extra_ms) {
             // console.log(`deleting ${short_code} from cache`)
             delete_count++
+            CACHE_STATS.evictions++
             delete CACHED_TILES[short_code]
          }
       })
@@ -224,6 +243,16 @@ export class FractoTileCache {
          console.log(`trim_cache deleted: ${delete_count} from ${short_codes.length}`)
       }
    }
+
+   static get_stats = () => ({
+      ...CACHE_STATS,
+      in_memory: Object.keys(CACHED_TILES).length,
+      in_flight: IN_FLIGHT_DOWNLOADS.size,
+      error_count: FractoTileCache.error_count,
+      read_only: CACHE_READ_ONLY,
+      cache_directory: TILES_DIR,
+      limits: {min: MIN_CACHE, max: MAX_CACHE},
+   })
 }
 
 export default FractoTileCache
