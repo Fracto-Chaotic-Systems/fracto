@@ -51,7 +51,8 @@ Generated log files are cleaned up at supervisor startup. Retention defaults to
 Fracto's dated service-log names are eligible for removal.
 The tile service also exposes `/cache_status`, reporting request counts, memory
 hits, disk loads, downloads, read-only downloads, failures, coalesced requests,
-evictions, in-flight work, and cache mode. This is useful for confirming whether
+evictions, in-flight work, and cache mode. It also retains the most recent 60
+snapshots at a five-second cadence for the tile status dashboard. This is useful for confirming whether
 tiles are being loaded from the persistent cache or fetched from the source.
 The tile service's `/metrics` endpoint reports request totals, response status
 counts, average/max latency, and process start time. Cache download bytes and
