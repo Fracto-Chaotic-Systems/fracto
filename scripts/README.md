@@ -113,6 +113,11 @@ $env:FRACTO_STARTUP_TIMEOUT_MS = 600000
 npm start
 ```
 
+The supervisor exposes `/healthz` for liveness and `/readyz` for readiness. Both
+return JSON with uptime and each service state (`pending`, `starting`, `healthy`,
+`failed`, or `stopped`); `/readyz` returns HTTP 503 until every service is healthy.
+The Docker `HEALTHCHECK` uses `/readyz`.
+
 ## Troubleshooting
 
 - **Tracked changes block updates:** commit, stash, or revert them in the named repository.

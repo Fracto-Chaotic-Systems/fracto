@@ -89,7 +89,7 @@ EXPOSE 3001 3002 3003 3004 3005 3006
 VOLUME ["/var/lib/fracto/tiles", "/var/lib/fracto/index", "/app/assets", "/app/logs"]
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5m --retries=3 \
-  CMD node -e "Promise.all([3001,3002,3003,3004,3005,3006].map(p=>fetch('http://127.0.0.1:'+p+'/').then(r=>{if(!r.ok)throw Error(p)}))).catch(()=>process.exit(1))"
+  CMD node -e "fetch('http://127.0.0.1:3001/readyz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["node", "--max-old-space-size=16384", "index.js"]

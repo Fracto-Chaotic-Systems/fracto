@@ -25,6 +25,10 @@ container. Downloaded tiles, generated index generations, assets, and logs use n
 volumes and survive ordinary container replacement and `docker compose down`.
 Docker sets `FORCE_COLOR=1` so supervisor and service health messages retain Chalk
 colors in Compose logs.
+The container health check uses the supervisor readiness endpoint (`/readyz`),
+which remains unhealthy until every internal service has passed its startup check.
+`/healthz` is also available for liveness diagnostics and returns each service's
+current state as JSON.
 The Git-ignored `config/` directory is excluded from the image and mounted read-only
 at `/app/config` for the application and index-refresh job.
 The browser-visible production tile URL is supplied separately through the
