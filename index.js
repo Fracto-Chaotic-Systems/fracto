@@ -19,6 +19,7 @@ import {validate_startup} from './scripts/startup_preflight.js'
 
 const STARTUP_TIMEOUT_MS = Number(process.env.FRACTO_STARTUP_TIMEOUT_MS || 300000)
 const HEALTH_POLL_MS = 500
+const ANSI_ESCAPE_PATTERN = /\u001B(?:\][^\u0007]*(?:\u0007|\u001B\\)|\[[0-?]*[ -/]*[@-~])/g
 const child_processes = new Map()
 const service_states = new Map(ALL_SERVICES.map(service => [service.name, 'pending']))
 let shutting_down = false
@@ -96,12 +97,16 @@ const start_service = async (service, show_output = false) => {
       stdio: ['ignore', 'pipe', 'pipe'],
       shell: false,
    })
-   child.stdout.pipe(log_stream)
-   child.stderr.pipe(log_stream)
-   if (show_output) {
-      child.stdout.pipe(process.stdout, {end: false})
-      child.stderr.pipe(process.stderr, {end: false})
+   const forward_output = (source, terminal) => {
+      source.on('data', chunk => {
+         // Preserve ANSI colors in the terminal, but keep persisted logs plain.
+         const text = chunk.toString()
+         log_stream.write(text.replace(ANSI_ESCAPE_PATTERN, ''))
+         if (show_output) terminal.write(text)
+      })
    }
+   forward_output(child.stdout, process.stdout)
+   forward_output(child.stderr, process.stderr)
    child_processes.set(service.name, {child, log_stream})
    child.once('error', error => console.error(`${service.name}: ${error.message}`))
    await wait_for_health(service, child)
