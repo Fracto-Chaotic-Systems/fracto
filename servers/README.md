@@ -113,6 +113,8 @@ JSON counters for requests, in-memory hits, persistent-disk loads, source
 downloads, read-only downloads, failures, coalesced requests, evictions, and
 currently in-flight work. Production should show persistent loads after a cache
 has been warmed; development may show read-only downloads when a tile is absent.
+`GET /metrics` separately reports tile-service HTTP request totals, response
+status counts, and average/max latency.
 
 ## Validation
 
