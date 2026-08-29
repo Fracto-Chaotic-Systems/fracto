@@ -29,6 +29,9 @@ The container health check uses the supervisor readiness endpoint (`/readyz`),
 which remains unhealthy until every internal service has passed its startup check.
 `/healthz` is also available for liveness diagnostics and returns each service's
 current state as JSON.
+Child-service output is kept colored on the terminal, while the dated files under
+`logs/` have ANSI control codes removed so they remain readable in editors and
+safe to process with text-search tools.
 The Git-ignored `config/` directory is excluded from the image and mounted read-only
 at `/app/config` for the application and index-refresh job.
 The browser-visible production tile URL is supplied separately through the
