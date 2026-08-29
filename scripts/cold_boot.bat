@@ -4,7 +4,7 @@ setlocal
 pushd "%~dp0.." || exit /b 1
 
 echo [1/4] Refreshing the root and service repositories...
-npm run update:repos
+call npm run update:repos
 if errorlevel 1 goto failed
 
 echo [2/4] Rebuilding the production image...
