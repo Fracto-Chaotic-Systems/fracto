@@ -16,6 +16,11 @@ npm run check
 npm start
 ```
 
+The automated test suite includes an HTTP integration test for the supervisor
+health contract. Run it with `npm test`; it verifies that `/healthz` remains
+available while services start and that `/readyz` returns 503 until every
+service reports `healthy`.
+
 `npm start` automatically runs `update:repos` through the `prestart` npm hook. Building the tile index remains an explicit operation because the source corpus and generated cache are several gigabytes.
 
 ## `update_repositories.js`

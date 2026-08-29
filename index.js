@@ -15,6 +15,7 @@ import {
 import {TILE_DATA_DIRECTORY, TILE_INDEX_ROOT} from './sdk/FractoTilePaths.js'
 import {handle_tile} from './handlers/main.js'
 import {handle_main_status} from './handlers/status.js'
+import {create_health_handler} from './handlers/health.js'
 import {validate_startup} from './scripts/startup_preflight.js'
 
 const STARTUP_TIMEOUT_MS = Number(process.env.FRACTO_STARTUP_TIMEOUT_MS || 300000)
@@ -131,15 +132,7 @@ const create_main_server = () => {
       next()
    })
    app.get('/', handle_main_status)
-   const health_response = (req, res) => {
-      const services = Object.fromEntries(service_states)
-      const ready = [...service_states.values()].every(state => state === 'healthy')
-      res.status(req.path === '/readyz' && !ready ? 503 : 200).json({
-         status: ready ? 'ready' : 'starting',
-         uptime_seconds: Math.round(process.uptime()),
-         services,
-      })
-   }
+   const health_response = create_health_handler(service_states)
    app.get('/healthz', health_response)
    app.get('/readyz', health_response)
    app.get('/status', handle_tile)
