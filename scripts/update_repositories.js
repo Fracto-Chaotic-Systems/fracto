@@ -14,13 +14,15 @@ const repositories = [
    })),
 ]
 
-const run_git = (repository, args, allow_failure = false) => {
-   const result = spawnSync('git', ['-C', repository.directory, ...args], {
-      encoding: 'utf8',
-      shell: false,
-   })
+const run_git = (repository, args, allow_failure = false, show_output = false) => {
+   const git_args = show_output
+      ? ['-C', repository.directory, '-c', 'color.ui=always', ...args]
+      : ['-C', repository.directory, ...args]
+   const result = spawnSync('git', git_args, show_output
+      ? {stdio: 'inherit', shell: false}
+      : {encoding: 'utf8', shell: false})
    if (!allow_failure && result.status !== 0) {
-      const detail = result.stderr.trim() || result.stdout.trim() || `exit code ${result.status}`
+      const detail = result.stderr?.trim() || result.stdout?.trim() || `exit code ${result.status}`
       throw new Error(`${repository.name}: git ${args.join(' ')} failed: ${detail}`)
    }
    return result
@@ -61,7 +63,7 @@ const update_repositories = () => {
 
    for (const item of ready) {
       console.log(`${item.repository.name}: fetching ${item.remote}...`)
-      run_git(item.repository, ['fetch', '--prune', item.remote])
+      run_git(item.repository, ['fetch', '--prune', item.remote], false, true)
    }
 
    for (const item of ready) {
@@ -81,7 +83,7 @@ const update_repositories = () => {
    }
 
    for (const item of ready) {
-      run_git(item.repository, ['merge', '--ff-only', item.upstream])
+      run_git(item.repository, ['merge', '--ff-only', item.upstream], false, true)
       const revision = git_output(item.repository, ['rev-parse', '--short', 'HEAD'])
       console.log(`${item.repository.name}: ready at ${revision}`)
    }
