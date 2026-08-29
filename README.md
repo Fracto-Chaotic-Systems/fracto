@@ -189,8 +189,8 @@ take a long time to move; allow the command to finish before starting production
 development. If the source and Docker volume use different filesystems, Docker may
 temporarily copy one file at a time before removing the source file.
 Progress is reported after every 100 tile files.
-Files are ordered by shortcode length, so lower tile levels transfer before
-higher levels.
+Files are collected into per-level bins, so lower tile levels transfer before
+higher levels without globally sorting the file list.
 The migration is restartable: stopping it between files leaves the source intact;
 the next run retries any incomplete file and removes completed duplicates.
 

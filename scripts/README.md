@@ -198,8 +198,9 @@ The scan happens only when invoked and may be slow for millions of files.
 
 Migration moves legacy numeric tile files into the persistent Docker volume,
 preserves restart safety, and reports progress every 100 files. It excludes
-the obsolete source manifest/index directories. Numeric `.gz` tiles are sorted by
-shortcode length, so lower levels are transferred before higher levels. Stop
+the obsolete source manifest/index directories. Numeric `.gz` tiles are collected
+into per-level bins, so lower levels are transferred before higher levels without
+sorting the entire file list. Stop
 production and development
 before migrating; ordinary `docker compose down` does not remove the destination
 volume.

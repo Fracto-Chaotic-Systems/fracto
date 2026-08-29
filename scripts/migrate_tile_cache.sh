@@ -22,26 +22,25 @@ echo "Existing Docker-cached tiles will be preserved and removed from the legacy
 moved_count=0
 skipped_count=0
 processed_count=0
-current_level=
+bin_directory=$(mktemp -d)
+trap 'rm -rf "$bin_directory"' EXIT HUP INT TERM
 find "$source_directory" -type f -print \
   | awk -F/ '{name=$NF; if (name ~ /^[0-9]+\.gz$/) {sub(/\.gz$/, "", name); print length(name) "\t" $0}}' \
-  | sort -n -k1,1 -k2,2 \
-  | cut -f2- \
-  | while IFS= read -r source_file; do
+  | while IFS="	" read -r level source_file; do
+      printf '%s\n' "$source_file" >> "$bin_directory/$level"
+    done
+
+for level in $(find "$bin_directory" -type f -printf '%f\n' | sort -n); do
+  bin_file="$bin_directory/$level"
+  if [ -f "$bin_file" ]; then
+    echo "Starting level $level tiles"
+    while IFS= read -r source_file; do
   relative_path=${source_file#"$source_directory"/}
   top_level=${relative_path%%/*}
   case "$top_level" in
     [0-9]*) ;;
     *) continue ;;
   esac
-
-  shortcode=${source_file##*/}
-  shortcode=${shortcode%.gz}
-  level=${#shortcode}
-  if [ "$level" != "$current_level" ]; then
-    echo "Starting level $level tiles"
-    current_level=$level
-  fi
 
   destination_file="$destination_directory/$relative_path"
   mkdir -p "$(dirname "$destination_file")"
@@ -58,8 +57,10 @@ find "$source_directory" -type f -print \
   fi
 
   processed_count=$((processed_count + 1))
-  if [ $((processed_count % 100)) -eq 0 ]; then
-    echo "Processed $processed_count tile files"
+    if [ $((processed_count % 100)) -eq 0 ]; then
+      echo "Processed $processed_count tile files"
+    fi
+    done < "$bin_file"
   fi
 done
 
