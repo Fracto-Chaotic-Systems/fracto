@@ -192,18 +192,21 @@ The scan happens only when invoked and may be slow for millions of files.
 ### Tile backup and migration
 
 - `backup-tiles.bat` runs the standalone tile backup operation in Docker.
+- `migrate_tile_cache_index.js` migrates indexed tiles with bounded concurrency
+  and promotes whole legacy directories when an atomic rename is possible.
 - `migrate_tile_cache.sh` is the POSIX migration implementation.
 - `migrate-tile-cache.sh` is the POSIX Docker wrapper.
 - `migrate-tile-cache.bat` is the Windows Docker wrapper.
 
-Migration moves legacy numeric tile files into the persistent Docker volume,
-preserves restart safety, and reports progress every 100 files. It excludes
-the obsolete source manifest/index directories. Numeric `.gz` tiles are collected
-into per-level bins, so lower levels are transferred before higher levels without
-sorting the entire file list. Stop
-production and development
-before migrating; ordinary `docker compose down` does not remove the destination
-volume.
+Migration uses the completed tile index rather than recursively scanning the
+legacy tree. It first promotes top-level numeric directories when source and
+destination share a filesystem, then performs restart-safe indexed moves for
+remaining files. Operations are bounded by `FRACTO_MIGRATION_CONCURRENCY` (default
+8), and progress is reported every 100 indexed tiles. Missing indexed tiles are
+reported so a later `tiles:backup` run can retrieve them from the cloud. Stop
+production and development before migrating; ordinary `docker compose down` does
+not remove the destination volume. The original `migrate_tile_cache.sh` scanner
+is retained as a fallback when an index generation is not available.
 
 ### `run_logged.js`
 
