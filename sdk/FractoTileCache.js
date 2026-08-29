@@ -22,6 +22,9 @@ const CACHE_STATS = {
    failures: 0,
    coalesced_requests: 0,
    evictions: 0,
+   download_bytes: 0,
+   download_duration_ms: 0,
+   last_download_at: null,
 }
 const CACHE_TIMEOUT = 2 * 1000 * 60;
 const QUICK_CACHE_TIMEOUT = 1000 * 60;
@@ -120,6 +123,7 @@ const https_load = (remote_filepath) => {
 
 const store_tile = async (short_code, coded_dir) => {
    try {
+      const download_started = Date.now()
       const level = short_code.length
       const naught = level < 10 ? '0' : ''
       const level_dirname = `L${naught}${level}`
@@ -137,6 +141,9 @@ const store_tile = async (short_code, coded_dir) => {
       const decompressedData = zlib.gunzipSync(gzippedData);
       const jsonString = decompressedData.toString('utf8');
       CACHE_STATS.downloads++
+      CACHE_STATS.download_bytes += gzippedData.length
+      CACHE_STATS.download_duration_ms += Date.now() - download_started
+      CACHE_STATS.last_download_at = new Date().toISOString()
       console.log(`fetched: ${short_code}`);
       return JSON.parse(jsonString);
    } catch (e) {
