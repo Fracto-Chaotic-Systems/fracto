@@ -25,6 +25,10 @@ const ANSI_ESCAPE_PATTERN = /\u001B(?:\][^\u0007]*(?:\u0007|\u001B\\)|\[[0-?]*[ 
 const child_processes = new Map()
 const degraded_monitors = new Map()
 const service_states = new Map(ALL_SERVICES.map(service => [service.name, 'pending']))
+const build_info_path = path.join(import.meta.dirname, 'build-info.json')
+const build_info = fs.existsSync(build_info_path)
+   ? JSON.parse(fs.readFileSync(build_info_path, 'utf8'))
+   : null
 let shutting_down = false
 let server
 
@@ -192,7 +196,7 @@ const create_main_server = () => {
       next()
    })
    app.get('/', handle_main_status)
-   const health_response = create_health_handler(service_states)
+   const health_response = create_health_handler(service_states, build_info)
    app.get('/healthz', health_response)
    app.get('/readyz', health_response)
    app.get('/status', handle_tile)
