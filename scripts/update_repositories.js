@@ -5,6 +5,7 @@ import {spawnSync} from 'node:child_process'
 import {ALL_SERVICES} from '../constants.js'
 
 const ROOT_DIRECTORY = path.join(import.meta.dirname, '..')
+const ALLOWED_UNSTAGED_FILES = new Set(['.idea/fracto.iml'])
 const repositories = [
    {name: 'fracto', directory: ROOT_DIRECTORY},
    ...ALL_SERVICES.map(service => ({
@@ -27,14 +28,19 @@ const run_git = (repository, args, allow_failure = false) => {
 
 const git_output = (repository, args) => run_git(repository, args).stdout.trim()
 
+const unstaged_changes = repository => git_output(repository, ['diff', '--name-only'])
+   .split(/\r?\n/).filter(Boolean)
+
 const assert_repository_ready = repository => {
    if (!fs.existsSync(path.join(repository.directory, '.git'))) {
       throw new Error(`${repository.name}: missing Git repository at ${repository.directory}`)
    }
-   if (run_git(repository, ['diff', '--quiet'], true).status !== 0 ||
-      run_git(repository, ['diff', '--cached', '--quiet'], true).status !== 0) {
+   const local_changes = unstaged_changes(repository)
+   const has_disallowed_unstaged = local_changes.some(file => !ALLOWED_UNSTAGED_FILES.has(file))
+   if (has_disallowed_unstaged || run_git(repository, ['diff', '--cached', '--quiet'], true).status !== 0) {
       throw new Error(`${repository.name}: tracked changes must be committed, stashed, or reverted before startup`)
    }
+   if (local_changes.length) console.log(`${repository.name}: allowing known IDE-only change in ${local_changes.join(', ')}`)
    const branch = git_output(repository, ['branch', '--show-current'])
    if (!branch) {
       throw new Error(`${repository.name}: detached HEAD cannot be updated safely`)

@@ -138,6 +138,8 @@ or any answer other than `Y` skips the refresh. It does not initialize/reset
 MySQL, migrate legacy tiles, or remove named volumes. The index refresh can take
 about an hour; an existing published generation remains available until the
 replacement completes.
+The repository refresh permits the known local IntelliJ metadata change in
+`.idea/fracto.iml`; any other tracked or staged change still stops the workflow.
 
 After cloning the root repository, checking out the five service repositories, and
 adding the local secret files under `config/`, the complete Windows first-run setup
