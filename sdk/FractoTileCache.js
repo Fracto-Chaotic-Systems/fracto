@@ -4,6 +4,7 @@ import path from "path";
 import fs from "fs";
 import https from "https";
 import {TILE_DATA_DIRECTORY} from './FractoTilePaths.js'
+import {color_shortcode} from '../utils/ansi_colors.js'
 
 const SEPARATOR = path.sep;
 const TILES_DIR = TILE_DATA_DIRECTORY;
@@ -144,11 +145,11 @@ const store_tile = async (short_code, coded_dir) => {
       CACHE_STATS.download_bytes += gzippedData.length
       CACHE_STATS.download_duration_ms += Date.now() - download_started
       CACHE_STATS.last_download_at = new Date().toISOString()
-      console.log(`fetched: ${short_code}`);
+      console.log(`fetched: ${color_shortcode(short_code)}`);
       return JSON.parse(jsonString);
    } catch (e) {
       CACHE_STATS.failures++
-      console.error(`store_tile error ${short_code}`, e.message)
+      console.error(`store_tile error ${color_shortcode(short_code)}`, e.message)
       return false;
    }
 }
@@ -163,11 +164,11 @@ const load_tile = async (short_code, coded_dir) => {
       const decompressedData = zlib.gunzipSync(gzippedData);
       const jsonString = decompressedData.toString('utf8');
       CACHE_STATS.disk_hits++
-      console.log(`loaded: ${short_code}`);
+      console.log(`loaded: ${color_shortcode(short_code)}`);
       return JSON.parse(jsonString);
    } catch (e) {
       CACHE_STATS.failures++
-      console.error(`load_tile error ${short_code}`, e.message)
+      console.error(`load_tile error ${color_shortcode(short_code)}`, e.message)
       return false;
    }
 }
@@ -216,7 +217,7 @@ export class FractoTileCache {
             }
          } catch (e) {
             CACHE_STATS.failures++
-            console.error(`get_tile error ${short_code}`, e.message)
+            console.error(`get_tile error ${color_shortcode(short_code)}`, e.message)
             FractoTileCache.error_count++
             return null
          }

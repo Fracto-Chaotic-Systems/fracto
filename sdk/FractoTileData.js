@@ -6,6 +6,7 @@ import FractoIndexedTiles, {TILE_SET_INDEXED} from "./FractoIndexedTiles.js";
 import FractoFastCalc from "./FractoFastCalc.js";
 import FractoTileCache from "./FractoTileCache.js";
 import {tile_index_paths} from './FractoTilePaths.js'
+import {color_shortcode} from '../utils/ansi_colors.js'
 
 export const FILTER_ALL_TILES = 'filter_all_tiles'
 export const FILLING_CANVAS_BUFFER = 'filling_canvas_buffer'
@@ -264,7 +265,7 @@ export const raster_fill = async (
                      try {
                         tile_data = await FractoTileCache.get_tile(tile.short_code)
                         if (!tile_data) {
-                           console.log(`bad tile_data: ${tile.short_code}`, tile.bounds)
+                           console.log(`bad tile_data: ${color_shortcode(tile.short_code)}`, tile.bounds)
                            BAD_TILES[tile.short_code] = true
                            break;
                         }
@@ -276,7 +277,7 @@ export const raster_fill = async (
                         }
                         if (!tile_data[tile_x]) {
                            BAD_TILES[tile.short_code] = true
-                           console.log(`bad tile_data[${tile_x}] short_code ${tile.short_code}`)
+                           console.log(`bad tile_data[${tile_x}] short_code ${color_shortcode(tile.short_code)}`)
                            continue;
                         }
                         let tile_y = Math.round((tile.bounds.top - y) / level_data_set.tile_increment)
@@ -287,17 +288,17 @@ export const raster_fill = async (
                         }
                         if (!tile_data[tile_x][tile_y]) {
                            BAD_TILES[tile.short_code] = true
-                           console.log(`bad tile_data[${tile_x}][${tile_y}] short_code ${tile.short_code}`)
+                           console.log(`bad tile_data[${tile_x}][${tile_y}] short_code ${color_shortcode(tile.short_code)}`)
                            continue;
                         }
                         if (!Array.isArray(tile_data[tile_x][tile_y])) {
                            BAD_TILES[tile.short_code] = true
-                           console.log(`not an array: tile_data[${tile_x}][${tile_y}] short_code ${tile.short_code}`)
+                           console.log(`not an array: tile_data[${tile_x}][${tile_y}] short_code ${color_shortcode(tile.short_code)}`)
                            continue;
                         }
                         if (tile_data[tile_x][tile_y].length !== 2) {
                            BAD_TILES[tile.short_code] = true
-                           console.log(`tile_data[${tile_x}][${tile_y}].length !== 2 short_code ${tile.short_code}`)
+                           console.log(`tile_data[${tile_x}][${tile_y}].length !== 2 short_code ${color_shortcode(tile.short_code)}`)
                            continue;
                         }
                         canvas_buffer[canvas_x][canvas_y] =
@@ -305,7 +306,7 @@ export const raster_fill = async (
                         found_point = true
 
                      } catch (e) {
-                        console.log(`exception on tile: ${tile.short_code}`, e.message)
+                        console.log(`exception on tile: ${color_shortcode(tile.short_code)}`, e.message)
                         BAD_TILES[tile.short_code] = true
                         continue;
                      }
@@ -333,7 +334,7 @@ export const raster_fill = async (
    }
    const bad_short_codes = Object.keys(BAD_TILES)
    if (bad_short_codes.length) {
-      console.log(`bad TILES`, bad_short_codes)
+      console.log(`bad TILES`, bad_short_codes.map(color_shortcode))
    }
    const end = performance.now()
    const rounded_time = Math.round((end - start) * 1000) / 1000
