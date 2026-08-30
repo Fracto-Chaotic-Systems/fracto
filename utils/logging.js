@@ -59,6 +59,7 @@ export const process_logfile = (service_name, res) => {
    const formatted_records = records.map((record, index) => ({
       timestamp: record.timestamp || null,
       message: lines[index],
+      level: record.level || 'info',
       segments: record.segments || null,
    }))
    res.json({
