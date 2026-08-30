@@ -56,8 +56,13 @@ export const process_logfile = (service_name, res) => {
       const level = record.level && record.level !== 'info' ? `[${record.level}] ` : ''
       return `${prefix}${level}${record.message || ''}`
    })
+   const formatted_records = records.map((record, index) => ({
+      timestamp: record.timestamp || null,
+      message: lines[index],
+   }))
    res.json({
       lines,
+      records: formatted_records,
       logfile_name: service_name === 'admin'
          ? `root-and-maintenance-log-${date()}.txt`
          : `${service_name}-log-${date()}.txt`,
