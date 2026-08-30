@@ -18,40 +18,12 @@ import {handle_main_status} from './handlers/status.js'
 import {create_health_handler} from './handlers/health.js'
 import {validate_startup} from './scripts/startup_preflight.js'
 import {root_log} from './utils/logging.js'
+import {ansi_segments} from './utils/ansi_colors.js'
 
 const STARTUP_TIMEOUT_MS = Number(process.env.FRACTO_STARTUP_TIMEOUT_MS || 300000)
 const HEALTH_POLL_MS = 500
 const LOG_RETENTION_DAYS = Number(process.env.FRACTO_LOG_RETENTION_DAYS || 30)
 const ANSI_ESCAPE_PATTERN = /\u001B(?:\][^\u0007]*(?:\u0007|\u001B\\)|\[[0-?]*[ -/]*[@-~])/g
-const ANSI_COLOR_CODES = {
-   30: '#000000', 31: '#ff5555', 32: '#50fa7b', 33: '#f1fa8c',
-   34: '#6272a4', 35: '#ff79c6', 36: '#8be9fd', 37: '#f8f8f2',
-   90: '#6272a4', 91: '#ff6e6e', 92: '#69ff94', 93: '#ffffa5',
-   94: '#d6acff', 95: '#ff92df', 96: '#a4ffff', 97: '#ffffff',
-}
-const ansi_segments = message => {
-   const segments = []
-   let current_color = null
-   let cursor = 0
-   let has_color = false
-   const pattern = /\u001B\[([0-9;]*)m/g
-   let match
-   while ((match = pattern.exec(message))) {
-      has_color = true
-      if (match.index > cursor) segments.push({
-         text: message.slice(cursor, match.index),
-         color: current_color,
-      })
-      match[1].split(';').forEach(code => {
-         const numeric_code = Number(code || 0)
-         if (numeric_code === 0 || numeric_code === 39) current_color = null
-         else if (ANSI_COLOR_CODES[numeric_code]) current_color = ANSI_COLOR_CODES[numeric_code]
-      })
-      cursor = pattern.lastIndex
-   }
-   if (cursor < message.length) segments.push({text: message.slice(cursor), color: current_color})
-   return has_color ? segments.filter(segment => segment.text) : []
-}
 const child_processes = new Map()
 const degraded_monitors = new Map()
 const service_states = new Map(ALL_SERVICES.map(service => [service.name, 'pending']))
