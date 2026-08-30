@@ -17,6 +17,7 @@ import {handle_tile} from './handlers/main.js'
 import {handle_main_status} from './handlers/status.js'
 import {create_health_handler} from './handlers/health.js'
 import {validate_startup} from './scripts/startup_preflight.js'
+import {root_log} from './utils/logging.js'
 
 const STARTUP_TIMEOUT_MS = Number(process.env.FRACTO_STARTUP_TIMEOUT_MS || 300000)
 const HEALTH_POLL_MS = 500
@@ -52,7 +53,7 @@ const cleanup_old_logs = () => {
          deleted++
       }
    })
-   if (deleted) console.log(chalk.blue(`Removed ${deleted} log file(s) older than ${LOG_RETENTION_DAYS} days.`))
+   if (deleted) { const message = `Removed ${deleted} log file(s) older than ${LOG_RETENTION_DAYS} days.`; root_log(message); console.log(chalk.blue(message)) }
 }
 
 const ensure_runtime_directories = () => {
@@ -70,7 +71,7 @@ const ensure_runtime_directories = () => {
 const shutdown = signal => {
    if (shutting_down) return
    shutting_down = true
-   console.log(chalk.yellow(`Received ${signal}; stopping services.`))
+   const message = `Received ${signal}; stopping services.`; root_log(message); console.log(chalk.yellow(message))
    child_processes.forEach(({child, log_stream}) => {
       if (!child.killed) {
          if (process.platform === 'win32') {
@@ -107,7 +108,7 @@ const wait_for_health = async (service, child) => {
          const response = await fetch(health_url, {signal: AbortSignal.timeout(2000)})
          if (response.ok) return
          if (response.status === 503 && service.degraded_health_env === 'FRACTO_ALLOW_DEGRADED_DB' && process.env.FRACTO_ALLOW_DEGRADED_DB === 'true') {
-            console.log(chalk.yellow(`${service.name} is degraded; continuing without its database dependency.`))
+            const message = `${service.name} is degraded; continuing without its database dependency.`; root_log(message); console.log(chalk.yellow(message))
             return 'degraded'
          }
          last_error = `HTTP ${response.status}`
@@ -121,7 +122,7 @@ const wait_for_health = async (service, child) => {
 
 const start_service = async (service, show_output = false) => {
    service_states.set(service.name, 'starting')
-   console.log(chalk.cyan(`Starting ${service.name}...`))
+   const message = `Starting ${service.name}...`; root_log(message); console.log(chalk.cyan(message))
    const log_path = path.join(import.meta.dirname, LOGS_DIRECTORY, service.logfile)
    const log_stream = fs.createWriteStream(log_path, {flags: 'a'})
    const child = spawn(process.execPath, ['scripts/launch_service.js', service.name], {
@@ -155,12 +156,12 @@ const start_service = async (service, show_output = false) => {
    forward_output(child.stderr, process.stderr, 'error')
    child.once('close', () => log_stream.end())
    child_processes.set(service.name, {child, log_stream})
-   child.once('error', error => console.error(`${service.name}: ${error.message}`))
+   child.once('error', error => { const message = `${service.name}: ${error.message}`; root_log(message, 'error'); console.error(message) })
    const health_state = await wait_for_health(service, child)
    child.once('exit', (code, signal) => {
       service_states.set(service.name, code === 0 ? 'stopped' : 'failed')
       if (!shutting_down) {
-         console.error(chalk.red(`${service.name} stopped unexpectedly (code=${code}, signal=${signal})`))
+         const message = `${service.name} stopped unexpectedly (code=${code}, signal=${signal})`; root_log(message, 'error'); console.error(chalk.red(message))
          shutdown('SIGTERM')
          exit_after_shutdown(1)
       }
@@ -176,7 +177,7 @@ const start_service = async (service, show_output = false) => {
                service_states.set(service.name, 'healthy')
                clearInterval(timer)
                degraded_monitors.delete(service.name)
-               console.log(chalk.green(`${service.name} recovered and is healthy.`))
+               const message = `${service.name} recovered and is healthy.`; root_log(message); console.log(chalk.green(message))
             }
          } catch {
             // The dependency is still unavailable.
@@ -184,7 +185,7 @@ const start_service = async (service, show_output = false) => {
       }, 5000)
       degraded_monitors.set(service.name, timer)
    }
-   console.log(chalk[health_state === 'degraded' ? 'yellow' : 'green'](`${service.name} is ${health_state || 'healthy'} on port ${service.port}`))
+   const status_message = `${service.name} is ${health_state || 'healthy'} on port ${service.port}`; root_log(status_message); console.log(chalk[health_state === 'degraded' ? 'yellow' : 'green'](status_message))
 }
 
 const create_main_server = () => {
@@ -201,7 +202,7 @@ const create_main_server = () => {
    app.get('/readyz', health_response)
    app.get('/status', handle_tile)
    return app.listen(FRACTO_SERVER_PORT, () => {
-      console.log(chalk.green(`Fracto main server is running on http://localhost:${FRACTO_SERVER_PORT}`))
+      const message = `Fracto main server is running on http://localhost:${FRACTO_SERVER_PORT}`; root_log(message); console.log(chalk.green(message))
    })
 }
 
@@ -219,16 +220,16 @@ const tile_service = ALL_SERVICES.find(service => service.name === SERVICE_NAME_
 const remaining_services = ALL_SERVICES.filter(service => service.name !== SERVICE_NAME_TILES)
 
 try {
-   console.log(chalk.cyan('Loading compiled tile index before starting any server...'))
+   const loading_message = 'Loading compiled tile index before starting any server...'; root_log(loading_message); console.log(chalk.cyan(loading_message))
    await start_service(tile_service, true)
-   console.log(chalk.green('Compiled tile index is ready. Starting Fracto servers.'))
+   const ready_message = 'Compiled tile index is ready. Starting Fracto servers.'; root_log(ready_message); console.log(chalk.green(ready_message))
 
    server = create_main_server()
    for (const service of remaining_services) {
       await start_service(service)
    }
 } catch (error) {
-   console.error(chalk.red(error.message))
+   root_log(error.message, 'error'); console.error(chalk.red(error.message))
    shutdown('SIGTERM')
    exit_after_shutdown(1)
 }
