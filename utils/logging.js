@@ -60,6 +60,8 @@ export const process_logfile = (service_name, res) => {
       timestamp: record.timestamp || null,
       message: lines[index],
       level: record.level || 'info',
+      kind: record.kind || null,
+      statement: record.statement || null,
       segments: record.segments || null,
    }))
    res.json({
