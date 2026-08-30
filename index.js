@@ -24,6 +24,7 @@ const STARTUP_TIMEOUT_MS = Number(process.env.FRACTO_STARTUP_TIMEOUT_MS || 30000
 const HEALTH_POLL_MS = 500
 const LOG_RETENTION_DAYS = Number(process.env.FRACTO_LOG_RETENTION_DAYS || 30)
 const ANSI_ESCAPE_PATTERN = /\u001B(?:\][^\u0007]*(?:\u0007|\u001B\\)|\[[0-?]*[ -/]*[@-~])/g
+const STRUCTURED_LOG_PREFIX = '@@FRACTO_LOG@@'
 const child_processes = new Map()
 const degraded_monitors = new Map()
 const service_states = new Map(ALL_SERVICES.map(service => [service.name, 'pending']))
@@ -136,12 +137,25 @@ const start_service = async (service, show_output = false) => {
       const write_record = raw_message => {
          if (!raw_message) return
          const message = raw_message.replace(ANSI_ESCAPE_PATTERN, '')
+         let structured_data = {}
+         if (message.startsWith(STRUCTURED_LOG_PREFIX)) {
+            try {
+               structured_data = JSON.parse(message.slice(STRUCTURED_LOG_PREFIX.length))
+            } catch {
+               structured_data = {}
+            }
+         }
+         const record_message = structured_data.statement || message
          log_stream.write(`${JSON.stringify({
             timestamp: new Date().toISOString(),
             service: service.name,
             level,
-            message,
-            segments: ansi_segments(raw_message),
+            message: record_message,
+            segments: structured_data.segments || ansi_segments(raw_message),
+            ...(structured_data.kind ? {
+               kind: structured_data.kind,
+               statement: structured_data.statement,
+            } : {}),
          })}\n`)
       }
       source.on('data', chunk => {
