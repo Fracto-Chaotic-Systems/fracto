@@ -35,6 +35,7 @@ services:
       - ./constants.js:/app/constants.js:ro
       - ./index.js:/app/index.js:ro
       - ./utils.js:/app/utils.js:ro
+      - ./utils:/app/utils:ro
       - ./handlers:/app/handlers:ro
       - ./scripts:/app/scripts:ro
       - ./sdk:/app/sdk:ro
