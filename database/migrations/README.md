@@ -44,6 +44,22 @@ backfills followed by a later `NOT NULL` constraint, and so on). Avoid dropping
 data in a migration. A destructive correction should be designed as a staged
 backup/rename process and reviewed separately.
 
+### Refresh a table from a downloaded dump
+
+For a new table-data dump that contains `DROP TABLE`, `CREATE TABLE`, and `INSERT`
+statements, do not run the dump directly against an existing database. Instead, add
+a numbered migration containing this directive:
+
+```sql
+-- FRACTO-BACKUP-REFRESH: free_bailiwicks.sql AS free_bailiwicks
+```
+
+The referenced file must be in `backup/`. The initializer extracts its `INSERT`
+statement and performs an `INSERT ... ON DUPLICATE KEY UPDATE` against the existing
+table. Existing rows are updated or retained, new rows are inserted, and rows absent
+from the dump are not deleted. On an empty database, bootstrap already loads the dump
+and the migration is recorded without repeating the refresh.
+
 ## Test and apply
 
 Before committing a migration, run the static validator:
@@ -86,6 +102,22 @@ skipped, and their checksums are verified. If a migration fails part-way through
 (some MySQL DDL implicitly commits), inspect the database before retrying and
 create a corrective migration if necessary. Never edit an already-applied file:
 the checksum guard intentionally rejects that.
+
+### Redo an applied migration
+
+When an already-applied migration must be deliberately replayed, use its numeric
+prefix with the Windows wrapper:
+
+```powershell
+.\scripts\redo-migration.bat 002
+```
+
+The wrapper confirms the operation, rebuilds the image, and runs the initializer
+with `--force 002`. The matching migration is executed again and its history row
+is updated. All other migrations remain skipped. Forced migrations must be
+idempotent: use `IF EXISTS`/`IF NOT EXISTS`, upserts, or equivalent guards so a
+second execution is safe. The command does not provide automatic undo or delete
+application data.
 
 Keep migration files in source control and deploy them together with the code
 that requires the schema. Do not put credentials or data dumps in this

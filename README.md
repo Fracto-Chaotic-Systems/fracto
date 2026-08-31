@@ -122,6 +122,25 @@ To apply pending migrations manually, run:
 .\scripts\reset-database.bat
 ```
 
+If `002_refresh-free-bailiwicks.sql` is visible in the container but the
+initializer reports that the database is up to date, an older initializer may
+already have recorded that directive as a no-op. Replay that migration with:
+
+```powershell
+.\scripts\redo-migration.bat 002
+```
+
+The command asks for confirmation and re-runs only migration 002. It never
+deletes rows from `free_bailiwicks`. The migration upserts rows from
+`backup/free_bailiwicks.sql`; rows absent from the dump are retained.
+
+To deliberately replay any applied migration by its numeric prefix, use the
+confirmed wrapper below. The migration must be idempotent:
+
+```powershell
+.\scripts\redo-migration.bat 002
+```
+
 The index refresh downloads the current manifest from
 `fracto.mikehallstudio.com` and can take about an hour. Wait for it to finish
 successfully before launching production or development. Otherwise startup stops

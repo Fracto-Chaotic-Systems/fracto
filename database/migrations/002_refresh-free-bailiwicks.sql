@@ -1,0 +1,4 @@
+-- Refresh free_bailiwicks from the latest downloaded dump.
+-- The initializer converts this directive into a non-destructive upsert.
+-- Rows absent from the dump are intentionally retained.
+-- FRACTO-BACKUP-REFRESH: free_bailiwicks.sql AS free_bailiwicks
