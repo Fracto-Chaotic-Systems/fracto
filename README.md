@@ -59,15 +59,21 @@ counts, average/max latency, and process start time. Cache download bytes and
 download duration are included in `/cache_status`. See
 [servers/README.md](D:\mediaplex\fracto\servers\README.md) for the complete
 field reference and interpretation guidance.
-The established tile renderer remains the default. The experimental masked
-renderer can be compared for a request with `strategy=masked`, or selected for
-the service with `FRACTO_RASTER_STRATEGY=masked`. It resolves the deepest indexed
-tiles first and visits coarser levels only for unresolved pixels; omitted blank
-tiles continue to inherit from coarser levels. Run the repeatable comparison
-against a running tile service with:
+The established tile renderer remains the default and is retained as a stable
+baseline. The experimental masked renderer can be selected for a request with
+`strategy=masked`, or for the service with `FRACTO_RASTER_STRATEGY=masked`. It
+resolves the deepest indexed tiles first and visits coarser levels only for
+unresolved pixels; omitted blank tiles continue to inherit from coarser levels.
+Run the independent baseline suite against a running tile service with:
 
 ```powershell
 npm run tiles:benchmark
+```
+
+Run the masked suite independently with:
+
+```powershell
+npm run tiles:benchmark:masked
 ```
 
 With no environment variable, the command checks the production tiles port
@@ -79,12 +85,18 @@ $env:FRACTO_TILES_URL = 'http://127.0.0.1:3104'  # development
 npm run tiles:benchmark
 ```
 
-The benchmark first sends each fixture through both strategies to warm the
-tile server's in-memory cache; those requests are excluded from the timings.
-It then uses fixed overview and detail viewports, verifies that both strategies
-produce identical canvas buffers, and fails if the masked strategy exceeds
-three times the legacy runtime. Set `FRACTO_BENCHMARK_MAX_RATIO` to adjust that
-threshold.
+Each suite obtains `free_bailiwicks` from the data service, combines freeform,
+inline, and nodal records, sorts them by descending magnitude, and randomly
+samples 10 records without replacement from the inclusive index range 500–1000
+by default. Every selected record contributes a fixed-focal-point zoom sequence
+whose scope is multiplied by `1.618` until it exceeds `2.5`. Warm-up requests
+are excluded from timing; each measured fixture is repeated three times by
+default and reports minimum, median, and maximum latency. Set
+`FRACTO_BENCHMARK_START_INDEX`, `FRACTO_BENCHMARK_END_INDEX`,
+`FRACTO_BENCHMARK_SAMPLE_COUNT`, or `FRACTO_BENCHMARK_REPETITIONS` to adjust
+the run. The suites validate their own response shape and repeatability, but
+deliberately do not compare outputs, timings, or execution order with the other
+strategy.
 The launch scripts generate a Git-ignored `build-info.json` manifest before each
 image build. The root health response and Admin Status page expose the recorded
 root and service revisions for deployment consistency; no upstream GitHub check is
