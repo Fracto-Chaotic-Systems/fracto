@@ -172,7 +172,7 @@ export const fill_canvas_buffer = async (
    resolution_factor,
    update_callback = null,
    update_status = null,
-   strategy = process.env.FRACTO_RASTER_STRATEGY || 'masked') => {
+   strategy = process.env.FRACTO_RASTER_STRATEGY || 'turbo') => {
 
    const all_level_sets = get_tiles(
       width_px,
@@ -199,7 +199,7 @@ export const fill_canvas_buffer = async (
       })
       .sort((a, b) => b.level - a.level)
 
-   const render = strategy === 'masked' || strategy === 'turbo' ? raster_fill_masked : raster_fill
+   const render = strategy === 'turbo' ? raster_fill_turbo : raster_fill
    await render(
       canvas_buffer, level_data_sets, width_px, focal_point, scope,
       aspect_ratio, update_callback, update_status)
@@ -344,7 +344,7 @@ export const raster_fill = async (
  * coarser levels only for pixels that remain unresolved. Missing tiles are
  * treated as intentional sparse coverage and do not trigger downloads.
  */
-export const raster_fill_masked = async (
+export const raster_fill_turbo = async (
    canvas_buffer,
    level_data_sets,
    width_px,
@@ -385,7 +385,7 @@ export const raster_fill_masked = async (
          try {
             tile_data = await FractoTileCache.get_tile(tile.short_code)
          } catch (error) {
-            console.error(`masked tile load error ${color_shortcode(tile.short_code)}`, error.message)
+            console.error(`turbo tile load error ${color_shortcode(tile.short_code)}`, error.message)
             continue
          }
          if (!tile_data) continue
@@ -417,5 +417,5 @@ export const raster_fill_masked = async (
       }
    }
    const elapsed = Math.round((performance.now() - start) * 1000) / 1000
-   console.log(chalk.yellow(`masked raster_fill ${width_px}x${height_px} complete in ${elapsed}ms`))
+   console.log(chalk.yellow(`turbo raster_fill ${width_px}x${height_px} complete in ${elapsed}ms`))
 }

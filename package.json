@@ -28,9 +28,9 @@
     "tiles:backup": "node --max-old-space-size=16384 servers/fracto-tiles-server/backup.js",
     "tiles:migrate:index": "node scripts/migrate_tile_cache_index.js",
     "tiles:status": "node scripts/tile_cache_status.js",
-    "tiles:benchmark": "node scripts/benchmark_canvas_render.js legacy",
+    "tiles:benchmark": "node scripts/benchmark_canvas_render.js",
     "tiles:benchmark:legacy": "node scripts/benchmark_canvas_render.js legacy",
-    "tiles:benchmark:masked": "node scripts/benchmark_canvas_render.js masked",
+    "tiles:benchmark:turbo": "node scripts/benchmark_canvas_render.js turbo",
     "db:init": "node scripts/initialize_database.js",
     "db:migrate": "node scripts/initialize_database.js",
     "db:validate": "node scripts/validate_migrations.js"

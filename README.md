@@ -59,21 +59,21 @@ counts, average/max latency, and process start time. Cache download bytes and
 download duration are included in `/cache_status`. See
 [servers/README.md](D:\mediaplex\fracto\servers\README.md) for the complete
 field reference and interpretation guidance.
-The masked tile renderer is now the default and resolves the deepest indexed
+The turbo tile renderer is now the default and resolves the deepest indexed
 tiles first, visiting coarser levels only for unresolved pixels; omitted blank
 tiles continue to inherit from coarser levels. The established renderer remains
 available as a stable legacy baseline by selecting `strategy=legacy`, or with
-`FRACTO_RASTER_STRATEGY=legacy`. Run the independent baseline suite against a
-running tile service with:
+`FRACTO_RASTER_STRATEGY=legacy`. Run both independent suites against a running
+tile service with:
 
 ```powershell
 npm run tiles:benchmark
 ```
 
-Run the masked suite independently with:
+Run only the turbo suite independently with:
 
 ```powershell
-npm run tiles:benchmark:masked
+npm run tiles:benchmark:turbo
 ```
 
 With no environment variable, the command checks the production tiles port
@@ -96,7 +96,12 @@ default and reports minimum, median, and maximum latency. Set
 `FRACTO_BENCHMARK_SAMPLE_COUNT`, or `FRACTO_BENCHMARK_REPETITIONS` to adjust
 the run. The suites validate their own response shape and repeatability, but
 deliberately do not compare outputs, timings, or execution order with the other
-strategy.
+strategy. Successful runs write complete JSON reports under the tiles-server
+runtime directories `servers/fracto-tiles-server/benchmarks/legacy/` and
+`servers/fracto-tiles-server/benchmarks/turbo/`. Reports include run metadata,
+sampled source records, every zoom-step focal point and scope, warm-up timing,
+measured samples, and per-fixture min/median/max summaries. These runtime
+reports are ignored by Git.
 The launch scripts generate a Git-ignored `build-info.json` manifest before each
 image build. The root health response and Admin Status page expose the recorded
 root and service revisions for deployment consistency; no upstream GitHub check is
