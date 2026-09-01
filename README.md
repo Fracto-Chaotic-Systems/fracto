@@ -59,12 +59,12 @@ counts, average/max latency, and process start time. Cache download bytes and
 download duration are included in `/cache_status`. See
 [servers/README.md](D:\mediaplex\fracto\servers\README.md) for the complete
 field reference and interpretation guidance.
-The established tile renderer remains the default and is retained as a stable
-baseline. The experimental masked renderer can be selected for a request with
-`strategy=masked`, or for the service with `FRACTO_RASTER_STRATEGY=masked`. It
-resolves the deepest indexed tiles first and visits coarser levels only for
-unresolved pixels; omitted blank tiles continue to inherit from coarser levels.
-Run the independent baseline suite against a running tile service with:
+The masked tile renderer is now the default and resolves the deepest indexed
+tiles first, visiting coarser levels only for unresolved pixels; omitted blank
+tiles continue to inherit from coarser levels. The established renderer remains
+available as a stable legacy baseline by selecting `strategy=legacy`, or with
+`FRACTO_RASTER_STRATEGY=legacy`. Run the independent baseline suite against a
+running tile service with:
 
 ```powershell
 npm run tiles:benchmark

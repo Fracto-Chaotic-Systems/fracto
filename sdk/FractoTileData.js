@@ -172,7 +172,7 @@ export const fill_canvas_buffer = async (
    resolution_factor,
    update_callback = null,
    update_status = null,
-   strategy = process.env.FRACTO_RASTER_STRATEGY || 'legacy') => {
+   strategy = process.env.FRACTO_RASTER_STRATEGY || 'masked') => {
 
    const all_level_sets = get_tiles(
       width_px,
@@ -199,7 +199,7 @@ export const fill_canvas_buffer = async (
       })
       .sort((a, b) => b.level - a.level)
 
-   const render = strategy === 'masked' ? raster_fill_masked : raster_fill
+   const render = strategy === 'masked' || strategy === 'turbo' ? raster_fill_masked : raster_fill
    await render(
       canvas_buffer, level_data_sets, width_px, focal_point, scope,
       aspect_ratio, update_callback, update_status)
