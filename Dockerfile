@@ -21,13 +21,9 @@ COPY servers/fracto-tiles-server/package.json servers/fracto-tiles-server/packag
 RUN npm ci --prefix servers/fracto-tiles-server
 COPY servers/fracto-ui/package.json servers/fracto-ui/package-lock.json servers/fracto-ui/.npmrc servers/fracto-ui/
 RUN npm ci --prefix servers/fracto-ui
-RUN chown -R node:node \
-    /app/node_modules \
-    /app/servers/fracto-admin-server/node_modules \
-    /app/servers/fracto-asset-server/node_modules \
-    /app/servers/fracto-data-server/node_modules \
-    /app/servers/fracto-tiles-server/node_modules \
-    /app/servers/fracto-ui/node_modules
+# Dependencies are installed as root for reproducible builds. They are read-only
+# at runtime, and the final image applies node ownership during COPY; recursively
+# chowning every dependency here makes cold builds unnecessarily expensive.
 
 FROM dependencies AS development
 
