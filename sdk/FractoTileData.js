@@ -171,7 +171,8 @@ export const fill_canvas_buffer = async (
    aspect_ratio,
    resolution_factor,
    update_callback = null,
-   update_status = null) => {
+   update_status = null,
+   strategy = process.env.FRACTO_RASTER_STRATEGY || 'legacy') => {
 
    const all_level_sets = get_tiles(
       width_px,
@@ -198,16 +199,10 @@ export const fill_canvas_buffer = async (
       })
       .sort((a, b) => b.level - a.level)
 
-   await raster_fill(
-      canvas_buffer,
-      level_data_sets,
-      width_px,
-      focal_point,
-      scope,
-      aspect_ratio,
-      update_callback,
-      update_status
-   )
+   const render = strategy === 'masked' ? raster_fill_masked : raster_fill
+   await render(
+      canvas_buffer, level_data_sets, width_px, focal_point, scope,
+      aspect_ratio, update_callback, update_status)
 }
 
 export const raster_fill = async (
@@ -342,4 +337,85 @@ export const raster_fill = async (
    setTimeout(() => {
       FractoTileCache.trim_cache()
    }, 1000)
+}
+
+/**
+ * Fills a canvas by resolving the deepest indexed tiles first, then visiting
+ * coarser levels only for pixels that remain unresolved. Missing tiles are
+ * treated as intentional sparse coverage and do not trigger downloads.
+ */
+export const raster_fill_masked = async (
+   canvas_buffer,
+   level_data_sets,
+   width_px,
+   focal_point,
+   scope,
+   aspect_ratio,
+   update_callback = null,
+   update_status = null) => {
+   if (!canvas_buffer) return
+   const start = performance.now()
+   const height_px = canvas_buffer[0]?.length || 0
+   const canvas_increment = scope / width_px
+   const horizontal = Array.from({length: width_px}, (_, x) =>
+      focal_point.x + (x - width_px / 2) * canvas_increment)
+   const vertical = Array.from({length: height_px}, (_, y) =>
+      Math.abs(focal_point.y - (y - height_px / 2) * canvas_increment))
+   const unresolved = Array.from({length: width_px}, () => new Uint8Array(height_px).fill(1))
+   let unresolved_count = width_px * height_px
+
+   for (const level_data_set of [...level_data_sets].sort((a, b) => b.level - a.level)) {
+      for (const tile of level_data_set.level_tiles) {
+         const x_start = Math.max(0, Math.floor((tile.bounds.left - focal_point.x) / canvas_increment + width_px / 2))
+         const x_end = Math.min(width_px - 1, Math.ceil((tile.bounds.right - focal_point.x) / canvas_increment + width_px / 2))
+         if (x_start > x_end) continue
+
+         let needed = false
+         for (let x = x_start; x <= x_end && !needed; x++) {
+            for (let y = 0; y < height_px; y++) {
+               if (unresolved[x][y] && tile.bounds.top >= vertical[y] && tile.bounds.bottom <= vertical[y]) {
+                  needed = true
+                  break
+               }
+            }
+         }
+         if (!needed) continue
+
+         let tile_data
+         try {
+            tile_data = await FractoTileCache.get_tile(tile.short_code)
+         } catch (error) {
+            console.error(`masked tile load error ${color_shortcode(tile.short_code)}`, error.message)
+            continue
+         }
+         if (!tile_data) continue
+
+         for (let x = x_start; x <= x_end; x++) {
+            for (let y = 0; y < height_px; y++) {
+               if (!unresolved[x][y] || tile.bounds.top < vertical[y] || tile.bounds.bottom > vertical[y]) continue
+               const tile_x = Math.max(0, Math.min(255, Math.round((horizontal[x] - tile.bounds.left) / level_data_set.tile_increment)))
+               const tile_y = Math.max(0, Math.min(255, Math.round((tile.bounds.top - vertical[y]) / level_data_set.tile_increment)))
+               const point = tile_data[tile_x]?.[tile_y]
+               if (!Array.isArray(point) || point.length !== 2) continue
+               canvas_buffer[x][y] = [point[0], point[1]]
+               unresolved[x][y] = 0
+               unresolved_count--
+            }
+         }
+         if (!unresolved_count) return
+      }
+   }
+
+   for (let x = 0; x < width_px; x++) {
+      for (let y = 0; y < height_px; y++) {
+         if (!unresolved[x][y]) continue
+         const out_of_bounds = horizontal[x] <= -2 || horizontal[x] > 0.55 || vertical[y] >= 1 || vertical[y] <= -1
+         if (out_of_bounds) {
+            const {pattern, iteration} = FractoFastCalc.calc(horizontal[x], vertical[y])
+            canvas_buffer[x][y] = [pattern, iteration]
+         }
+      }
+   }
+   const elapsed = Math.round((performance.now() - start) * 1000) / 1000
+   console.log(chalk.yellow(`masked raster_fill ${width_px}x${height_px} complete in ${elapsed}ms`))
 }

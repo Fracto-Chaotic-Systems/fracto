@@ -59,6 +59,32 @@ counts, average/max latency, and process start time. Cache download bytes and
 download duration are included in `/cache_status`. See
 [servers/README.md](D:\mediaplex\fracto\servers\README.md) for the complete
 field reference and interpretation guidance.
+The established tile renderer remains the default. The experimental masked
+renderer can be compared for a request with `strategy=masked`, or selected for
+the service with `FRACTO_RASTER_STRATEGY=masked`. It resolves the deepest indexed
+tiles first and visits coarser levels only for unresolved pixels; omitted blank
+tiles continue to inherit from coarser levels. Run the repeatable comparison
+against a running tile service with:
+
+```powershell
+npm run tiles:benchmark
+```
+
+With no environment variable, the command checks the production tiles port
+(`3004`) and then the development tiles port (`3104`), using the first
+reachable service. To select a service explicitly, set its URL first:
+
+```powershell
+$env:FRACTO_TILES_URL = 'http://127.0.0.1:3104'  # development
+npm run tiles:benchmark
+```
+
+The benchmark first sends each fixture through both strategies to warm the
+tile server's in-memory cache; those requests are excluded from the timings.
+It then uses fixed overview and detail viewports, verifies that both strategies
+produce identical canvas buffers, and fails if the masked strategy exceeds
+three times the legacy runtime. Set `FRACTO_BENCHMARK_MAX_RATIO` to adjust that
+threshold.
 The launch scripts generate a Git-ignored `build-info.json` manifest before each
 image build. The root health response and Admin Status page expose the recorded
 root and service revisions for deployment consistency; no upstream GitHub check is
