@@ -1,7 +1,22 @@
-const strategy = process.argv[2] || process.env.FRACTO_BENCHMARK_STRATEGY || 'legacy'
-if (!['legacy', 'masked'].includes(strategy)) {
-   throw new Error(`Unknown benchmark strategy "${strategy}". Use legacy or masked.`)
+import {mkdir, writeFile} from 'node:fs/promises'
+import path from 'node:path'
+import {spawn} from 'node:child_process'
+
+const requested_strategy = process.argv[2] || process.env.FRACTO_BENCHMARK_STRATEGY
+if (!requested_strategy) {
+   for (const suite of ['legacy', 'turbo']) {
+      await new Promise((resolve, reject) => {
+         const child = spawn(process.execPath, [process.argv[1], suite], {stdio: 'inherit'})
+         child.on('error', reject)
+         child.on('exit', code => code ? reject(new Error(`${suite} benchmark exited with code ${code}`)) : resolve())
+      })
+   }
+   process.exit(0)
 }
+if (!['legacy', 'turbo'].includes(requested_strategy)) {
+   throw new Error(`Unknown benchmark strategy "${requested_strategy}". Use legacy or turbo.`)
+}
+const strategy = requested_strategy
 
 const configured_url = process.env.FRACTO_TILES_URL
 const candidate_urls = configured_url
@@ -17,6 +32,8 @@ const end_index = Math.max(start_index, Number.parseInt(process.env.FRACTO_BENCH
 const sample_count = Math.max(1, Number.parseInt(process.env.FRACTO_BENCHMARK_SAMPLE_COUNT || '10', 10))
 const ZOOM_FACTOR = 1.618
 const MAX_SCOPE = 2.5
+const report_strategy = strategy
+const started_at = new Date().toISOString()
 
 const find_tiles_server = async () => {
    for (const candidate of candidate_urls) {
@@ -52,7 +69,7 @@ const find_data_server = async () => {
 
 const base_url = await find_tiles_server()
 const data_url = await find_data_server()
-console.log(`Running independent ${strategy} canvas benchmark at ${base_url}`)
+console.log(`Running independent ${report_strategy} canvas benchmark at ${base_url}`)
 
 const parse_json = value => {
    if (typeof value !== 'string') return value
@@ -105,6 +122,12 @@ const load_fixtures = async () => {
             scope,
             aspect_ratio: 1,
             resolution_factor: 1.5,
+            source: {
+               id: record.id,
+               category: record.category,
+               magnitude: Number(record.magnitude),
+               source_index: start_index + shuffled.indexOf(record),
+            },
          })
          scope *= ZOOM_FACTOR
          step++
@@ -118,7 +141,8 @@ const load_fixtures = async () => {
 const fixtures = await load_fixtures()
 
 const render = async (fixture) => {
-   const params = new URLSearchParams({...fixture, strategy})
+   const {source, ...request_fixture} = fixture
+   const params = new URLSearchParams({...request_fixture, strategy})
    const started = performance.now()
    const response = await fetch(`${base_url}/canvas_buffer?${params}`)
    if (!response.ok) throw new Error(`${strategy} ${fixture.name}: HTTP ${response.status}`)
@@ -138,6 +162,7 @@ const median = values => {
    return sorted[Math.floor(sorted.length / 2)]
 }
 
+const results = []
 for (const fixture of fixtures) {
    // Warm this strategy's fixtures only; warm-up requests are not measured.
    const warmup = await render(fixture)
@@ -150,6 +175,25 @@ for (const fixture of fixtures) {
       }
       samples.push(result.elapsed_ms)
    }
+   results.push({
+      name: fixture.name,
+      source: fixture.source,
+      parameters: {
+         width_px: fixture.width_px,
+         focal_point_x: fixture.focal_point_x,
+         focal_point_y: fixture.focal_point_y,
+         scope: fixture.scope,
+         aspect_ratio: fixture.aspect_ratio,
+         resolution_factor: fixture.resolution_factor,
+      },
+      warmup_ms: warmup.elapsed_ms,
+      samples,
+      summary: {
+         min_ms: Math.min(...samples),
+         median_ms: median(samples),
+         max_ms: Math.max(...samples),
+      },
+   })
    console.log(
       `${fixture.name}: min ${Math.min(...samples).toFixed(1)}ms, ` +
       `median ${median(samples).toFixed(1)}ms, max ${Math.max(...samples).toFixed(1)}ms ` +
@@ -157,4 +201,30 @@ for (const fixture of fixtures) {
    )
 }
 
-console.log(`${strategy} canvas benchmark passed.`)
+const completed_at = new Date().toISOString()
+const report = {
+   schema_version: 1,
+   started_at,
+   completed_at,
+   strategy: report_strategy,
+   requested_strategy: report_strategy,
+   tiles_url: base_url,
+   data_url,
+   selection: {
+      start_index,
+      end_index,
+      sample_count,
+      selected_count: new Set(results.map(result => result.source?.id)).size,
+      zoom_factor: ZOOM_FACTOR,
+      max_scope: MAX_SCOPE,
+      repetitions,
+   },
+   fixtures: results,
+}
+const report_directory = path.resolve('servers/fracto-tiles-server/benchmarks', report_strategy)
+await mkdir(report_directory, {recursive: true})
+const report_name = `${completed_at.replaceAll(':', '-').replaceAll('.', '-')}.json`
+const report_path = path.join(report_directory, report_name)
+await writeFile(report_path, `${JSON.stringify(report, null, 2)}\n`, 'utf8')
+console.log(`Saved benchmark report to ${report_path}`)
+console.log(`${report_strategy} canvas benchmark passed.`)

@@ -24,6 +24,18 @@ The root supervisor starts the tile service first, then the root server and the
 remaining services sequentially. It waits for health endpoints before continuing.
 See the root README for Docker production/development and first-run workflows.
 
+## Tile rendering benchmarks
+
+### `benchmark_canvas_render.js`
+
+Runs independent renderer suites against a running tiles service. With no
+strategy argument, `npm run tiles:benchmark` runs both suites; use
+`npm run tiles:benchmark:legacy` or `npm run tiles:benchmark:turbo` for one
+suite. Each run samples bailiwick fixtures,
+warms the selected strategy, records repeated timings, and writes a dated JSON
+report under `servers/fracto-tiles-server/benchmarks/legacy/` or `turbo/`.
+Reports are runtime data and are ignored by Git.
+
 ## Repository and startup orchestration
 
 ### `update_repositories.js`
