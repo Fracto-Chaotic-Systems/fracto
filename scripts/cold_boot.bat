@@ -16,8 +16,8 @@ echo [1/4] Refreshing the root and service repositories...
 call npm run update:repos
 if errorlevel 1 goto failed
 
-echo [2/4] Rebuilding the production image...
-docker compose build fracto
+echo [2/4] Rebuilding the production image (this may take several minutes)...
+docker compose build --progress=plain fracto
 if errorlevel 1 goto failed
 
 echo [3/4] Tile-index refresh is optional and can take about an hour.
