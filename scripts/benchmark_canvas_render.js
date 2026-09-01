@@ -1,7 +1,15 @@
 import {mkdir, writeFile} from 'node:fs/promises'
 import path from 'node:path'
 import {spawn} from 'node:child_process'
-import chalk from 'chalk'
+
+let chalk
+try {
+   chalk = (await import('chalk')).default
+} catch {
+   chalk = {
+      yellow: value => `\x1b[33m${value}\x1b[39m`,
+   }
+}
 
 const requested_strategy = process.argv[2] || process.env.FRACTO_BENCHMARK_STRATEGY
 if (!requested_strategy) {
