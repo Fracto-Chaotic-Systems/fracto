@@ -1,6 +1,7 @@
 import {mkdir, writeFile} from 'node:fs/promises'
 import path from 'node:path'
 import {spawn} from 'node:child_process'
+import chalk from 'chalk'
 
 const requested_strategy = process.argv[2] || process.env.FRACTO_BENCHMARK_STRATEGY
 if (!requested_strategy) {
@@ -164,7 +165,12 @@ const median = values => {
 }
 
 const results = []
+const run_numbers = new Map()
 for (const fixture of fixtures) {
+   const source = fixture.source || {}
+   const run_key = `${source.category || 'unknown'}-${source.id || fixture.name}`
+   if (!run_numbers.has(run_key)) run_numbers.set(run_key, run_numbers.size + 1)
+   const run_number = run_numbers.get(run_key)
    // Warm this strategy's fixtures only; warm-up requests are not measured.
    const warmup = await render(fixture)
    const samples = []
@@ -197,11 +203,14 @@ for (const fixture of fixtures) {
       },
    })
    console.log(
-      `${fixture.name}: min ${Math.min(...samples).toFixed(1)}ms, ` +
+      chalk.yellow(`${report_strategy} #${run_number}:`) +
+      ` ${fixture.name}: min ${Math.min(...samples).toFixed(1)}ms, ` +
       `median ${median(samples).toFixed(1)}ms, max ${Math.max(...samples).toFixed(1)}ms ` +
       `(${repetitions} samples)`
    )
 }
+
+console.log(`${report_strategy} benchmarked ${run_numbers.size} runs`)
 
 const completed_at = new Date().toISOString()
 const report = {
