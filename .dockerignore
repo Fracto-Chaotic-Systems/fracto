@@ -8,5 +8,6 @@
 /logs
 /assets
 /tiles
+/servers/fracto-tiles-server/benchmarks
 **/tiles.csv
 npm-debug.log*

@@ -29,7 +29,7 @@ const candidate_data_urls = configured_data_url
 const repetitions = Math.max(1, Number.parseInt(process.env.FRACTO_BENCHMARK_REPETITIONS || '3', 10))
 const start_index = Math.max(0, Number.parseInt(process.env.FRACTO_BENCHMARK_START_INDEX || '500', 10))
 const end_index = Math.max(start_index, Number.parseInt(process.env.FRACTO_BENCHMARK_END_INDEX || '1000', 10))
-const sample_count = Math.max(1, Number.parseInt(process.env.FRACTO_BENCHMARK_SAMPLE_COUNT || '10', 10))
+const sample_count = Math.max(1, Number.parseInt(process.env.FRACTO_BENCHMARK_SAMPLE_COUNT || '25', 10))
 const ZOOM_FACTOR = 1.618
 const MAX_SCOPE = 2.5
 const report_strategy = strategy
@@ -116,6 +116,7 @@ const load_fixtures = async () => {
       while (scope <= MAX_SCOPE) {
          fixtures.push({
             name: `${record.category}-${record.id || index}-${step}`,
+            step,
             width_px: 256,
             focal_point_x: Number(focal_point.x),
             focal_point_y: Number(focal_point.y),
@@ -179,6 +180,7 @@ for (const fixture of fixtures) {
       name: fixture.name,
       source: fixture.source,
       parameters: {
+         step: fixture.step,
          width_px: fixture.width_px,
          focal_point_x: fixture.focal_point_x,
          focal_point_y: fixture.focal_point_y,

@@ -53,6 +53,7 @@ services:
       - fracto-tile-index:/var/lib/fracto/index:ro
       - fracto-dev-assets:/app/assets
       - fracto-dev-logs:/app/logs
+      - ./servers/fracto-tiles-server/benchmarks:/app/servers/fracto-tiles-server/benchmarks
     restart: unless-stopped
     stop_grace_period: 30s
     logging:
