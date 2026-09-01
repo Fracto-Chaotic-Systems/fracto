@@ -87,7 +87,7 @@ npm run tiles:benchmark
 
 Each suite obtains `free_bailiwicks` from the data service, combines freeform,
 inline, and nodal records, sorts them by descending magnitude, and randomly
-samples 10 records without replacement from the inclusive index range 500–1000
+samples 25 records without replacement from the inclusive index range 500–1000
 by default. Every selected record contributes a fixed-focal-point zoom sequence
 whose scope is multiplied by `1.618` until it exceeds `2.5`. Warm-up requests
 are excluded from timing; each measured fixture is repeated three times by
@@ -101,7 +101,9 @@ runtime directories `servers/fracto-tiles-server/benchmarks/legacy/` and
 `servers/fracto-tiles-server/benchmarks/turbo/`. Reports include run metadata,
 sampled source records, every zoom-step focal point and scope, warm-up timing,
 measured samples, and per-fixture min/median/max summaries. These runtime
-reports are ignored by Git.
+reports are ignored by Git. Compose bind-mounts this directory into both
+production and development containers, so historical reports remain on the
+host and are available to the UI without rebuilding the image.
 The launch scripts generate a Git-ignored `build-info.json` manifest before each
 image build. The root health response and Admin Status page expose the recorded
 root and service revisions for deployment consistency; no upstream GitHub check is
