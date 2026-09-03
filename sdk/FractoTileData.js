@@ -357,6 +357,10 @@ export const raster_fill_turbo = async (
    const start = performance.now()
    const height_px = canvas_buffer[0]?.length || 0
    const canvas_increment = scope / width_px
+   const log_complete = () => {
+      const elapsed = Math.round((performance.now() - start) * 1000) / 1000
+      console.log(chalk.greenBright(`turbo raster_fill ${width_px}x${height_px} complete in ${elapsed}ms`))
+   }
    const horizontal = Array.from({length: width_px}, (_, x) =>
       focal_point.x + (x - width_px / 2) * canvas_increment)
    const vertical = Array.from({length: height_px}, (_, y) =>
@@ -402,7 +406,10 @@ export const raster_fill_turbo = async (
                unresolved_count--
             }
          }
-         if (!unresolved_count) return
+         if (!unresolved_count) {
+            log_complete()
+            return
+         }
       }
    }
 
@@ -416,6 +423,5 @@ export const raster_fill_turbo = async (
          }
       }
    }
-   const elapsed = Math.round((performance.now() - start) * 1000) / 1000
-   console.log(chalk.yellow(`turbo raster_fill ${width_px}x${height_px} complete in ${elapsed}ms`))
+   log_complete()
 }
