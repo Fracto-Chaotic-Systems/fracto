@@ -95,6 +95,7 @@ try {
       generation_env,
    )
    run(path.join(import.meta.dirname, '..'), ['scripts/build_tile_index.js'], generation_env)
+   run(path.join(import.meta.dirname, '..'), ['scripts/build_coverage_cache.js'], generation_env)
 
    fs.writeFileSync(path.join(generation_directory, 'COMPLETE'), `${new Date().toISOString()}\n`)
    publish_current(generation)
