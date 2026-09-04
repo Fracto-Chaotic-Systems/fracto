@@ -186,8 +186,10 @@ confirmed wrapper below. The migration must be idempotent:
 .\scripts\redo-migration.bat 002
 ```
 
-The index refresh downloads the current manifest from
-`fracto.mikehallstudio.com` and can take about an hour. Wait for it to finish
+The index refresh downloads the current manifest and coverage classifications from
+`fracto.mikehallstudio.com` and can take about an hour. It publishes the indexed
+geometry together with the `blank`, `interior`, and `needs_update` classification
+artifacts as one generation. Wait for it to finish
 successfully before launching production or development. Otherwise startup stops
 with `No completed tile index generation is installed.` This setup is required only
 when the index volume is new or has been deliberately deleted.
@@ -345,6 +347,14 @@ with `FRACTO_TILE_MIN_FREE_BYTES`. The cloud service remains the source of truth
 the demand cache and generated index can be reconstructed instead of backed up.
 Do not use `docker compose down --volumes` unless all persistent application data is
 intended to be removed.
+
+### Scheduled technical-debt review
+
+Search for dated `TODO(YYYY-MM-DD)` markers during regular maintenance reviews.
+The remote coverage-classification fallback in `sdk/FractoCoverageUtils.js` is
+scheduled for review on 2026-10-04. Remove it only after refreshed generations
+with local classification artifacts have been deployed and verified on the
+active installations.
 
 ### Docker development
 

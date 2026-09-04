@@ -1,5 +1,9 @@
 import FractoIndexedTiles from "./FractoIndexedTiles.js";
 import FractoUtil from "./FractoUtil.js";
+import fs from 'node:fs'
+import path from 'node:path'
+import v8 from 'node:v8'
+import {tile_index_paths} from './FractoTilePaths.js'
 
 let all_indexed_tiles = []
 let all_blank_tiles = []
@@ -26,6 +30,19 @@ const collect_local_indexed_tiles = () => {
 const load_classifications = async () => {
    if (classification_loading) return classification_loading
    classification_loading = (async () => {
+      const local = load_local_classifications()
+      if (local) {
+         [all_blank_tiles, all_interior_tiles, all_needs_update] = local
+         console.log('loaded local coverage classifications from tile index generation')
+         return {
+            indexed: count_tiles(all_indexed_tiles),
+            blank: count_tiles(all_blank_tiles),
+            interior: count_tiles(all_interior_tiles),
+            needs_update: count_tiles(all_needs_update),
+         }
+      }
+      // TODO(2026-10-04): remove this remote fallback after one month of
+      // verified generations containing local classification artifacts.
       const load = tile_set_name => new Promise(resolve =>
          collect_category_tiles(tile_set_name, resolve))
       const [blank, interior, needs_update] = await Promise.all([
@@ -45,6 +62,22 @@ const load_classifications = async () => {
       return stats
    })()
    return classification_loading
+}
+
+const load_local_classifications = () => {
+   try {
+      const {base} = tile_index_paths({require_complete: false})
+      const coverage_directory = path.join(base, 'coverage')
+      const categories = ['blank', 'interior', 'needs_update']
+      if (!categories.every(category => fs.existsSync(path.join(coverage_directory, `${category}.bin`)))) return null
+      return categories.map(category => {
+         const levels = v8.deserialize(fs.readFileSync(path.join(coverage_directory, `${category}.bin`)))
+         return levels.map(level => new Set(level))
+      })
+   } catch (error) {
+      console.warn(`Unable to load local coverage classifications: ${error.message}`)
+      return null
+   }
 }
 
 export const preload_coverage_classifications = () => load_classifications()
