@@ -244,6 +244,12 @@ try {
    for (const service of remaining_services) {
       await start_service(service)
    }
+   // The tile service starts first to load its local index. Begin the remote
+   // classification downloads only after every other service is healthy.
+   fetch(`http://127.0.0.1:${tile_service.port}/preload_coverage`).catch(error => {
+      const message = `Unable to start tile coverage preload: ${error.message}`
+      root_log(message, 'error'); console.error(chalk.yellow(message))
+   })
 } catch (error) {
    root_log(error.message, 'error'); console.error(chalk.red(error.message))
    shutdown('SIGTERM')
