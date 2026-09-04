@@ -105,9 +105,11 @@ reports are ignored by Git. Compose bind-mounts this directory into both
 production and development containers, so historical reports remain on the
 host and are available to the UI without rebuilding the image.
 The launch scripts generate a Git-ignored `build-info.json` manifest before each
-image build. The root health response and Admin Status page expose the recorded
-root and service revisions for deployment consistency; no upstream GitHub check is
-performed.
+image build. It contains the root and service revisions plus a recent commit
+snapshot, allowing the Admin Commits page to work in production images where
+`.git` directories are intentionally excluded. The root health response and
+Admin Status page expose the recorded revisions for deployment consistency; no
+upstream GitHub check is performed.
 For a read-only report of persistent cache size, temporary files, free space, and
 the active index generation, run `npm run tiles:status` (add `-- --json` for
 machine-readable output). The command scans the cache only when explicitly run.
