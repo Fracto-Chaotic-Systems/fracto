@@ -21,8 +21,6 @@ const ALL_TILE_SETS = [
    TILE_SET_UPDATED,
 ]
 
-var results = [];
-
 async function streamCsvFromUrl(url, cb) {
    try {
       // 1. Fetch the remote resource and get a readable stream
@@ -31,7 +29,7 @@ async function streamCsvFromUrl(url, cb) {
       if (!response.ok) {
          throw new Error(`HTTP error! status: ${response.status}`);
       }
-      results = []
+      const results = []
 
       // 2. Pipe the response body stream to the csv-parser transform stream
       response.body // This is a Node.js ReadableStream

@@ -5,38 +5,54 @@ let all_indexed_tiles = []
 let all_blank_tiles = []
 let all_interior_tiles = []
 let all_needs_update = []
+let classification_loading = null
 
 const count_tiles = level_sets => level_sets.reduce((total, level_set) => {
    return total + level_set.size
 }, 0)
 
-export const initialize_coverage = (cb) => {
-   collect_category_tiles('indexed', result => {
-      console.log('indexed load complete', count_tiles(result));
-      all_indexed_tiles = result;
-      collect_category_tiles('blank', result => {
-         console.log('blank load complete', count_tiles(result));
-         all_blank_tiles = result;
-         collect_category_tiles('interior', result => {
-            console.log('interior load complete', count_tiles(result));
-            all_interior_tiles = result;
-            collect_category_tiles('needs_update', result => {
-               console.log('needs_update load complete', count_tiles(result));
-               all_needs_update = result;
-               const stats = {
-                  indexed: count_tiles(all_indexed_tiles),
-                  blank: count_tiles(all_blank_tiles),
-                  interior: count_tiles(all_interior_tiles),
-                  needs_update: count_tiles(all_needs_update),
-               }
-               console.log(stats)
-               if (cb) {
-                  cb(stats);
-               }
-            })
-         })
+const collect_local_indexed_tiles = () => {
+   const result = []
+   for (let level = 0; level < 30; level++) result[level] = new Set()
+   for (let level = 2; level < 30; level++) {
+      const set_level = FractoIndexedTiles.get_set_level('indexed', level)
+      set_level?.columns.forEach(column => {
+         column.tiles.forEach(tile => result[level].add(tile.short_code))
       })
-   })
+   }
+   return result
+}
+
+const load_classifications = async () => {
+   if (classification_loading) return classification_loading
+   classification_loading = (async () => {
+      const load = tile_set_name => new Promise(resolve =>
+         collect_category_tiles(tile_set_name, resolve))
+      const [blank, interior, needs_update] = await Promise.all([
+         load('blank'), load('interior'), load('needs_update'),
+      ])
+      all_blank_tiles = blank
+      all_interior_tiles = interior
+      all_needs_update = needs_update
+      console.warn('coverage manifests are remote and may not match the local compiled tile index; proceeding')
+      const stats = {
+         indexed: count_tiles(all_indexed_tiles),
+         blank: count_tiles(all_blank_tiles),
+         interior: count_tiles(all_interior_tiles),
+         needs_update: count_tiles(all_needs_update),
+      }
+      console.log(stats)
+      return stats
+   })()
+   return classification_loading
+}
+
+export const preload_coverage_classifications = () => load_classifications()
+
+export const initialize_coverage = (cb) => {
+   all_indexed_tiles = collect_local_indexed_tiles()
+   console.log('indexed coverage derived from local compiled tile index', count_tiles(all_indexed_tiles))
+   if (cb) cb({indexed: count_tiles(all_indexed_tiles), deferred: true})
 }
 
 export const collect_category_tiles = (tile_set_name, cb) => {
@@ -61,7 +77,8 @@ export const collect_category_tiles = (tile_set_name, cb) => {
 
 const MAX_TILES = 100000
 
-export const detect_coverage = (focal_point, scope) => {
+export const detect_coverage = async (focal_point, scope) => {
+   await load_classifications()
    const tiles_in_scope = [];
    for (let level = 2; level < 30; level++) {
       const level_tiles = FractoIndexedTiles.tiles_in_scope(level, focal_point, scope);
