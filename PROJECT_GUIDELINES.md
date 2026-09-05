@@ -24,6 +24,40 @@ in the README for that feature or service.
 - When a file grows beyond roughly 200 lines, consider extracting utilities or
   a cohesive child component so the file structure reveals the architecture.
 
+## Settings and AppSettings
+
+- Define settings in the appropriate feature settings file with a unique key,
+  `data_type`, `default_value`, human-readable `description`, and `persist`
+  flag when applicable.
+- Add feature definitions to the application’s settings initialization merge
+  so `AppSettings.initialize()` can establish defaults and load persisted
+  values.
+- Read a value with `AppSettings.get(KEY)`. Object and array values are copied
+  unless the definition explicitly opts out with `no_copy`.
+- Update values through `AppSettings.on_settings_changed({[KEY]: value})`.
+  This updates the in-memory value, validates the broad data shape against the
+  definition, persists eligible values, and notifies subscribers.
+- Subscribe only when a component needs to react to changes made elsewhere;
+  always remove the subscription when the component unmounts.
+- Persistence uses browser storage and is controlled by the setting’s
+  `persist` flag. Boolean, string, number, object, and array values are
+  serialized and restored according to their declared type.
+- Keep setting keys stable because they are storage identifiers. If a key or
+  value shape must change, provide a compatibility or migration path.
+
+## Splitter and layout ownership
+
+- The outermost layout component owns splitter positions, orientations,
+  persistence, and all top/bottom/left/right placement calculations.
+- Nested layout components may own the splitter positions within their own
+  area, but content components should not calculate their screen position.
+- After splitter geometry is resolved, pass child components only the
+  `width_px` and `height_px` of their available block.
+- Area components should render as ordinary width-by-height blocks and remain
+  independent of whether they occupy the left, right, top, or bottom pane.
+- Persist each splitter position through `AppSettings` using a dedicated,
+  descriptive setting key.
+
 ## UI and text
 
 - Follow established component and styling patterns unless there is a clear
