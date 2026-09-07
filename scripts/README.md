@@ -36,6 +36,24 @@ warms the selected strategy, records repeated timings, and writes a dated JSON
 report under `servers/fracto-tiles-server/benchmarks/legacy/` or `turbo/`.
 Reports are runtime data and are ignored by Git.
 
+## Orbital circuitry sampling
+
+### `circuitry_harness.js`
+
+Calls the data server's `/circuitry` endpoint for one or more Mandelbrot
+parameter pairs and writes the sampled curves to a timestamped JSON report.
+Start the data server first, then run for example:
+
+```powershell
+npm run data:circuitry -- --pairs "-1,0;0.25,0" --samples 512
+```
+
+The harness also accepts `--url`, `--limit`, `--samples`, and `--output`.
+Without `--output`, reports are written under
+`servers/fracto-data-server/benchmarks/circuitry/`, which is runtime data and
+ignored by Git. `FRACTO_DATA_URL`, `FRACTO_CIRCUITRY_LIMIT`, and
+`FRACTO_CIRCUITRY_SAMPLES` provide environment defaults.
+
 ## Repository and startup orchestration
 
 ### `update_repositories.js`
