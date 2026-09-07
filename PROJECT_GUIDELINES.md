@@ -55,6 +55,9 @@ in the README for that feature or service.
   `width_px` and `height_px` of their available block.
 - Area components should render as ordinary width-by-height blocks and remain
   independent of whether they occupy the left, right, top, or bottom pane.
+- For complicated layouts whose geometry can be calculated independently,
+  isolate those calculations in a dedicated layout method or helper, separate
+  from component interaction and rendering logic.
 - Persist each splitter position through `AppSettings` using a dedicated,
   descriptive setting key.
 
