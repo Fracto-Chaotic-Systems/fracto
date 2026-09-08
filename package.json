@@ -35,8 +35,8 @@
     "db:init": "node scripts/initialize_database.js",
     "db:migrate": "node scripts/initialize_database.js",
     "db:validate": "node scripts/validate_migrations.js",
-    "format": "prettier --write \"servers/fracto-ui/**/*.{js,jsx,json,css,md}\" \"servers/fracto-data-server/**/*.js\"",
-    "format:check": "prettier --check \"servers/fracto-ui/**/*.{js,jsx,json,css,md}\" \"servers/fracto-data-server/**/*.js\""
+    "format": "node scripts/format_repositories.js write",
+    "format:check": "node scripts/format_repositories.js check"
   },
   "dependencies": {
     "axios": "^1.16.1",
