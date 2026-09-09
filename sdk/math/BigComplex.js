@@ -1,203 +1,190 @@
 import Decimal from "decimal.js";
 
-export const RESOLUTION_DIGITS = 64
-const MAX_COMPARE_DIGITS = RESOLUTION_DIGITS;
+/** Default precision retained for existing callers. */
+export const RESOLUTION_DIGITS = 64;
 
-Decimal.set({precision: RESOLUTION_DIGITS, rounding: 2})
+const decimal_contexts = new Map();
 
+/**
+ * Return a cached Decimal constructor configured for the requested precision.
+ * Each context is independent, allowing concurrent calculations to use
+ * different resolutions without changing global arithmetic settings.
+ *
+ * @param {number} precision Significant decimal digits.
+ * @returns {typeof Decimal} Precision-specific Decimal constructor.
+ */
+const get_decimal_context = (precision) => {
+  const normalized = Math.max(
+    1,
+    Math.floor(Number(precision) || RESOLUTION_DIGITS),
+  );
+  if (!decimal_contexts.has(normalized)) {
+    decimal_contexts.set(
+      normalized,
+      Decimal.clone({
+        precision: normalized,
+        rounding: Decimal.ROUND_HALF_UP,
+      }),
+    );
+  }
+  return decimal_contexts.get(normalized);
+};
+
+/**
+ * Arbitrary-precision complex number with an instance-local Decimal context.
+ * Arithmetic between values of different precision is promoted to the higher
+ * precision. The public `re` and `im` fields remain Decimal instances for
+ * compatibility with existing callers.
+ */
 export class BigComplex {
+  /**
+   * @param {number|string|Decimal} re Real component.
+   * @param {number|string|Decimal} im Imaginary component.
+   * @param {number} resolution_digits Significant decimal digits.
+   */
+  constructor(re, im, resolution_digits = RESOLUTION_DIGITS) {
+    this.precision = Math.max(
+      1,
+      Math.floor(Number(resolution_digits) || RESOLUTION_DIGITS),
+    );
+    this.Decimal = get_decimal_context(this.precision);
+    this.re = new this.Decimal(re);
+    this.im = new this.Decimal(im);
+  }
 
-   re;
-   im;
+  /** @param {BigComplex} value @returns {number} Common operand precision. */
+  operation_precision = (value) =>
+    Math.max(this.precision, value?.precision || this.precision);
 
-   constructor(re, im, resolution_digits = RESOLUTION_DIGITS) {
-      this.re = new Decimal(re);
-      this.im = new Decimal(im);
-   }
+  /** @param {BigComplex} value @param {number} precision @returns {BigComplex} Promoted value. */
+  promote = (value, precision = this.precision) =>
+    new BigComplex(value.re, value.im, precision);
 
-   get_re = (digits = 30) => {
-      const re_str = `${this.re}`;
-      return parseFloat(re_str.substring(0, digits))
-   }
+  /** @param {number} digits Significant digits to return. @returns {number} Native real value. */
+  get_re = (digits = 30) => this.re.toSignificantDigits(digits).toNumber();
 
-   get_im = (digits = 30) => {
-      const im_str = `${this.im}`;
-      return parseFloat(im_str.substring(0, digits))
-   }
+  /** @param {number} digits Significant digits to return. @returns {number} Native imaginary value. */
+  get_im = (digits = 30) => this.im.toSignificantDigits(digits).toNumber();
 
-   is_valid = () => {
-      if (isNaN(this.re.toNumber())) {
-         return false;
-      }
-      if (isNaN(this.im.toNumber())) {
-         return false;
-      }
-      return true;
-   }
+  /** @returns {boolean} Whether both components are finite. */
+  is_valid = () => this.re.isFinite() && this.im.isFinite();
 
-   toString = (limit = MAX_COMPARE_DIGITS) => {
-      const re_str = `${this.re.toString()}`;
-      const im_str = `${this.im.toString()}`;
-      return `[${re_str}, ${im_str}]`;
-   }
+  /** @returns {Decimal} High-precision magnitude. */
+  magnitude = () => this.re.mul(this.re).plus(this.im.mul(this.im)).sqrt();
 
-   compare = (z, limit = MAX_COMPARE_DIGITS) => {
-      const re_differs = this.re.toString() !== z.re.toString();
-      if (re_differs) {
-         return false;
-      }
-      const im_differs = this.im.toString() !== z.im.toString();
-      if (im_differs) {
-         return false;
-      }
-      return true;
-   }
+  /** @returns {string} Full precision textual representation. */
+  toString = () => `[${this.re.toString()}, ${this.im.toString()}]`;
 
-   magnitude = () => {
-      if (this.re.isNaN() || this.im.isNaN()) {
-         return -1;
-      }
-      const re_squared = this.re.mul(this.re);
-      const im_squared = this.im.mul(this.im);
-      const sum_squares = re_squared.add(im_squared);
-      return sum_squares.sqrt()
-   }
+  /** @param {BigComplex} value @returns {boolean} Exact component equality. */
+  compare = (value) => this.re.eq(value.re) && this.im.eq(value.im);
 
-   mul = (z) => {
-      const re_left_part = this.re.mul(z.re);
-      const re_right_part = this.im.mul(z.im);
-      const re_part = re_left_part.sub(re_right_part);
-      const im_left_part = this.re.mul(z.im);
-      const im_right_part = this.im.mul(z.re);
-      const im_part = im_left_part.add(im_right_part);
-      return new BigComplex(re_part, im_part)
-   }
+  /** @param {BigComplex} value @returns {BigComplex} Complex product. */
+  mul = (value) => {
+    const precision = this.operation_precision(value);
+    const left = this.promote(this, precision);
+    const right = this.promote(value, precision);
+    return new BigComplex(
+      left.re.mul(right.re).minus(left.im.mul(right.im)),
+      left.re.mul(right.im).plus(left.im.mul(right.re)),
+      precision,
+    );
+  };
 
-   mandelbrot = (z) => {
-      const re_left_part = this.re.mul(this.re);
-      const re_right_part = this.im.mul(this.im);
-      const re_part = re_left_part.sub(re_right_part);
-      const im_left_part = this.re.mul(this.im);
-      const im_right_part = this.im.mul(this.re);
-      const im_part = im_left_part.add(im_right_part);
-      this.re = re_part.add(z.re)
-      this.im = im_part.add(z.im)
-      return this
-   }
+  /** @param {BigComplex} value @returns {BigComplex} In-place Mandelbrot step. */
+  mandelbrot = (value) => {
+    const result = this.mul(this).add(value);
+    this.re = result.re;
+    this.im = result.im;
+    this.precision = result.precision;
+    this.Decimal = result.Decimal;
+    return this;
+  };
 
-   P_from_r_theta = (r, theta) => {
-      const two_pi_high_precision = Decimal.atan(1).times(2);
-      const r_squared = r.mul(r)
-      const two_pi_theta = two_pi_high_precision.mul(theta)
-      const four_pi_theta = two_pi_theta.mul(2)
-      const cos_two_pi_theta = two_pi_theta.cos()
-      const cos_four_pi_theta = four_pi_theta.cos()
-      const sin_two_pi_theta = two_pi_theta.sin()
-      const r_by_2 = r.div(2)
-      const r_squared_by_four = r_squared.div(4)
-      const r_by_2_times_cos_two_pi_theta = r_by_2.mul(cos_two_pi_theta)
-      const r_squared_by_four_times_cos_four_pi_theta = r_squared_by_four.mul(cos_four_pi_theta)
-      const re = r_by_2_times_cos_two_pi_theta.minus(r_squared_by_four_times_cos_four_pi_theta)
-      const negative_r_by_2 = r_by_2.mul(-1)
-      const r_cos_two_pi_theta = r.mul(cos_two_pi_theta)
-      const r_cos_two_pi_theta_minus_1 = r_cos_two_pi_theta.sub(1)
-      const im = negative_r_by_2.mul( sin_two_pi_theta).mul(r_cos_two_pi_theta_minus_1)
-      return {re, im}
-   }
+  /** @param {number|string|Decimal} scalar @returns {BigComplex} Scaled value. */
+  scale = (scalar) =>
+    new BigComplex(
+      this.re.mul(new this.Decimal(scalar)),
+      this.im.mul(new this.Decimal(scalar)),
+      this.precision,
+    );
 
-   divide = (den) => {
-      const com_conj = new BigComplex(den.im, den.re);
-      return this.mul(com_conj);
-   }
+  /** @param {number|string|Decimal} re @param {number|string|Decimal} im @returns {BigComplex} Offset value. */
+  offset = (re, im) =>
+    new BigComplex(
+      this.re.plus(new this.Decimal(re)),
+      this.im.plus(new this.Decimal(im)),
+      this.precision,
+    );
 
-   // log = () => {
-   //    const z = this.math.complex(this.re, this.im);
-   //    const result = this.math.log(z);
-   //    return new BigComplex(result.re, result.im)
-   // }
+  /** @param {BigComplex} value @returns {BigComplex} Complex sum. */
+  add = (value) => {
+    const precision = this.operation_precision(value);
+    const left = this.promote(this, precision);
+    const right = this.promote(value, precision);
+    return new BigComplex(
+      left.re.plus(right.re),
+      left.im.plus(right.im),
+      precision,
+    );
+  };
 
-   scale = (s) => {
-      return new BigComplex(
-         this.re.mul(s),
-         this.im.mul(s)
-      );
-   }
+  /** @returns {BigComplex} Principal complex square root. */
+  sqrt = () => {
+    const magnitude = this.magnitude();
+    const real_part = magnitude.plus(this.re).div(2).sqrt();
+    const imaginary_magnitude = magnitude.minus(this.re).div(2).sqrt();
+    const imaginary_part = this.im.isNegative()
+      ? imaginary_magnitude.neg()
+      : imaginary_magnitude;
+    return new BigComplex(real_part, imaginary_part, this.precision);
+  };
 
-   offset = (re, im) => {
-      return new BigComplex(
-         this.re.add(re),
-         this.im.add(im)
-      );
-   }
+  /** @param {BigComplex} denominator @returns {BigComplex} Complex quotient. */
+  divide = (denominator) => {
+    const precision = this.operation_precision(denominator);
+    const numerator = this.promote(this, precision);
+    const divisor = this.promote(denominator, precision);
+    const denominator_magnitude = divisor.re
+      .mul(divisor.re)
+      .plus(divisor.im.mul(divisor.im));
+    return new BigComplex(
+      numerator.re
+        .mul(divisor.re)
+        .plus(numerator.im.mul(divisor.im))
+        .div(denominator_magnitude),
+      numerator.im
+        .mul(divisor.re)
+        .minus(numerator.re.mul(divisor.im))
+        .div(denominator_magnitude),
+      precision,
+    );
+  };
 
-   add = (c) => {
-      return new BigComplex(this.re.add(c.re), this.im.add(c.im));
-   }
+  /** @returns {BigComplex} Multiplicative reciprocal. */
+  reciprocal = () => new BigComplex(1, 0, this.precision).divide(this);
 
-   sqrt = () => {
-      const re_squared = this.re.mul(this.re);
-      // console.log("re_squared",re_squared.toString())
-
-      const im_squared = this.im.mul(this.im);
-      // console.log("im_squared",im_squared.toString())
-
-      const sum_squares = re_squared.add(im_squared);
-      // console.log("sum_squares",sum_squares.toString())
-
-      const magnitude = sum_squares.sqrt()
-      // console.log("magnitude",magnitude.toString())
-
-      const re = magnitude.add(this.re).mul(0.5).sqrt();
-      // console.log("re",re.toString())
-
-      const im = magnitude.sub(this.re).mul(0.5).sqrt().mul(this.im.s);
-      // console.log("im",im.toString())
-
-      return new BigComplex(re, im);
-   }
-
-   // cube_root = () => {
-   //    const one = this.math.bignumber(1);
-   //    const three = this.math.bignumber(3);
-   //    const exponent = new BigComplex(one.div(three), 0)
-   //    return this.pow(exponent)
-   // }
-   //
-   // nth_root = (n) => {
-   //    const r = this.magnitude()
-   //    const nth_root_r = this.pow(r, 1 / n);
-   //    const theta = this.math.atan2(this.im, this.re)
-   //    return new BigComplex(
-   //       nth_root_r * this.math.cos(theta / n),
-   //       nth_root_r * this.math.sin(theta / n)
-   //    )
-   // }
-   //
-   // pow = (exponent) => {
-   //    // Convert base to polar form (r * e^(i*theta))
-   //    const r = this.magnitude();
-   //    const theta = this.math.atan2(this.im, this.re);
-   //    // console.log('pow, exponent', exponent.toString())
-   //
-   //    // Apply Euler's formula for z^w = e^(w * ln(z))
-   //    // where ln(z) = ln(r) + i*theta
-   //    const ln_r = this.math.log(r);
-   //    const exponent_re_times_ln_r = exponent.re.mul(ln_r)
-   //    const exponent_im_times_ln_r = exponent.im.mul(ln_r)
-   //    const exponent_re_times_theta = exponent.re.mul(theta)
-   //    const exponent_im_times_theta = exponent.im.mul(theta)
-   //
-   //    const term_re = exponent_re_times_ln_r.add(-exponent_im_times_theta);
-   //    const term_im = exponent_im_times_ln_r.add(exponent_re_times_theta)
-   //
-   //    const magnitude = this.math.exp(term_re);
-   //    const cos_im = this.math.cos(term_im)
-   //    const sin_im = this.math.sin(term_im)
-   //    const result_re = magnitude.mul(cos_im)
-   //    const result_im = magnitude.mul(sin_im)
-   //
-   //    return new BigComplex(result_re, result_im);
-   // }
+  /**
+   * Construct a Mandelbrot parameter from polar meridian coordinates.
+   *
+   * @param {Decimal} radius Radius as a Decimal value.
+   * @param {Decimal} theta Fraction of a full turn as a Decimal value.
+   * @returns {{re: Decimal, im: Decimal}} High-precision parameter components.
+   */
+  P_from_r_theta = (radius, theta) => {
+    const decimal_pi = this.Decimal.atan(1).times(4);
+    const two_pi_theta = decimal_pi.times(2).times(theta);
+    const four_pi_theta = two_pi_theta.times(2);
+    const radius_squared = radius.times(radius);
+    const re = radius
+      .div(2)
+      .times(two_pi_theta.cos())
+      .minus(radius_squared.div(4).times(four_pi_theta.cos()));
+    const im = radius
+      .div(-2)
+      .times(two_pi_theta.sin())
+      .times(radius.times(two_pi_theta.cos()).minus(1));
+    return { re, im };
+  };
 }
 
 export default BigComplex;
