@@ -31,7 +31,10 @@ const watch_args = process.env.FRACTO_WATCH === 'true' ? ['--watch'] : []
 const args = static_ui
    ? [path.join('scripts', 'serve_ui.js')]
    : service.name === SERVICE_NAME_UI
-      ? [path.join('node_modules', 'vite', 'bin', 'vite.js')]
+      ? [
+           path.join('node_modules', 'vite', 'bin', 'vite.js'),
+           ...(process.env.FRACTO_WATCH === 'true' ? ['--force'] : []),
+        ]
       : [...watch_args, '--max-old-space-size=16384', 'index.js']
 
 const child = spawn(command, args, {
