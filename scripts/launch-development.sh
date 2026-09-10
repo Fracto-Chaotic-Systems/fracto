@@ -7,4 +7,4 @@ cd "$repository_dir"
 node scripts/write_build_info.js
 scripts/ensure_exclusive.sh dev
 
-exec docker compose -f compose.yaml -f compose.dev.yaml up --build fracto-dev
+exec docker compose -f compose.yaml -f compose.dev.yaml up --build --renew-anon-volumes fracto-dev
