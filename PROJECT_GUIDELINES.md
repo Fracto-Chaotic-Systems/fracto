@@ -69,6 +69,10 @@ in the README for that feature or service.
   internal codes and implementation details do not need registration.
 - Keep styling centralized and theme-ready. Prefer shared semantic styles over
   scattered literals.
+- Add styles to the core style declarations only when they are broadly reused
+  across features. Keep special-purpose styles in the nearest feature or
+  domain-specific utility, even when more than one related component shares
+  them.
 - Use Prettier for formatting and ESLint for correctness checks. Formatting
   must not change runtime behavior.
 - Use monospace styling where values are compared or copied, and preserve
