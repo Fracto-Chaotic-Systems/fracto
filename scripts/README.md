@@ -24,6 +24,14 @@ The root supervisor starts the tile service first, then the root server and the
 remaining services sequentially. It waits for health endpoints before continuing.
 See the root README for Docker production/development and first-run workflows.
 
+## Spectral analysis benchmark
+
+`npm run data:spectral:benchmark` compares the established single spectral
+analysis pass with the eighteen-pass multi-configuration analysis using one shared
+synthetic orbit sample set. It reports min/average/max timings and the measured
+multi-pass relative cost. The benchmark isolates analysis cost from orbit discovery,
+network requests, and UI rendering.
+
 ## Tile rendering benchmarks
 
 ### `benchmark_canvas_render.js`
@@ -53,6 +61,52 @@ Without `--output`, reports are written under
 `servers/fracto-data-server/benchmarks/circuitry/`, which is runtime data and
 ignored by Git. `FRACTO_DATA_URL`, `FRACTO_CIRCUITRY_LIMIT`, and
 `FRACTO_CIRCUITRY_SAMPLES` provide environment defaults.
+
+### `orbital_newton_harness.js`
+
+Calls `/orbital_newton` to test the return-based cardinality detector and pass
+the result into native and/or BigComplex Newton refinement. For example:
+
+```powershell
+npm run data:orbital:newton -- --pairs "0.1517440416,0.5760073226" --mode both
+```
+
+Use `--iterations`, `--repetitions`, `--newton-limit`, `--mode`, `--url`, and
+`--output` to control the run. Reports are written under
+`servers/fracto-data-server/benchmarks/orbital-newton/`, which is runtime data
+and ignored by Git.
+
+### `benchmark_orbital_newton.js`
+
+`npm run data:orbital:newton:benchmark` compares known-cardinality Newton
+execution with the legacy cardinality-search loop for native and BigComplex
+solvers. It uses the cardinality-7 and cardinality-65 reference fixtures and
+reports min/average/max timings plus the speedup from avoiding the outer `N`
+search. This benchmark measures solver cost only; return detection is not
+included. The BigComplex legacy search is intentionally skipped by default
+because it scans thousands of cardinalities; enable it explicitly with
+`FRACTO_INCLUDE_BIG_NEWTON_LEGACY=true`.
+
+### `benchmark_orbital_detector.js`
+
+`npm run data:orbital:detector:benchmark` randomly samples usable core points
+from the `free_bailiwicks` table through `/minibrots`, then tests each record's
+stored `core_point` with the return-based cardinality detector at
+`/orbital_spectrum`. Display settings are never used for detector coordinates;
+records without a valid core point are excluded. The report
+keeps the table's `pattern` as the expected cardinality, the detector result,
+status, elapsed time, category, and summary accuracy. It does not run Newton
+refinement, so detector quality and detector cost are measured independently.
+An `unexpected_response_shape` result indicates that the running data server
+does not expose the current detector response (usually an older container that
+needs rebuilding); it is reported separately from a genuine inconclusive result.
+
+Use `--sample-count`, `--pool-limit`, `--iterations`, `--repetitions`, `--url`,
+and `--output`; defaults are 100 samples, up to 5,000 records per category,
+4,096 iterations, and five matching returns. Reports are written under
+`servers/fracto-data-server/benchmarks/orbital-detector/` and are ignored by
+Git. The data server caps a requested minibrot pool at 20,000 records per
+category.
 
 ## Repository and startup orchestration
 
