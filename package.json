@@ -35,6 +35,8 @@
     "data:orbital:newton": "node scripts/orbital_newton_harness.js",
     "data:orbital:newton:benchmark": "node scripts/benchmark_orbital_newton.js",
     "data:orbital:detector:benchmark": "node scripts/benchmark_orbital_detector.js",
+    "data:orbital:pyramid:benchmark": "node scripts/benchmark_orbital_detector.js --mode pyramid_only",
+    "data:orbital:main-cardioid:benchmark": "node scripts/benchmark_main_cardioid_detector.js",
     "data:spectral:benchmark": "node scripts/benchmark_spectral_analysis.js",
     "db:init": "node scripts/initialize_database.js",
     "db:migrate": "node scripts/initialize_database.js",
