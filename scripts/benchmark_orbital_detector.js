@@ -36,13 +36,14 @@ const usage = () => {
     "Usage: npm run data:orbital:detector:benchmark -- --sample-count 100 [options]",
   );
   console.log(
-    "Options: --url URL --sample-count N --pool-limit N --iterations N --repetitions N --output FILE",
+    "Options: --url URL --mode returns|pyramid_only --sample-count N --pool-limit N --iterations N --repetitions N --output FILE",
   );
 };
 
 const parse_args = (args) => {
   const options = {
     url: process.env.FRACTO_DATA_URL,
+    mode: process.env.FRACTO_DETECTOR_MODE || "returns",
     sample_count: Number(process.env.FRACTO_DETECTOR_SAMPLE_COUNT || 100),
     pool_limit: Number(process.env.FRACTO_DETECTOR_POOL_LIMIT || 5000),
     iterations: Number(process.env.FRACTO_ORBITAL_ITERATIONS || 4096),
@@ -58,6 +59,7 @@ const parse_args = (args) => {
       process.exit(0);
     }
     if (key === "--url") options.url = value_for();
+    else if (key === "--mode") options.mode = value_for();
     else if (key === "--sample-count")
       options.sample_count = Number(value_for());
     else if (key === "--pool-limit") options.pool_limit = Number(value_for());
@@ -65,6 +67,9 @@ const parse_args = (args) => {
     else if (key === "--repetitions") options.repetitions = Number(value_for());
     else if (key === "--output") options.output = value_for();
     else throw new Error(`Unknown argument "${argument}"`);
+  }
+  if (!["returns", "pyramid_only"].includes(options.mode)) {
+    throw new Error("--mode must be returns or pyramid_only");
   }
   for (const [name, value] of Object.entries({
     sample_count: options.sample_count,
@@ -141,32 +146,73 @@ const load_candidates = async (base_url, limit) => {
   return records;
 };
 
+const read_json_response = async (response, url) => {
+  const text = await response.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    const preview = text.replace(/\s+/g, " ").slice(0, 160);
+    throw new Error(
+      `Expected JSON from ${url} (HTTP ${response.status}); received ${preview}`,
+    );
+  }
+};
+
 const request_detection = async (base_url, record, options) => {
-  const url = new URL("/orbital_spectrum", base_url);
+  const endpoint =
+    options.mode === "pyramid_only" ? "/orbital_pyramid" : "/orbital_spectrum";
+  const url = new URL(endpoint, base_url);
   url.searchParams.set("re", record.re);
   url.searchParams.set("im", record.im);
   url.searchParams.set("iterations", options.iterations);
-  url.searchParams.set("minimum_return_repetitions", options.repetitions);
-  url.searchParams.set("detection_mode", "returns");
+  if (options.mode === "returns") {
+    url.searchParams.set("minimum_return_repetitions", options.repetitions);
+  }
+  url.searchParams.set("detection_mode", options.mode);
   const started = performance.now();
-  const response = await fetch(url);
-  const body = await response.json();
+  let response = await fetch(url);
+  let body;
+  try {
+    body = await read_json_response(response, url);
+  } catch (error) {
+    if (!(options.mode === "pyramid_only" && response.status >= 400)) {
+      throw error;
+    }
+  }
+  // Older running containers may not yet expose the dedicated route. Retry
+  // through the shared endpoint so a rolling deployment remains testable.
+  if (!response.ok && options.mode === "pyramid_only") {
+    const fallback_url = new URL("/orbital_spectrum", base_url);
+    fallback_url.search = url.search;
+    response = await fetch(fallback_url);
+    body = await read_json_response(response, fallback_url);
+  }
   if (!response.ok) throw new Error(body.error || `HTTP ${response.status}`);
   // Accept the direct endpoint response and the `{ result: ... }` envelope
   // used by older server wrappers during rolling container upgrades.
   const payload = body.detection ? body : body.result || body.data || body;
   const detection = payload.detection;
-  const detected = Number(detection?.candidate_cardinality);
+  const detected = Number(
+    options.mode === "pyramid_only"
+      ? detection?.survivors?.[0]?.cardinality
+      : detection?.candidate_cardinality,
+  );
   return {
     ...record,
     detected: Number.isInteger(detected) ? detected : null,
     status: detection?.status || "unexpected_response_shape",
+    detection_mode: options.mode,
     response_keys: Object.keys(body),
     elapsed_ms: performance.now() - started,
   };
 };
 
 const options = parse_args(process.argv.slice(2));
+if (options.mode === "pyramid_only") {
+  console.log(
+    "WARNING: pyramid_only is experimental; production detection remains spectral/returns.",
+  );
+}
 const data_url = await find_data_server(options.url);
 const all_candidates = await load_candidates(data_url, options.pool_limit);
 if (all_candidates.length < options.sample_count) {
@@ -186,14 +232,13 @@ for (const [index, record] of selected.entries()) {
 }
 const valid = results.filter((result) => result.detected !== null);
 const matches = valid.filter((result) => result.detected === result.expected);
-const inconclusive = results.filter(
-  (result) => result.status === "inconclusive",
-);
+const inconclusive = results.filter((result) => result.detected === null);
 const unexpected = results.filter(
   (result) => result.status === "unexpected_response_shape",
 );
 const report = {
   generated_at: new Date().toISOString(),
+  experimental: options.mode === "pyramid_only",
   data_url,
   options,
   pool_size: all_candidates.length,
