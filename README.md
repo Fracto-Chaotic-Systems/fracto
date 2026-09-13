@@ -76,6 +76,21 @@ Run only the turbo suite independently with:
 npm run tiles:benchmark:turbo
 ```
 
+To benchmark heat-map rasterization independently, run:
+
+```powershell
+npm run tiles:benchmark:heat-map
+```
+
+This samples the same free, inline, and nodal `free_bailiwicks` fixtures as the
+canvas benchmark, using each record's stored focal point and scope. By default
+it randomly selects 25 records from sorted indexes 500–1000 and tests 256,
+512, and 1024 pixel maps, with one warm-up request and three timed requests
+per fixture. Dated reports are written under
+`servers/fracto-tiles-server/benchmarks/heat-map/`; they are runtime data and
+are ignored by Git. Use `-- --help` for command-line overrides, or set the
+`FRACTO_HEAT_MAP_*` environment variables.
+
 With no environment variable, the command checks the production tiles port
 (`3004`) and then the development tiles port (`3104`), using the first
 reachable service. To select a service explicitly, set its URL first:

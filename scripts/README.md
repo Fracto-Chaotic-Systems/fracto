@@ -44,6 +44,27 @@ warms the selected strategy, records repeated timings, and writes a dated JSON
 report under `servers/fracto-tiles-server/benchmarks/legacy/` or `turbo/`.
 Reports are runtime data and are ignored by Git.
 
+### `benchmark_heat_map.js`
+
+`npm run tiles:benchmark:heat-map` measures the tile service's
+`/heat_map_buffer` endpoint using the same fixture selection used by the canvas
+benchmarks. It combines free, inline, and nodal `free_bailiwicks` records,
+sorts them by descending magnitude, and randomly samples records from the
+inclusive 500–1000 range by default. Each selected record contributes one
+fixture for each requested square width (256, 512, and 1024 pixels by
+default), using the focal point and scope stored in its display settings.
+Each fixture is warmed once and then measured repeatedly; reports contain the
+response dimensions, coverage level count, every sample, and min/median/max
+timings. Reports are written to the Git-ignored
+`servers/fracto-tiles-server/benchmarks/heat-map/` directory.
+
+The script accepts `--tiles-url`, `--data-url`, `--sample-count`,
+`--start-index`, `--end-index`, `--repetitions`, `--widths`, and `--output`.
+The corresponding `FRACTO_TILES_URL`, `FRACTO_DATA_URL`,
+`FRACTO_HEAT_MAP_SAMPLE_COUNT`, `FRACTO_HEAT_MAP_START_INDEX`,
+`FRACTO_HEAT_MAP_END_INDEX`, and `FRACTO_HEAT_MAP_REPETITIONS` environment
+variables provide defaults.
+
 ## Orbital circuitry sampling
 
 ### `circuitry_harness.js`
