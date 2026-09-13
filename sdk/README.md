@@ -34,6 +34,21 @@ const result = FractoFastCalc.calc(point.re, point.im)
 - `FractoTileIndexCache.js` builds and loads the compiled tile-index cache used at startup.
 - `utils/StreamJson.js` streams JSON data from disk.
 
+### Orbital pipeline contracts
+
+- `OrbitalPipelineContracts.js` defines the transport-neutral vocabulary shared
+  by orbital detection, Newton refinement, curve interpolation, waveform
+  construction, and audio playback.
+
+The canonical complex-point shape is `{ re, im }`. A `CurveSample` is
+`{ t, C }`, where `C` is a complex point. A `WaveformSample` adds `value`, the
+distance from `Q`, and may add a normalized `audio_value` in the range `[-1, 1]`.
+The optional `OrbitalPipelineResult` envelope carries `focal_point`, `Q`,
+`cardinality`, `orbital_points`, `curve_samples`, `waveform_profile`, and
+diagnostic metadata. `to_complex_point()` is available only at input
+boundaries to normalize legacy `{ x, y }` values; internal stages should use
+`{ re, im }` consistently.
+
 ## Runtime considerations
 
 The modules under `math/`, along with the core calculation and color utilities, are mostly self-contained. Tile and data modules depend on repository configuration, files under `tiles/`, Node.js filesystem APIs, or network access. They should be used from the Fracto repository root with project dependencies installed.
