@@ -110,19 +110,29 @@ export const collect_category_tiles = (tile_set_name, cb) => {
 
 const MAX_TILES = 100000
 
-export const detect_coverage = async (focal_point, scope) => {
+/**
+ * Classify the indexed tiles around a focal point. When `scoped_levels` is
+ * supplied, it is the result of a caller's existing spatial lookup and avoids
+ * traversing the index a second time. The expected shape is an array indexed
+ * by level, with each value containing `{bounds, short_code}` tile records.
+ */
+export const detect_coverage = async (focal_point, scope, scoped_levels = null) => {
    await load_classifications()
    const tiles_in_scope = [];
-   for (let level = 2; level < 30; level++) {
-      const level_tiles = FractoIndexedTiles.tiles_in_scope(level, focal_point, scope);
-      if (level_tiles.length < MAX_TILES) {
-         tiles_in_scope.push({
-            level: level,
-            tiles: level_tiles
-         });
+   if (scoped_levels) {
+      for (let level = 2; level < 30; level++) {
+         const level_tiles = scoped_levels[level] || [];
+         if (level_tiles.length >= MAX_TILES) break;
+         tiles_in_scope.push({level, tiles: level_tiles});
       }
-      else {
-         break;
+   } else {
+      for (let level = 2; level < 30; level++) {
+         const level_tiles = FractoIndexedTiles.tiles_in_scope(level, focal_point, scope);
+         if (level_tiles.length < MAX_TILES) {
+            tiles_in_scope.push({level, tiles: level_tiles});
+         } else {
+            break;
+         }
       }
    }
 

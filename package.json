@@ -31,6 +31,7 @@
     "tiles:benchmark": "node scripts/benchmark_canvas_render.js",
     "tiles:benchmark:legacy": "node scripts/benchmark_canvas_render.js legacy",
     "tiles:benchmark:turbo": "node scripts/benchmark_canvas_render.js turbo",
+    "tiles:benchmark:heat-map": "node scripts/benchmark_heat_map.js",
     "data:circuitry": "node scripts/circuitry_harness.js",
     "data:orbital:newton": "node scripts/orbital_newton_harness.js",
     "data:orbital:newton:benchmark": "node scripts/benchmark_orbital_newton.js",
