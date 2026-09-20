@@ -20,7 +20,12 @@ const BLUESKY_FEED_ENDPOINT =
 const DEFAULT_ACTOR = "fracto-studio.bsky.social";
 const DEFAULT_POST_LIMIT = 100;
 const MAX_PAGE_SIZE = 100;
-const MEDIA_KEY_PATTERN = /^\s*-\s*\*\*Media key:\*\*\s*`([^`]+)`\s*$/gim;
+const MEDIA_LEDGER_FORMAT_VERSION = 3;
+const MEDIA_LEDGER_FORMAT_MARKER = /<!--\s*media-ledger-format:\s*(\d+)\s*-->/i;
+const MEDIA_KEY_PATTERNS = [
+  /^\s*-\s*\*\*Media key:\*\*\s*`([^`]+)`\s*$/gim,
+  /<strong>Media key:<\/strong>\s*<code>([^<]+)<\/code>/gim,
+];
 
 const usage = () => {
   console.log("Usage: node scripts/sync_bluesky_media.js [options]");
@@ -97,8 +102,10 @@ const get_post_url = (actor, uri) => {
  */
 export const parse_media_document = (content = "") => {
   const media_keys = new Set();
-  for (const match of content.matchAll(MEDIA_KEY_PATTERN)) {
-    media_keys.add(match[1].trim());
+  for (const pattern of MEDIA_KEY_PATTERNS) {
+    for (const match of content.matchAll(pattern)) {
+      media_keys.add(match[1].trim());
+    }
   }
   return {
     content,
@@ -142,10 +149,82 @@ const media_from_embed = (embed) => {
 const format_heading_text = (record) => {
   const description = (record.alt_text || `${record.media_type} upload`)
     .split(/\r?\n/)[0]
-    .trim()
-    .slice(0, 80);
-  return description || `${record.media_type} upload`;
+    .trim();
+  const words = description.split(/\s+/).filter(Boolean);
+  if (!words.length) return `${record.media_type} upload`;
+  const word_limit = Math.max(1, Math.ceil(words.length / 2));
+  const shortened = words.slice(0, word_limit).join(" ");
+  return words.length > word_limit ? `${shortened}…` : shortened;
 };
+
+const shorten_existing_media_titles = (content) =>
+  content
+    .split(/(?=^##\s+\d{4}-\d{2}-\d{2}\s+—)/m)
+    .map((chunk) => {
+      const heading = chunk.match(
+        /^(##\s+\d{4}-\d{2}-\d{2}\s+—\s+)([^\n]+)/,
+      );
+      if (!heading) return chunk;
+      const alt_text = chunk.match(/<blockquote>([^<]*)<\/blockquote>/)?.[1];
+      if (!alt_text) return chunk;
+      const decoded_alt_text = alt_text
+        .replaceAll("&amp;", "&")
+        .replaceAll("&lt;", "<")
+        .replaceAll("&gt;", ">")
+        .replaceAll("&quot;", '"');
+      return chunk.replace(
+        heading[0],
+        `${heading[1]}${format_heading_text({
+          alt_text: decoded_alt_text,
+          media_type: "media",
+        })}`,
+      );
+    })
+    .join("");
+
+const escape_html = (value) =>
+  String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+
+const format_copy_alt_button = (alt_text) =>
+  `<button type="button" class="media-copy-alt" data-copy-alt-text="${escape_html(alt_text)}" title="copy alt text to clipboard" aria-label="copy alt text to clipboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V5.5C8 4.67 8.67 4 9.5 4h9C19.33 4 20 4.67 20 5.5v9c0 .83-.67 1.5-1.5 1.5H16v2.5c0 .83-.67 1.5-1.5 1.5h-9C4.67 20 4 19.33 4 18.5v-9C4 8.67 4.67 8 5.5 8H8Zm-2.5 2c-.28 0-.5.22-.5.5v8c0 .28.22.5.5.5h9c.28 0 .5-.22.5-.5V10.5c0-.28-.22-.5-.5-.5h-9ZM10 6v2h4.5c.83 0 1.5.67 1.5 1.5V14h2V6.5c0-.28-.22-.5-.5-.5h-7.5Z"/></svg></button>`;
+
+const format_technical_details = (record) => {
+  const technical_values = [
+    ["Uploaded", record.uploaded_at || "unknown"],
+    ["Media key", record.media_key],
+    ["Post URI", record.post_uri || "unknown"],
+    ["Post CID", record.post_cid || "unknown"],
+    ["Blob CID", record.blob_cid || "unknown"],
+    ["Media type", record.media_type],
+  ];
+  if (record.aspect_ratio) {
+    technical_values.push([
+      "Aspect ratio",
+      JSON.stringify(record.aspect_ratio),
+    ]);
+  }
+  technical_values.push(["Notes", record.notes || "(none provided)"]);
+  const items = technical_values
+    .map(
+      ([label, value]) =>
+        `  <li><strong>${label}:</strong> <code>${escape_html(value)}</code></li>`,
+    )
+    .join("\n");
+  return `<details>\n<summary>technical details</summary>\n<ul>\n${items}\n</ul>\n</details>`;
+};
+
+const format_media_properties = (record, full_size, post_url) => `
+<div class="media-entry-properties">
+<p><strong>Full-size media:</strong> <a href="${escape_html(full_size)}">open original</a></p>
+<p><strong>Source post:</strong> <a href="${escape_html(post_url || "#")}">view post</a></p>
+<p><strong>Alt text:</strong> ${format_copy_alt_button(record.alt_text || "(none provided)")}</p>
+<blockquote>${escape_html(record.alt_text || "(none provided)")}</blockquote>
+${format_technical_details(record)}
+</div>`;
 
 /**
  * Render one normalized media record as a Markdown ledger entry.
@@ -159,27 +238,176 @@ export const format_media_entry = (record) => {
   const thumbnail = record.thumbnail_url || record.full_size_url || "";
   const full_size = record.full_size_url || record.thumbnail_url || "";
   const thumbnail_line = thumbnail
-    ? `[![Thumbnail](${thumbnail})](${full_size})`
-    : "No preview URL available.";
-  return `### ${uploaded_date} — ${format_heading_text(record)}
+    ? `<a href="${escape_html(full_size)}"><img src="${escape_html(thumbnail)}" alt="Thumbnail" /></a>`
+    : "<p>No preview URL available.</p>";
+  return `## ${uploaded_date} — ${format_heading_text(record)}
 
-${thumbnail_line}
-
-- **Uploaded:** ${record.uploaded_at || "unknown"}
-- **Media key:** \`${record.media_key}\`
-- **Post URI:** \`${record.post_uri || "unknown"}\`
-- **Post CID:** \`${record.post_cid || "unknown"}\`
-- **Blob CID:** \`${record.blob_cid || "unknown"}\`
-- **Media type:** ${record.media_type}
-- **Full-size media:** [open original](${full_size})
-- **Source post:** [view post](${record.post_url || "#"})
-- **Alt text:** ${record.alt_text || "(none provided)"}
-- **Notes:**
+<div class="media-entry">
+<div class="media-entry-visual">${thumbnail_line}</div>
+${format_media_properties(record, full_size, record.post_url)}
+</div>
 `;
 };
 
 const NO_UPLOADS_PLACEHOLDER =
   /\n*No media upload records have been imported yet\. Add new entries directly below\s*this line, keeping the newest upload at the top\.\s*/i;
+const GENERATED_DATE_PATTERN =
+  /<p class="ledger-generated"><strong>Ledger generated:<\/strong>[^<]+<\/p>/;
+
+const format_ledger_date = (date = new Date()) =>
+  date.toLocaleDateString("en-US", {
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+    year: "numeric",
+  });
+
+const ensure_layout_marker = (content) => {
+  const marker = `<!-- media-ledger-format: ${MEDIA_LEDGER_FORMAT_VERSION} -->`;
+  if (MEDIA_LEDGER_FORMAT_MARKER.test(content)) {
+    return content.replace(MEDIA_LEDGER_FORMAT_MARKER, marker);
+  }
+  return content.replace(/^(#\s+[^\n]+\n)/, `$1\n${marker}\n`);
+};
+
+const update_ledger_generated_date = (content) => {
+  const generated_line = `<p class="ledger-generated"><strong>Ledger generated:</strong> ${format_ledger_date()}</p>`;
+  if (GENERATED_DATE_PATTERN.test(content)) {
+    return content.replace(GENERATED_DATE_PATTERN, generated_line);
+  }
+  return content.replace(
+    /(<p class="subtitle">[\s\S]*?<\/p>)/,
+    `$1\n${generated_line}`,
+  );
+};
+
+const LEGACY_TECHNICAL_FIELDS =
+  /(?:- \*\*Uploaded:\*\*[^\n]*\n)(?:- \*\*Media key:\*\*[^\n]*\n)(?:- \*\*Post URI:\*\*[^\n]*\n)(?:- \*\*Post CID:\*\*[^\n]*\n)(?:- \*\*Blob CID:\*\*[^\n]*\n)(?:- \*\*Media type:\*\*[^\n]*\n)/g;
+
+const collapse_legacy_technical_fields = (content) => {
+  const uploads_heading = /^##\s+Uploads\s*$/im.exec(content);
+  if (!uploads_heading) return content;
+  const heading_end = uploads_heading.index + uploads_heading[0].length;
+  const before_uploads = content.slice(0, heading_end);
+  const uploads = content
+    .slice(heading_end)
+    .replace(LEGACY_TECHNICAL_FIELDS, (block) => {
+      const values = Object.fromEntries(
+        [...block.matchAll(/- \*\*([^:]+):\*\*\s*(.*)/g)].map((match) => [
+          match[1],
+          match[2],
+        ]),
+      );
+      return `${format_technical_details({
+        uploaded_at: values.Uploaded,
+        media_key: values["Media key"]?.replaceAll("`", ""),
+        post_uri: values["Post URI"]?.replaceAll("`", ""),
+        post_cid: values["Post CID"]?.replaceAll("`", ""),
+        blob_cid: values["Blob CID"]?.replaceAll("`", ""),
+        media_type: values["Media type"],
+      })}\n`;
+    });
+  return `${before_uploads}${uploads}`;
+};
+
+const normalize_media_entry_layout = (content) => {
+  const chunks = content.split(/(?=^###\s)/m);
+  const normalized = chunks
+    .map((chunk) => {
+      if (
+        !chunk.includes("[![Thumbnail]") ||
+        chunk.includes('class="media-entry"')
+      ) {
+        return chunk;
+      }
+      const thumbnail_match = chunk.match(
+        /\[!\[Thumbnail\]\(([^)]+)\)\]\(([^)]+)\)/,
+      );
+      const details_match = chunk.match(/<details>[\s\S]*?<\/details>/);
+      const full_size_match = chunk.match(
+        /- \*\*Full-size media:\*\* \[open original\]\(([^)]+)\)/,
+      );
+      const post_match = chunk.match(
+        /- \*\*Source post:\*\* \[view post\]\(([^)]+)\)/,
+      );
+      const alt_match = chunk.match(/- \*\*Alt text:\*\* ([^\n]*)/);
+      if (!thumbnail_match || !details_match) return chunk;
+      const properties = `
+<div class="media-entry-properties">
+${details_match[0]}
+<p><strong>Full-size media:</strong> <a href="${escape_html(full_size_match?.[1] || thumbnail_match[2])}">open original</a></p>
+<p><strong>Source post:</strong> <a href="${escape_html(post_match?.[1] || "#")}">view post</a></p>
+<p><strong>Alt text:</strong> ${escape_html(alt_match?.[1] || "(none provided)")}</p>
+</div>`;
+      const heading_match = chunk.match(/^###[^\n]+/m);
+      const heading = heading_match?.[0] || "";
+      const prefix = heading_match ? chunk.slice(0, heading_match.index) : "";
+      return `${prefix}${heading}
+
+<div class="media-entry">
+<div class="media-entry-visual"><a href="${escape_html(thumbnail_match[2])}"><img src="${escape_html(thumbnail_match[1])}" alt="Thumbnail" /></a></div>
+${properties}
+</div>
+`;
+    })
+    .join("");
+  const with_notes = normalized.replace(
+    /(<details>[\s\S]*?<\/details>)\n<p><strong>Notes:<\/strong>\s*([^<]*)<\/p>/g,
+    (_match, details, notes) => {
+      const note_value = notes.trim() || "(none provided)";
+      const note_item = `  <li><strong>Notes:</strong> <code>${escape_html(note_value)}</code></li>\n`;
+      return details.replace("</ul>", `${note_item}</ul>`);
+    },
+  );
+  return with_notes
+    .replace(/<details>[\s\S]*?<\/details>/g, (details) => {
+      if (details.includes("<strong>Notes:</strong>")) return details;
+      const note_item =
+        "  <li><strong>Notes:</strong> <code>(none provided)</code></li>\n";
+      return details.replace("</ul>", `${note_item}</ul>`);
+    })
+    .replace(/\n<p><strong>Notes:<\/strong>[^<]*<\/p>/g, "")
+    .replace(
+      /<p><strong>Alt text:<\/strong><\/p>\n<blockquote>([^<]*)<\/blockquote>/g,
+      (_match, alt_text) =>
+        `<p><strong>Alt text:</strong> ${format_copy_alt_button(alt_text)}</p>\n<blockquote>${alt_text}</blockquote>`,
+    )
+    .replace(
+      /<p><strong>Alt text:<\/strong>\s*([^<]*)<\/p>/g,
+      (_match, alt_text) =>
+        `<p><strong>Alt text:</strong> ${format_copy_alt_button(alt_text)}</p>\n<blockquote>${alt_text}</blockquote>`,
+    )
+    .replace(
+      /<blockquote><strong>Alt text:<\/strong>\s*([^<]*)<\/blockquote>/g,
+      (_match, alt_text) =>
+        `<p><strong>Alt text:</strong> ${format_copy_alt_button(alt_text)}</p>\n<blockquote>${alt_text}</blockquote>`,
+    )
+    .replace(
+      /(<div class="media-entry-properties">\n)(<details>[\s\S]*?<\/details>\n)([\s\S]*?)(<\/div>)/g,
+      (_match, opening, details, properties, closing) =>
+        `${opening}${properties}${details}${closing}`,
+    )
+    .replace(/<\/div>\n(?=###\s)/g, "</div>\n\n");
+};
+
+const add_aspect_ratios_to_details = (content, records) => {
+  let updated = content;
+  records.forEach((record) => {
+    if (!record.media_key || !record.aspect_ratio) return;
+    const aspect_ratio = escape_html(JSON.stringify(record.aspect_ratio));
+    const media_key = escape_html(record.media_key);
+    const media_block_pattern = new RegExp(
+      `(<details>[\\s\\S]*?<strong>Media key:<\\/strong>\\s*<code>${media_key.replace(/[.*+?^${}()|[\\]\\]/g, "\\\\$&")}<\\/code>[\\s\\S]*?<\\/details>)`,
+      "i",
+    );
+    updated = updated.replace(media_block_pattern, (details) => {
+      if (details.includes("<strong>Aspect ratio:</strong>")) return details;
+      const item = `  <li><strong>Aspect ratio:</strong> <code>${aspect_ratio}</code></li>\n`;
+      return details.replace("</ul>", `${item}</ul>`);
+    });
+  });
+  return updated;
+};
 
 /**
  * Insert new records while preserving existing entries and editorial notes.
@@ -189,7 +417,17 @@ const NO_UPLOADS_PLACEHOLDER =
  * Updated document state.
  */
 export const add_new_media_entries = (existing_content, records) => {
-  const parsed = parse_media_document(existing_content);
+  const normalized_content = ensure_layout_marker(
+    add_aspect_ratios_to_details(
+      shorten_existing_media_titles(
+        normalize_media_entry_layout(
+          collapse_legacy_technical_fields(existing_content),
+        ),
+      ),
+      records,
+    ).replace(/^###\s+/gm, "## "),
+  );
+  const parsed = parse_media_document(normalized_content);
   const seen_keys = new Set(parsed.media_keys);
   const added_records = records
     .filter((record) => record.media_key && !seen_keys.has(record.media_key))
@@ -198,24 +436,47 @@ export const add_new_media_entries = (existing_content, records) => {
         new Date(right.uploaded_at || 0) - new Date(left.uploaded_at || 0),
     );
   if (!added_records.length) {
-    return { content: existing_content, added_records, changed: false };
+    const content =
+      normalized_content !== existing_content
+        ? update_ledger_generated_date(normalized_content)
+        : normalized_content;
+    return {
+      content,
+      added_records,
+      changed: content !== existing_content,
+    };
   }
   const entries = added_records.map(format_media_entry).join("\n\n");
-  const uploads_heading = /^##\s+Uploads\s*$/im.exec(existing_content);
+  const uploads_heading = /^##\s+Uploads\s*$/im.exec(normalized_content);
   if (!uploads_heading) {
+    const first_media_heading = /^##\s+\d{4}-\d{2}-\d{2}[^\n]*$/m.exec(
+      normalized_content,
+    );
+    const content_before_first_media = first_media_heading
+      ? normalized_content.slice(0, first_media_heading.index).trimEnd()
+      : normalized_content.trimEnd();
+    const content_after_first_media = first_media_heading
+      ? normalized_content.slice(first_media_heading.index)
+      : "";
+    const content = update_ledger_generated_date(
+      `${content_before_first_media}\n\n${entries}\n${content_after_first_media}`,
+    );
     return {
-      content: `${existing_content.trimEnd()}\n\n## Uploads\n\n${entries}\n`,
+      content,
       added_records,
       changed: true,
     };
   }
   const heading_end = uploads_heading.index + uploads_heading[0].length;
-  const before_uploads = existing_content.slice(0, heading_end);
-  const after_uploads = existing_content
+  const before_uploads = normalized_content.slice(0, heading_end);
+  const after_uploads = normalized_content
     .slice(heading_end)
     .replace(NO_UPLOADS_PLACEHOLDER, "\n");
+  const content = update_ledger_generated_date(
+    `${before_uploads}\n\n${entries}\n${after_uploads.trimStart()}`,
+  );
   return {
-    content: `${before_uploads}\n\n${entries}\n${after_uploads.trimStart()}`,
+    content,
     added_records,
     changed: true,
   };

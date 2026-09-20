@@ -10,6 +10,8 @@ describe("Bluesky media ledger sync", () => {
   it("reads stable media keys from an existing ledger", () => {
     const content = `# Bluesky media uploads
 
+<!-- media-ledger-format: 3 -->
+
 ## Uploads
 
 - **Media key:** \`post-cid/blob-cid\`
@@ -60,6 +62,8 @@ No media upload records have been imported yet. Add new entries directly below t
 
   it("does not rewrite a ledger when every record is already present", () => {
     const content = `# Bluesky media uploads
+
+<!-- media-ledger-format: 3 -->
 
 ## Uploads
 
