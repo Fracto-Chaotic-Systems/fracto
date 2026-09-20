@@ -244,6 +244,15 @@ No media upload records have been imported yet. Add new entries directly below t
     assert.equal(result.media_result.added_records.length, 1);
     assert.match(result.post_result.content, /shared-cid/);
     assert.match(result.media_result.content, /shared-cid\/blob-cid/);
+    assert.match(
+      result.post_result.content,
+      /media\/MEDIA_UPLOADS\.md#media-shared-cid-blob-cid/,
+    );
+    assert.match(result.media_result.content, /id="media-shared-cid-blob-cid"/);
+    assert.match(
+      result.media_result.content,
+      /class="media-ledger-index"[\s\S]*#media-shared-cid-blob-cid/,
+    );
     assert.doesNotMatch(result.post_result.content, /<script>/);
     assert.match(result.post_result.content, /&lt;script&gt;/);
   });
@@ -271,5 +280,25 @@ No media upload records have been imported yet. Add new entries directly below t
     assert.deepEqual(result.media_records, []);
     assert.equal(result.post_result.changed, false);
     assert.equal(result.media_result.changed, false);
+  });
+
+  it("removes obsolete numbered media alt-text duplicates", () => {
+    const content = `# Public post archive
+
+## 2026-09-20 — post
+
+> Post text
+
+Media alt text: Existing description
+
+Media alt text 1: Duplicate description
+
+Media details: [media 1 details](media/MEDIA_UPLOADS.md#media-example-0)
+`;
+    const result = add_new_post_entries(content, []);
+
+    assert.equal(result.changed, true);
+    assert.match(result.content, /Media alt text: Existing description/);
+    assert.doesNotMatch(result.content, /Media alt text 1:/);
   });
 });

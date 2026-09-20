@@ -28,6 +28,9 @@ Snapshot: 2 likes, 1 reply, 0 reposts.
 Media alt text: “Minibrots cling to the field like fruit on a tree - that is, a
 tree with primates swinging by their tails.”
 
+
+Media details: [media 1 details](media/MEDIA_UPLOADS.md#media-bafyreihh6v5vwhybexyivbvt4qh66hsqtekbnxnp2rkw4fqbs4js3r4h3m-0)
+
 Snapshot: 1 like, 0 replies, 0 reposts.
 
 ### (3/4)
@@ -39,6 +42,9 @@ Snapshot: 1 like, 0 replies, 0 reposts.
 
 Media alt text: “When different areas of the interior collide, they create
 singularities that emphasize the geometry of those interactions.”
+
+
+Media details: [media 1 details](media/MEDIA_UPLOADS.md#media-bafyreic567zzvovdr22d7yycy67bqnwnshn22xdclghrkrzpiy5iie6s4m-0)
 
 Snapshot: 2 likes, 1 reply, 0 reposts.
 
@@ -66,6 +72,11 @@ if you just look closely enough”; “Minibrots dot the surrounding landscape l
 candies spilled from a piñata”; “Landscapes found on the main cardiod resemble a
 row of hedges when applying color according to orbital properties.”
 
+
+
+
+Media details: [media 1 details](media/MEDIA_UPLOADS.md#media-bafyreicfseangnmdqsfc4wevh3uqiv457qkzu2uwy4fm56ozcyvbl5vhmy-0), [media 2 details](media/MEDIA_UPLOADS.md#media-bafyreicfseangnmdqsfc4wevh3uqiv457qkzu2uwy4fm56ozcyvbl5vhmy-1), [media 3 details](media/MEDIA_UPLOADS.md#media-bafyreicfseangnmdqsfc4wevh3uqiv457qkzu2uwy4fm56ozcyvbl5vhmy-2)
+
 Snapshot: 3 likes, 1 reply, 0 reposts.
 
 ## 2026-08-30 — research artifacts
@@ -79,6 +90,11 @@ Media alt text describes early patterns based on internal orbital properties,
 orbital paths creating wave-like intersections, and concentrated variations that
 resemble vertical “geysers.”
 
+
+
+
+Media details: [media 1 details](media/MEDIA_UPLOADS.md#media-bafyreieofptt3zpwcqj3np6okvcnhfxahx2iylq4wxkchhavgos623kwnu-0), [media 2 details](media/MEDIA_UPLOADS.md#media-bafyreieofptt3zpwcqj3np6okvcnhfxahx2iylq4wxkchhavgos623kwnu-1), [media 3 details](media/MEDIA_UPLOADS.md#media-bafyreieofptt3zpwcqj3np6okvcnhfxahx2iylq4wxkchhavgos623kwnu-2)
+
 Snapshot: 1 like, 0 replies, 0 reposts.
 
 ## 2026-08-26 — why study the interior?
@@ -90,6 +106,9 @@ Snapshot: 1 like, 0 replies, 0 reposts.
 
 Media alt text: “A rendering of a minibrot using the customary black interior as
 per tradition.”
+
+
+Media details: [media 1 details](media/MEDIA_UPLOADS.md#media-bafyreick7df3zduqyjh4oyymdnuepno5t2i4dqmqct5fsqydl35r3cfow4-0)
 
 Snapshot: 2 likes, 0 replies, 0 reposts.
 
@@ -105,6 +124,9 @@ Snapshot: 2 likes, 0 replies, 0 reposts.
 Media alt text: “The complete Mandelbrot set with interior coloration based on
 orbital dynamics.”
 
+
+Media details: [media 1 details](media/MEDIA_UPLOADS.md#media-bafyreig5loq365hw6teilv4cvblgr3fqqxxmow722ycqnxizzdcwtqdguq-0)
+
 Snapshot: 2 likes, 0 replies, 0 reposts.
 
 ## 2026-08-21 — account introduction
@@ -115,6 +137,9 @@ Snapshot: 2 likes, 0 replies, 0 reposts.
 
 Media alt text: “An illustration of a node on the main Mandelbrot core. It uses
 coloring based on the orbital patterns found at each point in the region.”
+
+
+Media details: [media 1 details](media/MEDIA_UPLOADS.md#media-bafyreidzu5gok25sqahowyin7glryun64csbiqql5wtevydk2xq3izebga-0)
 
 Snapshot: 4 likes, 0 replies, 0 reposts.
 

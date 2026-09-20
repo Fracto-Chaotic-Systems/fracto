@@ -32,3 +32,8 @@ Markdown renderer processes the archive's trusted layout HTML.
 The account archive intentionally excludes reposted material returned by the
 author-feed endpoint. Only records whose author matches the configured actor
 are written.
+
+Posts that contain media include each asset's alt text and an internal link to
+the corresponding anchored entry in `media/MEDIA_UPLOADS.md`. Existing seeded
+post entries are enriched with those links when their matching feed records are
+seen during synchronization.

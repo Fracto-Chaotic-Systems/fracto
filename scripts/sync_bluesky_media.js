@@ -180,6 +180,9 @@ const media_from_embed = (embed) => {
   return [];
 };
 
+const media_anchor_id = (media_key) =>
+  `media-${String(media_key || "unknown").replace(/[^A-Za-z0-9_-]+/g, "-")}`;
+
 const format_heading_text = (record) => {
   const description = (record.alt_text || `${record.media_type} upload`)
     .split(/\r?\n/)[0]
@@ -272,7 +275,8 @@ export const format_media_entry = (record) => {
   const thumbnail_line = thumbnail
     ? `<a href="${escape_html(full_size)}"><img src="${escape_html(thumbnail)}" alt="Thumbnail" /></a>`
     : "<p>No preview URL available.</p>";
-  return `## ${uploaded_date} — ${format_heading_text(record)}
+  return `<a id="${media_anchor_id(record.media_key)}"></a>
+## ${uploaded_date} — ${format_heading_text(record)}
 
 <div class="media-entry">
 <div class="media-entry-visual">${thumbnail_line}</div>
@@ -285,6 +289,8 @@ const NO_UPLOADS_PLACEHOLDER =
   /\n*No media upload records have been imported yet\. Add new entries directly below\s*this line, keeping the newest upload at the top\.\s*/i;
 const GENERATED_DATE_PATTERN =
   /<p class="ledger-generated"><strong>Ledger generated:<\/strong>[^<]+<\/p>/;
+const MEDIA_INDEX_PATTERN =
+  /<div class="media-ledger-index">[\s\S]*?<\/div>\s*/;
 
 const format_ledger_date = (date = new Date()) =>
   date.toLocaleDateString("en-US", {
@@ -311,6 +317,26 @@ const update_ledger_generated_date = (content) => {
     /(<p class="subtitle">[\s\S]*?<\/p>)/,
     `$1\n${generated_line}`,
   );
+};
+
+const update_media_index = (content) => {
+  const entries = [
+    ...content.matchAll(/<a id="(media-[^"]+)"><\/a>\s*\n##\s+([^\n]+)/g),
+  ];
+  if (!entries.length) return content;
+  const list = entries
+    .map(
+      ([, anchor, heading]) =>
+        `  <li><a href="#${anchor}">${escape_html(heading.trim())}</a></li>`,
+    )
+    .join("\n");
+  const index = `<div class="media-ledger-index">\n<strong>Media index</strong>\n<ul>\n${list}\n</ul>\n</div>\n`;
+  if (MEDIA_INDEX_PATTERN.test(content)) {
+    return content.replace(MEDIA_INDEX_PATTERN, index);
+  }
+  const first_entry = /<a id="media-[^"]+"><\/a>\s*\n##\s+/m.exec(content);
+  if (!first_entry) return content;
+  return `${content.slice(0, first_entry.index)}${index}\n${content.slice(first_entry.index)}`;
 };
 
 const LEGACY_TECHNICAL_FIELDS =
@@ -441,6 +467,33 @@ const add_aspect_ratios_to_details = (content, records) => {
   return updated;
 };
 
+const add_media_entry_anchors = (content, records) => {
+  let updated = content;
+  const media_keys = new Set([
+    ...parse_media_document(content).media_keys,
+    ...records.map((record) => record.media_key).filter(Boolean),
+  ]);
+  media_keys.forEach((media_key) => {
+    const anchor = media_anchor_id(media_key);
+    if (updated.includes(`id="${anchor}"`)) return;
+    const escaped_key = escape_html(media_key).replace(
+      /[.*+?^${}()|[\]\\]/g,
+      "\\$&",
+    );
+    const detail_index = updated.search(
+      new RegExp(
+        `<strong>Media key:<\\/strong>\\s*<code>${escaped_key}<\\/code>`,
+        "i",
+      ),
+    );
+    if (detail_index < 0) return;
+    const heading_index = updated.lastIndexOf("\n## ", detail_index);
+    const insert_at = heading_index < 0 ? 0 : heading_index + 1;
+    updated = `${updated.slice(0, insert_at)}<a id="${anchor}"></a>\n${updated.slice(insert_at)}`;
+  });
+  return updated;
+};
+
 /**
  * Insert new records while preserving existing entries and editorial notes.
  * @param {string} existing_content Existing Markdown ledger.
@@ -449,15 +502,20 @@ const add_aspect_ratios_to_details = (content, records) => {
  * Updated document state.
  */
 export const add_new_media_entries = (existing_content, records) => {
-  const normalized_content = ensure_layout_marker(
-    add_aspect_ratios_to_details(
-      shorten_existing_media_titles(
-        normalize_media_entry_layout(
-          collapse_legacy_technical_fields(existing_content),
+  const normalized_content = update_media_index(
+    ensure_layout_marker(
+      add_media_entry_anchors(
+        add_aspect_ratios_to_details(
+          shorten_existing_media_titles(
+            normalize_media_entry_layout(
+              collapse_legacy_technical_fields(existing_content),
+            ),
+          ),
+          records,
         ),
-      ),
-      records,
-    ).replace(/^###\s+/gm, "## "),
+        records,
+      ).replace(/^###\s+/gm, "## "),
+    ),
   );
   const parsed = parse_media_document(normalized_content);
   const seen_keys = new Set(parsed.media_keys);
@@ -490,8 +548,10 @@ export const add_new_media_entries = (existing_content, records) => {
     const content_after_first_media = first_media_heading
       ? normalized_content.slice(first_media_heading.index)
       : "";
-    const content = update_ledger_generated_date(
-      `${content_before_first_media}\n\n${entries}\n${content_after_first_media}`,
+    const content = update_media_index(
+      update_ledger_generated_date(
+        `${content_before_first_media}\n\n${entries}\n${content_after_first_media}`,
+      ),
     );
     return {
       content,
@@ -504,8 +564,10 @@ export const add_new_media_entries = (existing_content, records) => {
   const after_uploads = normalized_content
     .slice(heading_end)
     .replace(NO_UPLOADS_PLACEHOLDER, "\n");
-  const content = update_ledger_generated_date(
-    `${before_uploads}\n\n${entries}\n${after_uploads.trimStart()}`,
+  const content = update_media_index(
+    update_ledger_generated_date(
+      `${before_uploads}\n\n${entries}\n${after_uploads.trimStart()}`,
+    ),
   );
   return {
     content,
@@ -545,7 +607,10 @@ export const extract_post_record = (feed_item, actor) => {
   const post = feed_item?.post;
   const record = post?.record;
   if (!post?.cid || !record) return null;
-  const media = media_from_embed(post.embed);
+  const media = media_from_embed(post.embed).map((asset) => ({
+    ...asset,
+    media_key: `${post.cid}/${asset.blob_cid || asset.media_index}`,
+  }));
   return {
     post_uri: post.uri || null,
     post_cid: post.cid,
@@ -660,6 +725,27 @@ const format_post_text = (text) =>
     .map((line) => `> ${escape_html(line.trim())}`)
     .join("\n");
 
+const format_post_media_details = (record) => {
+  const media = (record.media || []).filter((asset) => asset.media_key);
+  if (!media.length) return "";
+  const alt_text = media
+    .map((asset) => escape_html(asset.alt_text || "(none provided)"))
+    .join("; ");
+  return `Media alt text: ${alt_text}\n\n${format_post_media_links(record)}`;
+};
+
+const format_post_media_links = (record) => {
+  const media = (record.media || []).filter((asset) => asset.media_key);
+  if (!media.length) return "";
+  const links = media
+    .map(
+      (asset, index) =>
+        `[media ${index + 1} details](media/MEDIA_UPLOADS.md#${media_anchor_id(asset.media_key)})`,
+    )
+    .join(", ");
+  return `Media details: ${links}`;
+};
+
 const format_snapshot = (record) => {
   const likes = Number(record.like_count || 0);
   const replies = Number(record.reply_count || 0);
@@ -677,7 +763,8 @@ const format_snapshot = (record) => {
 export const format_post_entry = (record) => {
   const date = post_date(record);
   const post_url = record.post_url || "#";
-  return `## ${date} — ${format_post_heading_text(record.text)}\n\n<!-- post-cid: ${record.post_cid} -->\n\n${format_post_text(record.text)}\n\n<p><strong>Source post:</strong> <a href="${escape_html(post_url)}">view post</a></p>\n\n${format_snapshot(record)}\n`;
+  const media_details = format_post_media_details(record);
+  return `## ${date} — ${format_post_heading_text(record.text)}\n\n<!-- post-cid: ${record.post_cid} -->\n\n${format_post_text(record.text)}\n\n<p><strong>Source post:</strong> <a href="${escape_html(post_url)}">view post</a></p>\n\n${media_details ? `${media_details}\n\n` : ""}${format_snapshot(record)}\n`;
 };
 
 const ensure_post_archive_marker = (content) => {
@@ -687,6 +774,73 @@ const ensure_post_archive_marker = (content) => {
   }
   return content.replace(/^(#\s+[^\n]+\n)/, `$1\n${marker}\n`);
 };
+
+const post_section_ranges = (content) => {
+  const ranges = [];
+  const headings = [...content.matchAll(POST_HEADING_PATTERN)];
+  headings.forEach((heading, index) => {
+    const section_start = heading.index + heading[0].length;
+    const section_end = headings[index + 1]?.index ?? content.length;
+    const section = content.slice(section_start, section_end);
+    const subheadings = [...section.matchAll(POST_SUBHEADING_PATTERN)];
+    const boundaries = subheadings.length
+      ? subheadings.map((subheading, sub_index) => ({
+          start: section_start + subheading.index + subheading[0].length,
+          end:
+            section_start +
+            (subheadings[sub_index + 1]?.index ?? section.length),
+        }))
+      : [{ start: section_start, end: section_end }];
+    boundaries.forEach(({ start, end }) => {
+      const post_section = content.slice(start, end);
+      const quoted_text = [...post_section.matchAll(/^>\s?(.*)$/gm)]
+        .map((match) => match[1])
+        .join(" ");
+      ranges.push({
+        start,
+        end,
+        date: heading[1],
+        legacy_key: quoted_text
+          ? post_legacy_key(heading[1], quoted_text)
+          : null,
+      });
+    });
+  });
+  return ranges;
+};
+
+const add_media_links_to_existing_posts = (content, records) => {
+  const ranges = post_section_ranges(content);
+  const insertions = [];
+  records.forEach((record) => {
+    const media_links = format_post_media_links(record);
+    if (!media_links) return;
+    const match = ranges.find(
+      (range) =>
+        range.legacy_key === post_legacy_key(post_date(record), record.text),
+    );
+    if (!match) return;
+    const section = content.slice(match.start, match.end);
+    if (/^Media details:/im.test(section)) return;
+    const snapshot_offset = section.search(/^Snapshot:/m);
+    const insert_at =
+      match.start + (snapshot_offset < 0 ? section.length : snapshot_offset);
+    insertions.push({
+      index: insert_at,
+      text: `${media_links}\n\n`,
+    });
+  });
+  return insertions
+    .sort((left, right) => right.index - left.index)
+    .reduce(
+      (updated, insertion) =>
+        `${updated.slice(0, insertion.index)}${insertion.text}${updated.slice(insertion.index)}`,
+      content,
+    );
+};
+
+const remove_duplicate_media_alt_text = (content) =>
+  content.replace(/^Media alt text \d+:.*\r?\n?/gm, "");
 
 /**
  * Add unseen posts to the public archive, newest first, while preserving
@@ -698,7 +852,11 @@ const ensure_post_archive_marker = (content) => {
  * Updated archive state.
  */
 export const add_new_post_entries = (existing_content, records) => {
-  const parsed = parse_post_archive(existing_content);
+  const enriched_content = add_media_links_to_existing_posts(
+    remove_duplicate_media_alt_text(existing_content),
+    records,
+  );
+  const parsed = parse_post_archive(enriched_content);
   const added_records = records
     .filter((record) => {
       if (!record?.post_cid) return false;
@@ -712,10 +870,18 @@ export const add_new_post_entries = (existing_content, records) => {
         new Date(right.created_at || 0) - new Date(left.created_at || 0),
     );
   if (!added_records.length) {
-    return { content: existing_content, added_records, changed: false };
+    const content =
+      enriched_content === existing_content
+        ? existing_content
+        : ensure_post_archive_marker(enriched_content);
+    return {
+      content,
+      added_records,
+      changed: content !== existing_content,
+    };
   }
   const entries = added_records.map(format_post_entry).join("\n\n");
-  const marked_content = ensure_post_archive_marker(existing_content);
+  const marked_content = ensure_post_archive_marker(enriched_content);
   const first_post_heading = /^##\s+\d{4}-\d{2}-\d{2}\s+[^\n]*$/m.exec(
     marked_content,
   );
