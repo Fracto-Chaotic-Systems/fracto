@@ -9,9 +9,9 @@ build on the existing record rather than starting from memory.
 
 - [CONTENT_GUIDELINES.md](CONTENT_GUIDELINES.md) — voice, themes, editorial
   guardrails, and audience goals.
-- [POST_ARCHIVE.md](POST_ARCHIVE.md) — the current archive of public posts and
+- [Bluesky/POST_ARCHIVE.md](Bluesky/POST_ARCHIVE.md) — the current archive of public posts and
   their associated media descriptions and engagement snapshot.
-- [RESPONSE_LOG.md](RESPONSE_LOG.md) — a running record of public replies,
+- [Bluesky/RESPONSE_LOG.md](Bluesky/RESPONSE_LOG.md) — a running record of public replies,
   quote-posts, questions, and follow-up opportunities.
 - [CAMPAIGN_FRAMEWORK.md](CAMPAIGN_FRAMEWORK.md) — reusable structures for
   short posts, threads, visual posts, and multi-week campaigns.
@@ -32,4 +32,3 @@ When adding material:
 5. Never store private messages, personal information, or identifying details
    about members of the public unless there is a clear editorial reason and
    explicit permission.
-
