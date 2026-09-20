@@ -28,12 +28,13 @@ See the root README for Docker production/development and first-run workflows.
 
 ### `sync_bluesky_media.js`
 
-Fetches the public author feed for `fracto-studio.bsky.social`, extracts image
-and video media metadata, and adds only unseen uploads to
-`social/Bluesky/media/MEDIA_UPLOADS.md`. Entries remain newest-first and are
-deduplicated by post CID and blob CID. The script never downloads the media
-files themselves. Use `npm run social:sync` directly, or let one of the Docker
-launch workflows run it before building.
+Fetches the public author feed for `fracto-studio.bsky.social` once, then
+updates both the public post archive (`social/Bluesky/POST_ARCHIVE.md`) and the
+image/video media ledger (`social/Bluesky/media/MEDIA_UPLOADS.md`). Entries
+remain newest-first and are deduplicated by post CID (and by blob CID for
+media). The script never downloads the media files themselves. Use
+`npm run social:sync` directly, or let one of the Docker launch workflows run
+it before building.
 
 The actor, feed limit, and page count can be overridden with
 `FRACTO_BLUESKY_ACTOR`, `FRACTO_BLUESKY_POST_LIMIT`, and
@@ -202,23 +203,24 @@ without the root supervisor.
 
 ### Platform launchers
 
-- `launch-production.bat` / `launch-production.sh`: refresh the Bluesky media
-  ledger, then build and start production.
-- `launch-development.bat` / `launch-development.sh`: refresh the Bluesky media
-  ledger, then start the Vite-based
+- `launch-production.bat` / `launch-production.sh`: refresh the Bluesky post
+  archive and media ledger, then build and start production.
+- `launch-development.bat` / `launch-development.sh`: refresh the Bluesky post
+  archive and media ledger, then start the Vite-based
   development stack on ports 3101–3106.
-- `cold_boot.bat`: after a host restart, refreshes Git and the Bluesky media
-  ledger, rebuilds the image, refreshes the tile index, and starts production
-  with Compose.
+- `cold_boot.bat`: after a host restart, refreshes Git and the Bluesky post
+  archive/media ledger, rebuilds the image, refreshes the tile index, and
+  starts production with Compose.
 - `ensure_exclusive.bat` / `ensure_exclusive.sh`: check for the other Docker
   mode before launch and, after confirmation, gracefully stop it with
   `docker compose stop`.
 - `shutdown.bat` / `shutdown.sh`: detect running production/development
   containers, ask for confirmation, and gracefully stop either selected mode or
   both when no parameter is supplied.
-- `first-run.bat`: Windows first-run workflow; refreshes the Bluesky media ledger,
-  builds the image, bootstraps or migrates the database, refreshes the index, and
-  starts production. It is safe to rerun after correcting an error.
+- `first-run.bat`: Windows first-run workflow; refreshes the Bluesky post
+  archive/media ledger, builds the image, bootstraps or migrates the database,
+  refreshes the index, and starts production. It is safe to rerun after
+  correcting an error.
 
 ## Database setup and schema changes
 

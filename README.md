@@ -292,12 +292,14 @@ shared tile cache and index.
 
 ### Docker production
 
-The production and development launch scripts refresh the tracked Bluesky media
-ledger before building, so the UI sees newly published media without downloading
-image files. The sync is idempotent: when the public feed contains no media not
-already recorded in `social/Bluesky/media/MEDIA_UPLOADS.md`, the document is not
-rewritten. Launch-time refreshes are best-effort so a temporary Bluesky outage
-does not block an otherwise valid build; a direct manual sync remains strict.
+The production and development launch scripts refresh the tracked Bluesky post
+archive and media ledger before building, so the UI sees newly published posts
+and media without downloading image files. The feed is fetched once for both
+documents, and the sync is idempotent: when the public feed contains no records
+not already recorded in `social/Bluesky/POST_ARCHIVE.md` or
+`social/Bluesky/media/MEDIA_UPLOADS.md`, neither document is rewritten.
+Launch-time refreshes are best-effort so a temporary Bluesky outage does not
+block an otherwise valid build; a direct manual sync remains strict.
 To refresh it without launching Docker, run:
 
 ```powershell

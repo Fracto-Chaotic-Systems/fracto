@@ -1,8 +1,21 @@
 # Public post archive
 
+<!-- post-archive-format: 1 -->
+
 This is the initial archive of posts returned by the public author feed on
 2026-09-20. Engagement values are the observed snapshot at that time. The
 posts are listed newest first.
+
+## 2026-09-04 — My lifelong study of both music and art…
+
+<!-- post-cid: bafyreif57qkdsfdyiihi6zk67vxmika7he7rufgqgfdsdpqwld5brponcm -->
+
+> My lifelong study of both music and art helped me understand that the geometric patterns within the Mandelbrot Set could be represented visually. Each &quot;orbital&quot; of the interior has a specific frequency, like a musical tone or a specific shade of color. (2/4)
+
+<p><strong>Source post:</strong> <a href="https://bsky.app/profile/fracto-studio.bsky.social/post/3munqq65ves2h">view post</a></p>
+
+Snapshot: 2 likes, 1 reply, 0 reposts.
+
 
 ## 2026-09-04 — four-part interior/orbital thread
 

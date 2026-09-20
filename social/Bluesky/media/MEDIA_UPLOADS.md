@@ -8,7 +8,7 @@ listing is generated from Bluesky directly, do not edit!</p>
 <p class="ledger-generated"><strong>Ledger generated:</strong> September 20, 2026</p>
 
 
-## 2026-09-04 — Minibrots cling to the field like fruit on a tree -…
+## 2026-09-04 — Minibrots cling to the field like fruit on…
 
 <div class="media-entry">
 <div class="media-entry-visual"><a href="https://cdn.bsky.app/img/feed_fullsize/plain/did:plc:f4r4ysvnudlmotcxt3t36dhd/bafkreidp7ibjli3ztn2omzxyl6txojpsx2xuszjgdbyelzeils4wxrnzfe"><img src="https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:f4r4ysvnudlmotcxt3t36dhd/bafkreidp7ibjli3ztn2omzxyl6txojpsx2xuszjgdbyelzeils4wxrnzfe" alt="Thumbnail" /></a></div>
@@ -34,7 +34,7 @@ listing is generated from Bluesky directly, do not edit!</p>
 </div>
 </div>
 
-## 2026-09-04 — When different areas of the interior collide, they create…
+## 2026-09-04 — When different areas of the interior collide, they…
 
 <div class="media-entry">
 <div class="media-entry-visual"><a href="https://cdn.bsky.app/img/feed_fullsize/plain/did:plc:f4r4ysvnudlmotcxt3t36dhd/bafkreic5oqmadvskjl3wxyoq5sxdnq46xre3cbm5bkobdsrgkpqapqm27m"><img src="https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:f4r4ysvnudlmotcxt3t36dhd/bafkreic5oqmadvskjl3wxyoq5sxdnq46xre3cbm5bkobdsrgkpqapqm27m" alt="Thumbnail" /></a></div>
@@ -59,7 +59,7 @@ listing is generated from Bluesky directly, do not edit!</p>
 </div>
 </div>
 
-## 2026-09-04 — Lined up like bars on a xylophone, these nodes closely…
+## 2026-09-04 — Lined up like bars on a xylophone, these…
 
 <div class="media-entry">
 <div class="media-entry-visual"><a href="https://cdn.bsky.app/img/feed_fullsize/plain/did:plc:f4r4ysvnudlmotcxt3t36dhd/bafkreieh2acixvx4n4pco4mjqxmfoo3ditqvnyp7pjum74ozrv7idr5hxe"><img src="https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:f4r4ysvnudlmotcxt3t36dhd/bafkreieh2acixvx4n4pco4mjqxmfoo3ditqvnyp7pjum74ozrv7idr5hxe" alt="Thumbnail" /></a></div>
@@ -84,7 +84,7 @@ listing is generated from Bluesky directly, do not edit!</p>
 </div>
 </div>
 
-## 2026-09-04 — A kaleidoscope of colors is found inside of the…
+## 2026-09-04 — A kaleidoscope of colors is found inside of…
 
 <div class="media-entry">
 <div class="media-entry-visual"><a href="https://cdn.bsky.app/img/feed_fullsize/plain/did:plc:f4r4ysvnudlmotcxt3t36dhd/bafkreihae2daokkdrxejpju4c2tj5kbxyvsou6cgyeuvmht5zo7zllmcxa"><img src="https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:f4r4ysvnudlmotcxt3t36dhd/bafkreihae2daokkdrxejpju4c2tj5kbxyvsou6cgyeuvmht5zo7zllmcxa" alt="Thumbnail" /></a></div>
@@ -134,7 +134,7 @@ listing is generated from Bluesky directly, do not edit!</p>
 </div>
 </div>
 
-## 2026-09-04 — Landscapes found on the main cardiod resemble a row…
+## 2026-09-04 — Landscapes found on the main cardiod resemble a…
 
 <div class="media-entry">
 <div class="media-entry-visual"><a href="https://cdn.bsky.app/img/feed_fullsize/plain/did:plc:f4r4ysvnudlmotcxt3t36dhd/bafkreigs2jscgzdb5xeryfi2qhrdb4qscxuovra7653o2whgczb7nhwpxa"><img src="https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:f4r4ysvnudlmotcxt3t36dhd/bafkreigs2jscgzdb5xeryfi2qhrdb4qscxuovra7653o2whgczb7nhwpxa" alt="Thumbnail" /></a></div>
@@ -159,7 +159,7 @@ listing is generated from Bluesky directly, do not edit!</p>
 </div>
 </div>
 
-## 2026-08-30 — Patterns emerged in early research based on internal orbital properties. This was…
+## 2026-08-30 — Patterns emerged in early research based on internal…
 
 <div class="media-entry">
 <div class="media-entry-visual"><a href="https://cdn.bsky.app/img/feed_fullsize/plain/did:plc:f4r4ysvnudlmotcxt3t36dhd/bafkreighmujqeorizjp25o5g3wl22lu6zzq5mohbevk5i63l6tncn745w4"><img src="https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:f4r4ysvnudlmotcxt3t36dhd/bafkreighmujqeorizjp25o5g3wl22lu6zzq5mohbevk5i63l6tncn745w4" alt="Thumbnail" /></a></div>
@@ -184,7 +184,7 @@ listing is generated from Bluesky directly, do not edit!</p>
 </div>
 </div>
 
-## 2026-08-30 — Orbital paths appear to create waves within the Set. As they intersect, patterns emerge similar to other intersecting wave patterns found…
+## 2026-08-30 — Orbital paths appear to create waves within the…
 
 <div class="media-entry">
 <div class="media-entry-visual"><a href="https://cdn.bsky.app/img/feed_fullsize/plain/did:plc:f4r4ysvnudlmotcxt3t36dhd/bafkreia755ukp6cjkqi335jnduz4lw3wox3wmzjin23jjwh3hummghi54m"><img src="https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:f4r4ysvnudlmotcxt3t36dhd/bafkreia755ukp6cjkqi335jnduz4lw3wox3wmzjin23jjwh3hummghi54m" alt="Thumbnail" /></a></div>
@@ -209,7 +209,7 @@ listing is generated from Bluesky directly, do not edit!</p>
 </div>
 </div>
 
-## 2026-08-30 — One of my favorite artifacts within the Set is the appearance of concentrated orbital variations in a narrow area. I call these "geysers" because…
+## 2026-08-30 — One of my favorite artifacts within the Set…
 
 <div class="media-entry">
 <div class="media-entry-visual"><a href="https://cdn.bsky.app/img/feed_fullsize/plain/did:plc:f4r4ysvnudlmotcxt3t36dhd/bafkreiglj3xvd4mwc2q2ul5ahr2fvwxmzebawwtia3nzqx3hk3t4sxxwhu"><img src="https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:f4r4ysvnudlmotcxt3t36dhd/bafkreiglj3xvd4mwc2q2ul5ahr2fvwxmzebawwtia3nzqx3hk3t4sxxwhu" alt="Thumbnail" /></a></div>
@@ -284,7 +284,7 @@ listing is generated from Bluesky directly, do not edit!</p>
 </div>
 </div>
 
-## 2026-08-21 — An illustration of a node on the main Mandelbrot core. It uses coloring…
+## 2026-08-21 — An illustration of a node on the main…
 
 <div class="media-entry">
 <div class="media-entry-visual"><a href="https://cdn.bsky.app/img/feed_fullsize/plain/did:plc:f4r4ysvnudlmotcxt3t36dhd/bafkreigwvgrcysg7o2azsdn4eujaxntxbohsv76bucko2an2mj643kdsoq"><img src="https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:f4r4ysvnudlmotcxt3t36dhd/bafkreigwvgrcysg7o2azsdn4eujaxntxbohsv76bucko2an2mj643kdsoq" alt="Thumbnail" /></a></div>
