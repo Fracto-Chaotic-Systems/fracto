@@ -39,6 +39,7 @@ services:
       - ./handlers:/app/handlers:ro
       - ./scripts:/app/scripts:ro
       - ./sdk:/app/sdk:ro
+      - ./social:/app/social:ro
       - ./servers/fracto-admin-server:/app/servers/fracto-admin-server
       - /app/servers/fracto-admin-server/node_modules
       - ./servers/fracto-asset-server:/app/servers/fracto-asset-server
