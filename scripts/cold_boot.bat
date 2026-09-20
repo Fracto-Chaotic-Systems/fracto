@@ -17,6 +17,9 @@ call npm run update:repos
 if errorlevel 1 goto failed
 
 echo [2/4] Rebuilding the production image (this may take several minutes)...
+echo Refreshing the Bluesky media ledger...
+call npm run social:sync -- --allow-failure
+if errorlevel 1 goto failed
 docker compose build --progress=plain fracto
 if errorlevel 1 goto failed
 

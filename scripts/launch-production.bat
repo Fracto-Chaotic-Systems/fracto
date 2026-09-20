@@ -2,6 +2,8 @@
 setlocal
 
 pushd "%~dp0.." || exit /b 1
+node scripts\sync_bluesky_media.js --allow-failure
+if errorlevel 1 exit /b %ERRORLEVEL%
 node scripts\write_build_info.js
 if errorlevel 1 exit /b %ERRORLEVEL%
 call scripts\ensure_exclusive.bat prod
