@@ -26,6 +26,7 @@ listing is generated from Bluesky directly, do not edit!</p>
 </ul>
 </div>
 <a id="media-bafyreihh6v5vwhybexyivbvt4qh66hsqtekbnxnp2rkw4fqbs4js3r4h3m-0"></a>
+
 ## 2026-09-04 — Minibrots cling to the field like fruit on…
 
 <div class="media-entry">
@@ -53,6 +54,7 @@ listing is generated from Bluesky directly, do not edit!</p>
 </div>
 
 <a id="media-bafyreic567zzvovdr22d7yycy67bqnwnshn22xdclghrkrzpiy5iie6s4m-0"></a>
+
 ## 2026-09-04 — When different areas of the interior collide, they…
 
 <div class="media-entry">
@@ -79,6 +81,7 @@ listing is generated from Bluesky directly, do not edit!</p>
 </div>
 
 <a id="media-bafyreif57qkdsfdyiihi6zk67vxmika7he7rufgqgfdsdpqwld5brponcm-0"></a>
+
 ## 2026-09-04 — Lined up like bars on a xylophone, these…
 
 <div class="media-entry">
@@ -105,6 +108,7 @@ listing is generated from Bluesky directly, do not edit!</p>
 </div>
 
 <a id="media-bafyreicfseangnmdqsfc4wevh3uqiv457qkzu2uwy4fm56ozcyvbl5vhmy-0"></a>
+
 ## 2026-09-04 — A kaleidoscope of colors is found inside of…
 
 <div class="media-entry">
@@ -131,6 +135,7 @@ listing is generated from Bluesky directly, do not edit!</p>
 </div>
 
 <a id="media-bafyreicfseangnmdqsfc4wevh3uqiv457qkzu2uwy4fm56ozcyvbl5vhmy-1"></a>
+
 ## 2026-09-04 — Minibrots dot the surrounding landscape like…
 
 <div class="media-entry">
@@ -157,6 +162,7 @@ listing is generated from Bluesky directly, do not edit!</p>
 </div>
 
 <a id="media-bafyreicfseangnmdqsfc4wevh3uqiv457qkzu2uwy4fm56ozcyvbl5vhmy-2"></a>
+
 ## 2026-09-04 — Landscapes found on the main cardiod resemble a…
 
 <div class="media-entry">
@@ -183,6 +189,7 @@ listing is generated from Bluesky directly, do not edit!</p>
 </div>
 
 <a id="media-bafyreieofptt3zpwcqj3np6okvcnhfxahx2iylq4wxkchhavgos623kwnu-0"></a>
+
 ## 2026-08-30 — Patterns emerged in early research based on internal…
 
 <div class="media-entry">
@@ -209,6 +216,7 @@ listing is generated from Bluesky directly, do not edit!</p>
 </div>
 
 <a id="media-bafyreieofptt3zpwcqj3np6okvcnhfxahx2iylq4wxkchhavgos623kwnu-1"></a>
+
 ## 2026-08-30 — Orbital paths appear to create waves within the…
 
 <div class="media-entry">
@@ -235,6 +243,7 @@ listing is generated from Bluesky directly, do not edit!</p>
 </div>
 
 <a id="media-bafyreieofptt3zpwcqj3np6okvcnhfxahx2iylq4wxkchhavgos623kwnu-2"></a>
+
 ## 2026-08-30 — One of my favorite artifacts within the Set…
 
 <div class="media-entry">
@@ -261,6 +270,7 @@ listing is generated from Bluesky directly, do not edit!</p>
 </div>
 
 <a id="media-bafyreick7df3zduqyjh4oyymdnuepno5t2i4dqmqct5fsqydl35r3cfow4-0"></a>
+
 ## 2026-08-26 — A rendering of a minibrot using the…
 
 <div class="media-entry">
@@ -287,6 +297,7 @@ listing is generated from Bluesky directly, do not edit!</p>
 </div>
 
 <a id="media-bafyreig5loq365hw6teilv4cvblgr3fqqxxmow722ycqnxizzdcwtqdguq-0"></a>
+
 ## 2026-08-23 — The complete Mandelbrot set with interior…
 
 <div class="media-entry">
@@ -313,6 +324,7 @@ listing is generated from Bluesky directly, do not edit!</p>
 </div>
 
 <a id="media-bafyreidzu5gok25sqahowyin7glryun64csbiqql5wtevydk2xq3izebga-0"></a>
+
 ## 2026-08-21 — An illustration of a node on the main…
 
 <div class="media-entry">

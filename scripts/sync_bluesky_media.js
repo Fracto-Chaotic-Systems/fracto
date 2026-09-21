@@ -224,8 +224,23 @@ const escape_html = (value) =>
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
 
+const decode_html_entities = (value) =>
+  String(value ?? "")
+    .replaceAll("&quot;", '"')
+    .replaceAll("&#39;", "'")
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">")
+    .replaceAll("&amp;", "&")
+    .replaceAll("&quot;", '"')
+    .replaceAll("&#39;", "'")
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">");
+
 const format_copy_alt_button = (alt_text) =>
   `<button type="button" class="media-copy-alt" data-copy-alt-text="${escape_html(alt_text)}" title="copy alt text to clipboard" aria-label="copy alt text to clipboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V5.5C8 4.67 8.67 4 9.5 4h9C19.33 4 20 4.67 20 5.5v9c0 .83-.67 1.5-1.5 1.5H16v2.5c0 .83-.67 1.5-1.5 1.5h-9C4.67 20 4 19.33 4 18.5v-9C4 8.67 4.67 8 5.5 8H8Zm-2.5 2c-.28 0-.5.22-.5.5v8c0 .28.22.5.5.5h9c.28 0 .5-.22.5-.5V10.5c0-.28-.22-.5-.5-.5h-9ZM10 6v2h4.5c.83 0 1.5.67 1.5 1.5V14h2V6.5c0-.28-.22-.5-.5-.5h-7.5Z"/></svg></button>`;
+
+const format_copy_post_button = (text) =>
+  `<button type="button" class="post-copy-content" data-copy-post-content="${escape_html(text)}" title="copy post content to clipboard" aria-label="copy post content to clipboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V5.5C8 4.67 8.67 4 9.5 4h9C19.33 4 20 4.67 20 5.5v9c0 .83-.67 1.5-1.5 1.5H16v2.5c0 .83-.67 1.5-1.5 1.5h-9C4.67 20 4 19.33 4 18.5v-9C4 8.67 4.67 8 5.5 8H8Zm-2.5 2c-.28 0-.5.22-.5.5v8c0 .28.22.5.5.5h9c.28 0 .5-.22.5-.5V10.5c0-.28-.22-.5-.5-.5h-9ZM10 6v2h4.5c.83 0 1.5.67 1.5 1.5V14h2V6.5c0-.28-.22-.5-.5-.5h-7.5Z"/></svg></button>`;
 
 const format_technical_details = (record) => {
   const technical_values = [
@@ -276,6 +291,7 @@ export const format_media_entry = (record) => {
     ? `<a href="${escape_html(full_size)}"><img src="${escape_html(thumbnail)}" alt="Thumbnail" /></a>`
     : "<p>No preview URL available.</p>";
   return `<a id="${media_anchor_id(record.media_key)}"></a>
+
 ## ${uploaded_date} — ${format_heading_text(record)}
 
 <div class="media-entry">
@@ -489,7 +505,7 @@ const add_media_entry_anchors = (content, records) => {
     if (detail_index < 0) return;
     const heading_index = updated.lastIndexOf("\n## ", detail_index);
     const insert_at = heading_index < 0 ? 0 : heading_index + 1;
-    updated = `${updated.slice(0, insert_at)}<a id="${anchor}"></a>\n${updated.slice(insert_at)}`;
+    updated = `${updated.slice(0, insert_at)}<a id="${anchor}"></a>\n\n${updated.slice(insert_at)}`;
   });
   return updated;
 };
@@ -514,7 +530,9 @@ export const add_new_media_entries = (existing_content, records) => {
           records,
         ),
         records,
-      ).replace(/^###\s+/gm, "## "),
+      )
+        .replace(/^###\s+/gm, "## ")
+        .replace(/(<a id="media-[^"]+"><\/a>)\r?\n(?=##\s)/g, "$1\n\n"),
     ),
   );
   const parsed = parse_media_document(normalized_content);
@@ -731,7 +749,7 @@ const format_post_media_details = (record) => {
   const alt_text = media
     .map((asset) => escape_html(asset.alt_text || "(none provided)"))
     .join("; ");
-  return `Media alt text: ${alt_text}\n\n${format_post_media_links(record)}`;
+  return `<strong>Media alt text:</strong> ${alt_text}\n\n${format_post_media_links(record)}`;
 };
 
 const format_post_media_links = (record) => {
@@ -743,14 +761,14 @@ const format_post_media_links = (record) => {
         `[media ${index + 1} details](media/MEDIA_UPLOADS.md#${media_anchor_id(asset.media_key)})`,
     )
     .join(", ");
-  return `Media details: ${links}`;
+  return `<strong>Media details:</strong> ${links}`;
 };
 
 const format_snapshot = (record) => {
   const likes = Number(record.like_count || 0);
   const replies = Number(record.reply_count || 0);
   const reposts = Number(record.repost_count || 0);
-  return `Snapshot: ${likes} ${likes === 1 ? "like" : "likes"}, ${replies} ${replies === 1 ? "reply" : "replies"}, ${reposts} ${reposts === 1 ? "repost" : "reposts"}.`;
+  return `<strong>Snapshot:</strong> ${likes} ${likes === 1 ? "like" : "likes"}, ${replies} ${replies === 1 ? "reply" : "replies"}, ${reposts} ${reposts === 1 ? "repost" : "reposts"}.`;
 };
 
 /**
@@ -764,7 +782,7 @@ export const format_post_entry = (record) => {
   const date = post_date(record);
   const post_url = record.post_url || "#";
   const media_details = format_post_media_details(record);
-  return `## ${date} — ${format_post_heading_text(record.text)}\n\n<!-- post-cid: ${record.post_cid} -->\n\n${format_post_text(record.text)}\n\n<p><strong>Source post:</strong> <a href="${escape_html(post_url)}">view post</a></p>\n\n${media_details ? `${media_details}\n\n` : ""}${format_snapshot(record)}\n`;
+  return `## ${date} — ${format_post_heading_text(record.text)}\n\n<!-- post-cid: ${record.post_cid} -->\n\n<p><strong>Post content:</strong> ${format_copy_post_button(record.text)}</p>\n\n${format_post_text(record.text)}\n\n<p><strong>Source post:</strong> <a href="${escape_html(post_url)}">view post</a></p>\n\n${media_details ? `${media_details}\n\n` : ""}${format_snapshot(record)}\n`;
 };
 
 const ensure_post_archive_marker = (content) => {
@@ -809,6 +827,45 @@ const post_section_ranges = (content) => {
   return ranges;
 };
 
+const add_post_copy_controls = (content) => {
+  const ranges = post_section_ranges(content);
+  const insertions = [];
+  ranges.forEach((range) => {
+    const section = content.slice(range.start, range.end);
+    if (section.includes("data-copy-post-content")) {
+      const normalized_section = section.replace(
+        /data-copy-post-content="([^"]*)"/,
+        (_match, value) =>
+          `data-copy-post-content="${escape_html(decode_html_entities(value))}"`,
+      );
+      if (normalized_section !== section) {
+        insertions.push({
+          index: range.start,
+          text: normalized_section,
+          replace_length: section.length,
+        });
+      }
+      return;
+    }
+    const quote_offset = section.search(/^>\s?/m);
+    if (quote_offset < 0) return;
+    const quoted_text = [...section.matchAll(/^>\s?(.*)$/gm)]
+      .map((match) => match[1])
+      .join("\n");
+    insertions.push({
+      index: range.start + quote_offset,
+      text: `<p><strong>Post content:</strong> ${format_copy_post_button(quoted_text)}</p>\n\n`,
+    });
+  });
+  return insertions
+    .sort((left, right) => right.index - left.index)
+    .reduce(
+      (updated, insertion) =>
+        `${updated.slice(0, insertion.index)}${insertion.text}${updated.slice(insertion.index + (insertion.replace_length || 0))}`,
+      content,
+    );
+};
+
 const add_media_links_to_existing_posts = (content, records) => {
   const ranges = post_section_ranges(content);
   const insertions = [];
@@ -821,8 +878,8 @@ const add_media_links_to_existing_posts = (content, records) => {
     );
     if (!match) return;
     const section = content.slice(match.start, match.end);
-    if (/^Media details:/im.test(section)) return;
-    const snapshot_offset = section.search(/^Snapshot:/m);
+    if (/^(?:<strong>)?Media details:/im.test(section)) return;
+    const snapshot_offset = section.search(/^(?:<strong>)?Snapshot:/m);
     const insert_at =
       match.start + (snapshot_offset < 0 ? section.length : snapshot_offset);
     insertions.push({
@@ -842,6 +899,12 @@ const add_media_links_to_existing_posts = (content, records) => {
 const remove_duplicate_media_alt_text = (content) =>
   content.replace(/^Media alt text \d+:.*\r?\n?/gm, "");
 
+const normalize_post_property_labels = (content) =>
+  content
+    .replace(/^Media alt text:\s*/gm, "<strong>Media alt text:</strong> ")
+    .replace(/^Media details:\s*/gm, "<strong>Media details:</strong> ")
+    .replace(/^Snapshot:\s*/gm, "<strong>Snapshot:</strong> ");
+
 /**
  * Add unseen posts to the public archive, newest first, while preserving
  * existing editorial content. Records are deduplicated by CID; legacy entries
@@ -853,7 +916,11 @@ const remove_duplicate_media_alt_text = (content) =>
  */
 export const add_new_post_entries = (existing_content, records) => {
   const enriched_content = add_media_links_to_existing_posts(
-    remove_duplicate_media_alt_text(existing_content),
+    add_post_copy_controls(
+      normalize_post_property_labels(
+        remove_duplicate_media_alt_text(existing_content),
+      ),
+    ),
     records,
   );
   const parsed = parse_post_archive(enriched_content);

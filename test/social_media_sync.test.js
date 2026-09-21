@@ -189,6 +189,8 @@ No media upload records have been imported yet. Add new entries directly below t
 
 <!-- post-cid: marked-cid -->
 
+<p><strong>Post content:</strong> <button data-copy-post-content="Marked post text"></button></p>
+
 > Marked post text
 `;
     const result = add_new_post_entries(content, [
@@ -243,6 +245,8 @@ No media upload records have been imported yet. Add new entries directly below t
     assert.equal(result.post_result.added_records.length, 1);
     assert.equal(result.media_result.added_records.length, 1);
     assert.match(result.post_result.content, /shared-cid/);
+    assert.match(result.post_result.content, /Post content:/);
+    assert.match(result.post_result.content, /data-copy-post-content=/);
     assert.match(result.media_result.content, /shared-cid\/blob-cid/);
     assert.match(
       result.post_result.content,
@@ -298,7 +302,10 @@ Media details: [media 1 details](media/MEDIA_UPLOADS.md#media-example-0)
     const result = add_new_post_entries(content, []);
 
     assert.equal(result.changed, true);
-    assert.match(result.content, /Media alt text: Existing description/);
+    assert.match(
+      result.content,
+      /<strong>Media alt text:<\/strong> Existing description/,
+    );
     assert.doesNotMatch(result.content, /Media alt text 1:/);
   });
 });
