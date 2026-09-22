@@ -20,6 +20,7 @@ services:
       - fracto-tile-data:/var/lib/fracto/tiles
       - fracto-tile-index:/var/lib/fracto/index
       - fracto-assets:/app/assets
+      - fracto-videos:/app/videos
       - fracto-logs:/app/logs
       - ./servers/fracto-tiles-server/benchmarks:/app/servers/fracto-tiles-server/benchmarks
     restart: unless-stopped
@@ -85,3 +86,4 @@ volumes:
   fracto-tile-index:
   fracto-assets:
   fracto-logs:
+  fracto-videos:
