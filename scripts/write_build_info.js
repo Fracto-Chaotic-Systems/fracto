@@ -49,6 +49,58 @@ const recent_commits = directory => {
    return output.split('\x1e').filter(Boolean).map(record => commit_summary(record.trim()))
 }
 
+const tag_records = (repository, directory) => {
+   const output = git(directory, [
+      'for-each-ref', 'refs/tags',
+      '--format=%(refname:strip=2)%09%(objectname)%09%(*objectname)%09%(objecttype)%09%(creatordate:iso-strict)',
+   ])
+   if (!output) return []
+   return output.split(/\r?\n/).filter(Boolean).map(line => {
+      const [name, object_hash, peeled_hash, object_type, created_at] = line.split('\t')
+      return {
+         repository,
+         name,
+         object_hash,
+         target_hash: peeled_hash || object_hash,
+         object_type,
+         created_at,
+         annotated: object_type === 'tag',
+         timestamp_source: created_at
+            ? (object_type === 'tag' ? 'tagger' : 'commit')
+            : null,
+      }
+   })
+}
+
+const all_tag_records = repositories.flatMap(repository =>
+   tag_records(repository.name, repository.directory))
+const tag_events = [...all_tag_records.reduce((grouped, record) => {
+   if (!record.name) return grouped
+   const event = grouped.get(record.name) || {
+      name: record.name,
+      occurrences: [],
+      repositories: [],
+   }
+   event.occurrences.push({
+      repository: record.repository,
+      target_hash: record.target_hash,
+      created_at: record.created_at,
+      annotated: record.annotated,
+      timestamp_source: record.timestamp_source,
+   })
+   if (!event.repositories.includes(record.repository)) {
+      event.repositories.push(record.repository)
+   }
+   grouped.set(record.name, event)
+   return grouped
+}, new Map()).values()].map(event => ({
+   ...event,
+   created_at: event.occurrences
+      .map(occurrence => occurrence.created_at)
+      .filter(Boolean)
+      .sort()[0] || null,
+})).sort((left, right) => String(right.created_at).localeCompare(String(left.created_at)))
+
 const repositories_info = Object.fromEntries(repositories.map(repository => [repository.name, {
    revision: git(repository.directory, ['rev-parse', 'HEAD']),
    short_revision: git(repository.directory, ['rev-parse', '--short', 'HEAD']),
@@ -61,6 +113,8 @@ const generated_at = new Date().toISOString()
 fs.writeFileSync(path.join(root, 'build-info.json'), JSON.stringify({
    version: generated_at.replace(/[-:.TZ]/g, '').slice(0, 14),
    generated_at,
+   tag_records: all_tag_records,
+   tag_events,
    repositories: repositories_info,
 }, null, 2) + '\n')
 console.log('Build information written to build-info.json')

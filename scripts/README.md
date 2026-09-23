@@ -361,6 +361,12 @@ Git-ignored `build-info.json` file. The production and development launchers run
 it before building, so the root `/healthz` response and Admin Status page can show
 which revisions are running. This is a deployment-consistency check; it does not
 contact GitHub or determine whether a revision is current upstream.
+The snapshot also carries raw `tag_records` and normalized `tag_events`, allowing
+the Admin Commits page to display milestone markers when production images do not
+contain `.git` directories.
+The snapshot also carries raw `tag_records` and normalized `tag_events`, allowing
+the Admin Commits page to display milestone markers when production images do not
+contain `.git` directories.
 
 ## Validation, testing, and diagnostics
 
