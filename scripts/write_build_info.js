@@ -20,7 +20,11 @@ const git = (directory, args) => {
 
 const commit_summary = record => {
    const lines = record.trim().split(/\r?\n/)
-   const [hash, date, author, message] = lines.shift().split('\x1f')
+   const [hash, date, author, message, decorations = ''] = lines.shift().split('\x1f')
+   const tags = decorations.split(',')
+      .map(value => value.trim())
+      .filter(value => value.startsWith('tag: '))
+      .map(value => value.slice(5))
    const summary = {files_changed: 0, insertions: 0, deletions: 0, files_created: 0, files_removed: 0}
    lines.forEach(stat => {
       const numstat = stat.match(/^(\d+|-)\s+(\d+|-)\s+(.+)$/)
@@ -32,13 +36,13 @@ const commit_summary = record => {
       if (stat.startsWith(' create mode ')) summary.files_created++
       if (stat.startsWith(' delete mode ')) summary.files_removed++
    })
-   return {hash, date, author, message, ...summary}
+   return {hash, date, author, message, tags, ...summary}
 }
 
 const recent_commits = directory => {
    const output = git(directory, [
       'log', '-100', '--date=iso-strict',
-      '--pretty=format:%x1e%H%x1f%aI%x1f%an%x1f%s',
+      '--pretty=format:%x1e%H%x1f%aI%x1f%an%x1f%s%x1f%D',
       '--numstat', '--summary', '--no-renames',
    ])
    if (!output) return []
