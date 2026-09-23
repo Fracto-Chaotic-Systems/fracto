@@ -12,6 +12,11 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
+# The service lockfiles reference the local @fracto/sdk package. Copy its
+# manifest before any service runs npm ci; the complete SDK source is copied
+# later with the application source in the development/build stages.
+COPY sdk/package.json sdk/
+
 COPY servers/fracto-admin-server/package.json servers/fracto-admin-server/package-lock.json servers/fracto-admin-server/
 RUN npm ci --prefix servers/fracto-admin-server
 COPY servers/fracto-asset-server/package.json servers/fracto-asset-server/package-lock.json servers/fracto-asset-server/

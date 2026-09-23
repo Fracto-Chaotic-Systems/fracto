@@ -44,6 +44,10 @@ npm ci --prefix servers/fracto-admin-server
 npm ci --prefix servers/fracto-ui
 ```
 
+These commands resolve `@fracto/sdk` from the root `sdk/` directory through the
+local file dependency recorded in each service lockfile. Keep the root SDK
+directory present when installing dependencies or building the Docker image.
+
 The UI currently requires the legacy peer-dependency policy recorded in its `.npmrc`. Running through `npm ci --prefix` uses that local configuration.
 
 ## Starting the system
@@ -84,15 +88,19 @@ Running `npm start` inside a backend service uses `nodemon` and is intended for 
 
 ## Shared root dependencies
 
-The services are separate repositories but are not fully isolated packages. Several import files from the root repository using paths such as:
+The services are separate repositories, but they share the local `@fracto/sdk`
+package during development. SDK imports should use package subpaths such as:
 
 ```text
-../../constants.js
-../../sdk/FractoIndexedTiles.js
-../../sdk/FractoTileData.js
+@fracto/sdk/FractoIndexedTiles.js
+@fracto/sdk/FractoTileData.js
 ```
 
-Keep the service directory names and their position beneath `servers/` unchanged. Moving a service or running it from another layout can break these imports.
+The package currently resolves to `../../sdk` in each service's
+`package.json`. Run `npm run sdk:check` from the root after changing the SDK
+version or a service dependency. Root application files such as
+`../../constants.js` remain layout-sensitive, so keep the service directory
+names and their position beneath `servers/` unchanged.
 
 Root-level configuration under `config/` is also shared. It may contain credentials and environment-specific network endpoints and is intentionally excluded from version control.
 

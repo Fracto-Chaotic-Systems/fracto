@@ -1,0 +1,25 @@
+{
+  "name": "@fracto/sdk",
+  "version": "1.0.0",
+  "description": "Framework-neutral calculation, tile, color, and rendering utilities for Fracto.",
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js",
+    "./*.js": "./*.js",
+    "./math/*.js": "./math/*.js",
+    "./utils/*.js": "./utils/*.js",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "test": "node --test ../test/sdk_canvas_buffer.test.js ../test/sdk_package.test.js"
+  },
+  "dependencies": {
+    "chalk": "^5.6.2",
+    "csv-parser": "^3.2.0",
+    "decimal.js": "^10.6.0",
+    "node-fetch": "^3.3.2",
+    "stream-chain": "^3.6.3",
+    "stream-json": "^2.1.0"
+  }
+}

@@ -2,7 +2,16 @@
 
 Shared JavaScript utilities for Fracto's fractal calculations, coordinate handling, coloring, tile discovery, caching, and rendering data.
 
-The SDK is part of this repository rather than a separately published package. Import modules directly by file path. The project uses ES modules, so include the `.js` extension in imports.
+The SDK is defined as the `@fracto/sdk` package in this repository. It uses ES
+modules and exposes a stable barrel entry point plus explicit `.js` subpaths.
+
+During the local-development transition, direct file imports remain supported.
+Consumers should eventually prefer package imports:
+
+```js
+import { FractoCanvasBuffer } from "@fracto/sdk";
+import FractoFastCalc from "@fracto/sdk/FractoFastCalc.js";
+```
 
 ```js
 import Complex from "./sdk/math/Complex.js";
@@ -30,6 +39,9 @@ const result = FractoFastCalc.calc(point.re, point.im);
 - `FractoCanvasBuffer.js` converts iteration and pattern buffers into pixels
   on a canvas-like 2D context. It supports scale, heat-map, and selected-level
   arguments without depending on React, application settings, or a backend.
+- Server-oriented tile, cache, coverage, and stream modules remain available
+  through explicit subpath imports; they are intentionally not loaded by the
+  browser-safe root entry point.
 - `FractoIndexedTiles.js` defines tile-set names and retrieves indexed tile information.
 - `FractoCoverageUtils.js` initializes and queries tile coverage.
 - `FractoTileData.js` loads manifests and packets, selects tiles in scope, and fills raster buffers.

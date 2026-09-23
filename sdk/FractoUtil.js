@@ -5,7 +5,7 @@ const ONE_BY_LOG_ONE_MILLION = 1 / Math.log(1000000);
 var COLOR_CACHE = {};
 var CACHE_SIZE = 0;
 
-setInterval(() => {
+const cache_cleanup_interval = setInterval(() => {
    if (CACHE_SIZE > 500000) {
       console.log("resetting COLOR_CACHE")
       const color_keys = Object.keys(COLOR_CACHE)
@@ -16,6 +16,11 @@ setInterval(() => {
       CACHE_SIZE = 0
    }
 }, 10000)
+
+// Do not keep short-lived SDK consumers alive solely for cache maintenance.
+if (typeof cache_cleanup_interval.unref === "function") {
+   cache_cleanup_interval.unref()
+}
 
 export class FractoUtil {
 
