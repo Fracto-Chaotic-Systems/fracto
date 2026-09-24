@@ -1,7 +1,7 @@
 import fs from 'fs';
 import {chain}  from 'stream-chain'
 import { parser } from 'stream-json';
-import Assembler from 'stream-json/Assembler.js';
+import Assembler from 'stream-json/assembler.js';
 
 export const stream_json = (filepath, cb) => {
    const pipeline = chain([
