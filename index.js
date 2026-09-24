@@ -19,6 +19,7 @@ import {
 import {TILE_DATA_DIRECTORY, TILE_INDEX_ROOT} from './sdk/FractoTilePaths.js'
 import {handle_tile} from './handlers/main.js'
 import {handle_main_status} from './handlers/status.js'
+import {handle_logs} from './handlers/logs.js'
 import {create_health_handler} from './handlers/health.js'
 import {validate_startup} from './scripts/startup_preflight.js'
 import {root_log} from './utils/logging.js'
@@ -227,6 +228,10 @@ const discover_runtime_ports = async admin_service => {
    if (Number(discovered.admin) !== Number(admin_service.port)) {
       throw new Error(`Admin port map conflicts with its bootstrap port (${admin_service.port})`)
    }
+   const main_bootstrap_port = Number(process.env.FRACTO_SERVER_PORT || FRACTO_SERVER_PORT)
+   if (Number(discovered.main) !== main_bootstrap_port) {
+      throw new Error(`Main port map conflicts with its bootstrap port (${main_bootstrap_port})`)
+   }
    ALL_SERVICES.forEach(service => {
       const key = service_keys[service.name]
       if (key) service.port = Number(discovered[key])
@@ -249,6 +254,7 @@ const create_main_server = () => {
       next()
    })
    app.get('/', handle_main_status)
+   app.get('/logs', handle_logs)
    const health_response = create_health_handler(service_states, build_info)
    app.get('/healthz', health_response)
    app.get('/readyz', health_response)
@@ -270,6 +276,7 @@ ensure_runtime_directories()
 await validate_startup()
 
 try {
+   server = create_main_server()
    const admin_service = ALL_SERVICES.find(service => service.name === SERVICE_NAME_ADMIN)
    await start_service(admin_service, true)
    await discover_runtime_ports(admin_service)
@@ -278,7 +285,6 @@ try {
    await start_service(tile_service, true)
    const ready_message = 'Compiled tile index is ready. Starting Fracto servers.'; root_log(ready_message); console.log(chalk.green(ready_message))
 
-   server = create_main_server()
    const remaining_services = ALL_SERVICES.filter(service => ![SERVICE_NAME_TILES, SERVICE_NAME_ADMIN].includes(service.name))
    for (const service of remaining_services) {
       await start_service(service)

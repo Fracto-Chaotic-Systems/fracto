@@ -4,6 +4,14 @@ import path from 'node:path'
 import {ALL_SERVICES, LOGS_DIRECTORY} from '../constants.js'
 
 const service_names = new Set(ALL_SERVICES.map(service => service.name))
+const service_aliases = {
+   main: 'fracto-root',
+   data: 'fracto-data-server',
+   asset: 'fracto-asset-server',
+   tiles: 'fracto-tiles-server',
+   admin: 'admin',
+   ui: 'fracto-ui',
+}
 const date = () => new Date().toISOString().slice(0, 10)
 const logs_directory = () => path.join(import.meta.dirname, '..', LOGS_DIRECTORY)
 const root_log_path = () => path.join(logs_directory(), `fracto-root-log-${date()}.txt`)
@@ -43,14 +51,21 @@ const record_belongs_to = (record, service_name) => {
    if (service_name === 'admin') {
       return !service_names.has(record.service)
    }
-   return record.service === service_name || record.log_file.startsWith(`${service_name}-log-`)
+   const service_id = service_aliases[service_name] || service_name
+   return record.service === service_id || record.log_file.startsWith(`${service_id}-log-`)
 }
 
-export const process_logfile = (service_name, res) => {
+/** Collects normalized log records for one service selector. */
+export const collect_log_records = (service_name = 'all') => {
    const records = log_files()
       .flatMap(read_records)
-      .filter(record => record_belongs_to(record, service_name))
+      .filter(record => service_name === 'all' || record_belongs_to(record, service_name))
       .sort((a, b) => String(a.timestamp || '').localeCompare(String(b.timestamp || '')))
+   return records
+}
+
+/** Converts collected records into the stable log API response shape. */
+export const format_log_records = (service_name, records) => {
    const lines = records.map(record => {
       const prefix = service_name === 'admin' && record.service ? `[${record.service}] ` : ''
       const level = record.level && record.level !== 'info' ? `[${record.level}] ` : ''
@@ -64,11 +79,17 @@ export const process_logfile = (service_name, res) => {
       statement: record.statement || null,
       segments: record.segments || null,
    }))
-   res.json({
+   return {
       lines,
       records: formatted_records,
       logfile_name: service_name === 'admin'
          ? `root-and-maintenance-log-${date()}.txt`
-         : `${service_name}-log-${date()}.txt`,
-   })
+         : service_name === 'all'
+            ? `all-services-log-${date()}.txt`
+            : `${service_aliases[service_name] || service_name}-log-${date()}.txt`,
+   }
+}
+
+export const process_logfile = (service_name, res) => {
+   res.json(format_log_records(service_name, collect_log_records(service_name)))
 }

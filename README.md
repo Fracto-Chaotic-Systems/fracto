@@ -25,6 +25,30 @@ location and `FRACTO_*_PORT` environment variables override file values.
 During migration, standalone maintenance scripts retain environment/default
 fallbacks when the supervisor is not present.
 
+### Central log endpoint
+
+The main server exposes the shared log stream through:
+
+```text
+GET /logs?service=<selector>
+```
+
+Supported selectors are `main`, `admin`, `data`, `asset`, `tiles`, `ui`, and
+`all`. The response contains `lines`, structured `records`, and
+`logfile_name`, matching the existing log viewer contract. For example:
+
+```powershell
+Invoke-RestMethod http://localhost:3001/logs?service=tiles
+```
+
+The main server starts before the other services, so `/healthz` and `/logs`
+can be used while dependencies are still starting. `/readyz` remains `503`
+until every required service is healthy. The existing service-specific
+`/logs` routes remain available for compatibility with older clients.
+
+If the main server itself cannot start, inspect the persisted root log under
+`logs/fracto-root-log-YYYY-MM-DD.txt` or the Docker output.
+
 ```powershell
 npm ci
 npm run start:check
