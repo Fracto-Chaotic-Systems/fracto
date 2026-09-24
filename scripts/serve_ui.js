@@ -2,7 +2,7 @@ import path from 'node:path'
 
 import express from 'express'
 
-import {FRACTO_UI_PORT} from '../constants.js'
+const FRACTO_UI_PORT = Number(process.env.FRACTO_UI_PORT || 3006)
 
 const dist_directory = path.join(import.meta.dirname, '..', 'servers', 'fracto-ui', 'dist')
 const index_file = path.join(dist_directory, 'index.html')

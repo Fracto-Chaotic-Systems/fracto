@@ -10,7 +10,11 @@ import {
    ASSETS_DIRECTORY,
    FRACTO_SERVER_PORT,
    LOGS_DIRECTORY,
+   SERVICE_NAME_ADMIN,
+   SERVICE_NAME_ASSET,
+   SERVICE_NAME_DATA,
    SERVICE_NAME_TILES,
+   SERVICE_NAME_UI,
 } from './constants.js'
 import {TILE_DATA_DIRECTORY, TILE_INDEX_ROOT} from './sdk/FractoTilePaths.js'
 import {handle_tile} from './handlers/main.js'
@@ -204,6 +208,38 @@ const start_service = async (service, show_output = false) => {
    const status_message = `${service.name} is ${health_state || 'healthy'} on port ${service.port}`; root_log(status_message); console.log(chalk[health_state === 'degraded' ? 'yellow' : 'green'](status_message))
 }
 
+const discover_runtime_ports = async admin_service => {
+   const response = await fetch(`http://127.0.0.1:${admin_service.port}/ports`, {signal: AbortSignal.timeout(5000)})
+   if (!response.ok) throw new Error(`Admin port discovery failed (HTTP ${response.status})`)
+   const payload = await response.json()
+   const discovered = payload?.ports || {}
+   const service_keys = {
+      [SERVICE_NAME_DATA]: 'data',
+      [SERVICE_NAME_ASSET]: 'asset',
+      [SERVICE_NAME_TILES]: 'tiles',
+      [SERVICE_NAME_ADMIN]: 'admin',
+      [SERVICE_NAME_UI]: 'ui',
+   }
+   const required = Object.values(service_keys)
+   if (required.some(key => !Number.isInteger(Number(discovered[key])))) {
+      throw new Error('Admin returned an incomplete service-port map')
+   }
+   if (Number(discovered.admin) !== Number(admin_service.port)) {
+      throw new Error(`Admin port map conflicts with its bootstrap port (${admin_service.port})`)
+   }
+   ALL_SERVICES.forEach(service => {
+      const key = service_keys[service.name]
+      if (key) service.port = Number(discovered[key])
+   })
+   process.env.FRACTO_SERVER_PORT = `${Number(discovered.main || process.env.FRACTO_SERVER_PORT || FRACTO_SERVER_PORT)}`
+   process.env.FRACTO_DATA_PORT = `${discovered.data}`
+   process.env.FRACTO_ASSET_PORT = `${discovered.asset}`
+   process.env.FRACTO_TILES_PORT = `${discovered.tiles}`
+   process.env.FRACTO_ADMIN_PORT = `${discovered.admin}`
+   process.env.FRACTO_UI_PORT = `${discovered.ui}`
+   return discovered
+}
+
 const create_main_server = () => {
    const app = express()
    app.use((req, res, next) => {
@@ -217,8 +253,9 @@ const create_main_server = () => {
    app.get('/healthz', health_response)
    app.get('/readyz', health_response)
    app.get('/status', handle_tile)
-   return app.listen(FRACTO_SERVER_PORT, () => {
-      const message = `Fracto main server is running on http://localhost:${FRACTO_SERVER_PORT}`; root_log(message); console.log(chalk.green(message))
+   const port = Number(process.env.FRACTO_SERVER_PORT || FRACTO_SERVER_PORT)
+   return app.listen(port, () => {
+      const message = `Fracto main server is running on http://localhost:${port}`; root_log(message); console.log(chalk.green(message))
    })
 }
 
@@ -232,15 +269,17 @@ for (const signal of ['SIGINT', 'SIGTERM']) {
 ensure_runtime_directories()
 await validate_startup()
 
-const tile_service = ALL_SERVICES.find(service => service.name === SERVICE_NAME_TILES)
-const remaining_services = ALL_SERVICES.filter(service => service.name !== SERVICE_NAME_TILES)
-
 try {
-   const loading_message = 'Loading compiled tile index before starting any server...'; root_log(loading_message); console.log(chalk.cyan(loading_message))
+   const admin_service = ALL_SERVICES.find(service => service.name === SERVICE_NAME_ADMIN)
+   await start_service(admin_service, true)
+   await discover_runtime_ports(admin_service)
+   const tile_service = ALL_SERVICES.find(service => service.name === SERVICE_NAME_TILES)
+   const loading_message = 'Loading compiled tile index before starting the remaining servers...'; root_log(loading_message); console.log(chalk.cyan(loading_message))
    await start_service(tile_service, true)
    const ready_message = 'Compiled tile index is ready. Starting Fracto servers.'; root_log(ready_message); console.log(chalk.green(ready_message))
 
    server = create_main_server()
+   const remaining_services = ALL_SERVICES.filter(service => ![SERVICE_NAME_TILES, SERVICE_NAME_ADMIN].includes(service.name))
    for (const service of remaining_services) {
       await start_service(service)
    }

@@ -9,6 +9,22 @@ used by the root repository and the independent service repositories.
 
 The services under `servers/` are independent repositories. Check out each service and install its locked dependencies before starting Fracto. Startup does not clone repositories, copy data, or install packages. Before opening any port, it fetches every repository and applies fast-forward-only upstream updates. Tracked or staged changes, detached heads, missing upstreams, and divergent branches abort startup. Untracked runtime files are preserved.
 
+### Runtime service-port discovery
+
+The admin service is the fixed bootstrap authority for service ports (`3005`
+in production and `3105` in development). It exposes `GET /ports`, returning a
+versioned map for all Fracto services. The supervisor starts admin first,
+discovers and validates that map, then passes the resolved values to the other
+services. The browser UI performs the same discovery using the current browser
+hostname, so remote clients do not fall back to `localhost`.
+
+Port maps are installation-local runtime data and are not stored in Git. An
+optional ignored `servers/fracto-admin-server/runtime/ports.json` file can
+provide a `{ "ports": { ... } }` map; `FRACTO_PORTS_FILE` selects another
+location and `FRACTO_*_PORT` environment variables override file values.
+During migration, standalone maintenance scripts retain environment/default
+fallbacks when the supervisor is not present.
+
 ```powershell
 npm ci
 npm run start:check
