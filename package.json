@@ -18,7 +18,7 @@
     "start": "node --max-old-space-size=16384 index.js",
     "check": "npm run check:syntax && npm run db:validate && npm test",
     "check:syntax": "node scripts/check_syntax.js",
-    "test": "node --test test/math.test.js test/tile_paths.test.js test/health.integration.test.js test/logs_endpoint.test.js test/social_media_sync.test.js test/sdk_canvas_buffer.test.js test/sdk_package.test.js",
+    "test": "node --test test/math.test.js test/tile_paths.test.js test/health.integration.test.js test/logs_endpoint.test.js test/auth_endpoint.test.js test/social_media_sync.test.js test/sdk_canvas_buffer.test.js test/sdk_package.test.js",
     "test:docker": "node scripts/docker_smoke_test.js",
     "start:check": "node scripts/startup_preflight.js",
     "prestart": "node scripts/update_repositories.js",

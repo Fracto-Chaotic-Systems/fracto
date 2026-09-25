@@ -7,6 +7,11 @@ used by the root repository and the independent service repositories.
 
 ## Setup
 
+The planned user-aware access model is documented in
+[AUTHENTICATION.md](AUTHENTICATION.md). Authentication is not yet enabled;
+the document defines the OIDC, allowlist, session, and local-development
+contracts for the upcoming implementation stages.
+
 The services under `servers/` are independent repositories. Check out each service and install its locked dependencies before starting Fracto. Startup does not clone repositories, copy data, or install packages. Before opening any port, it fetches every repository and applies fast-forward-only upstream updates. Tracked or staged changes, detached heads, missing upstreams, and divergent branches abort startup. Untracked runtime files are preserved.
 
 ### Runtime service-port discovery

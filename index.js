@@ -20,6 +20,7 @@ import {TILE_DATA_DIRECTORY, TILE_INDEX_ROOT} from './sdk/FractoTilePaths.js'
 import {handle_tile} from './handlers/main.js'
 import {handle_main_status} from './handlers/status.js'
 import {handle_logs} from './handlers/logs.js'
+import {handle_auth_callback, handle_auth_login, handle_auth_logout, handle_auth_session} from './handlers/auth.js'
 import {create_health_handler} from './handlers/health.js'
 import {validate_startup} from './scripts/startup_preflight.js'
 import {root_log} from './utils/logging.js'
@@ -247,14 +248,23 @@ const discover_runtime_ports = async admin_service => {
 
 const create_main_server = () => {
    const app = express()
+   const configured_ui_origin = process.env.FRACTO_UI_ORIGIN || `http://localhost:${process.env.FRACTO_UI_PORT || 3006}`
    app.use((req, res, next) => {
-      res.setHeader('Access-Control-Allow-Origin', '*')
+      const request_origin = req.headers.origin
+      const allow_all_origins = process.env.FRACTO_ALLOW_CORS_ALL === 'true'
+      const allow_credentials = Boolean(request_origin && (allow_all_origins || request_origin === configured_ui_origin))
+      res.setHeader('Access-Control-Allow-Origin', allow_credentials ? request_origin : '*')
+      if (allow_credentials) res.setHeader('Access-Control-Allow-Credentials', 'true')
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
       res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With')
       next()
    })
    app.get('/', handle_main_status)
    app.get('/logs', handle_logs)
+   app.get('/auth/login', handle_auth_login)
+   app.get('/auth/callback', handle_auth_callback)
+   app.get('/auth/session', handle_auth_session)
+   app.post('/auth/logout', handle_auth_logout)
    const health_response = create_health_handler(service_states, build_info)
    app.get('/healthz', health_response)
    app.get('/readyz', health_response)

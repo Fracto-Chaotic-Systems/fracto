@@ -5,13 +5,13 @@
 <p class="subtitle">This ledger records images and other media uploaded for the Fracto Bluesky
 account. Entries are listed newest first, with one entry per media asset. This
 listing is generated from Bluesky directly, do not edit!</p>
-<p class="ledger-generated"><strong>Ledger generated:</strong> September 20, 2026</p>
+<p class="ledger-generated"><strong>Ledger generated:</strong> September 25, 2026</p>
 
 
 <div class="media-ledger-index">
 <strong>Media index</strong>
 <ul>
-  <li><a href="#media-bafyreihh6v5vwhybexyivbvt4qh66hsqtekbnxnp2rkw4fqbs4js3r4h3m-0">2026-09-04 — Minibrots cling to the field like fruit on…</a></li>
+  <li><a href="#media-bafyreid4pqy34sjfnqfu6h2wm254bi4d7ooayovuh4fz43kf4hwh6rxanq-0">2026-09-25 — The path of a 28 point orbital, with…</a></li>
   <li><a href="#media-bafyreic567zzvovdr22d7yycy67bqnwnshn22xdclghrkrzpiy5iie6s4m-0">2026-09-04 — When different areas of the interior collide, they…</a></li>
   <li><a href="#media-bafyreif57qkdsfdyiihi6zk67vxmika7he7rufgqgfdsdpqwld5brponcm-0">2026-09-04 — Lined up like bars on a xylophone, these…</a></li>
   <li><a href="#media-bafyreicfseangnmdqsfc4wevh3uqiv457qkzu2uwy4fm56ozcyvbl5vhmy-0">2026-09-04 — A kaleidoscope of colors is found inside of…</a></li>
@@ -26,6 +26,34 @@ listing is generated from Bluesky directly, do not edit!</p>
 </ul>
 </div>
 <a id="media-bafyreihh6v5vwhybexyivbvt4qh66hsqtekbnxnp2rkw4fqbs4js3r4h3m-0"></a>
+
+<a id="media-bafyreid4pqy34sjfnqfu6h2wm254bi4d7ooayovuh4fz43kf4hwh6rxanq-0"></a>
+
+## 2026-09-25 — The path of a 28 point orbital, with…
+
+<div class="media-entry">
+<div class="media-entry-visual"><a href="https://cdn.bsky.app/img/feed_fullsize/plain/did:plc:f4r4ysvnudlmotcxt3t36dhd/bafkreiehv46zwa6es2wbxe7lhl7wqjawabq5p7herzxxvlddrxnkiampce"><img src="https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:f4r4ysvnudlmotcxt3t36dhd/bafkreiehv46zwa6es2wbxe7lhl7wqjawabq5p7herzxxvlddrxnkiampce" alt="Thumbnail" /></a></div>
+
+<div class="media-entry-properties">
+<p><strong>Full-size media:</strong> <a href="https://cdn.bsky.app/img/feed_fullsize/plain/did:plc:f4r4ysvnudlmotcxt3t36dhd/bafkreiehv46zwa6es2wbxe7lhl7wqjawabq5p7herzxxvlddrxnkiampce">open original</a></p>
+<p><strong>Source post:</strong> <a href="https://bsky.app/profile/fracto-studio.bsky.social/post/3mwchrmkoxk23">view post</a></p>
+<p><strong>Alt text:</strong> <button type="button" class="media-copy-alt" data-copy-alt-text="The path of a 28 point orbital, with 5 full revolutions and lines connecting to the center (Q), as well as a line showing their path." title="copy alt text to clipboard" aria-label="copy alt text to clipboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V5.5C8 4.67 8.67 4 9.5 4h9C19.33 4 20 4.67 20 5.5v9c0 .83-.67 1.5-1.5 1.5H16v2.5c0 .83-.67 1.5-1.5 1.5h-9C4.67 20 4 19.33 4 18.5v-9C4 8.67 4.67 8 5.5 8H8Zm-2.5 2c-.28 0-.5.22-.5.5v8c0 .28.22.5.5.5h9c.28 0 .5-.22.5-.5V10.5c0-.28-.22-.5-.5-.5h-9ZM10 6v2h4.5c.83 0 1.5.67 1.5 1.5V14h2V6.5c0-.28-.22-.5-.5-.5h-7.5Z"/></svg></button></p>
+<blockquote>The path of a 28 point orbital, with 5 full revolutions and lines connecting to the center (Q), as well as a line showing their path.</blockquote>
+<details>
+<summary>technical details</summary>
+<ul>
+  <li><strong>Uploaded:</strong> <code>2026-09-25T00:02:37.738Z</code></li>
+  <li><strong>Media key:</strong> <code>bafyreid4pqy34sjfnqfu6h2wm254bi4d7ooayovuh4fz43kf4hwh6rxanq/0</code></li>
+  <li><strong>Post URI:</strong> <code>at://did:plc:f4r4ysvnudlmotcxt3t36dhd/app.bsky.feed.post/3mwchrmkoxk23</code></li>
+  <li><strong>Post CID:</strong> <code>bafyreid4pqy34sjfnqfu6h2wm254bi4d7ooayovuh4fz43kf4hwh6rxanq</code></li>
+  <li><strong>Blob CID:</strong> <code>unknown</code></li>
+  <li><strong>Media type:</strong> <code>image</code></li>
+  <li><strong>Aspect ratio:</strong> <code>{&quot;height&quot;:898,&quot;width&quot;:870}</code></li>
+  <li><strong>Notes:</strong> <code>(none provided)</code></li>
+</ul>
+</details>
+</div>
+</div>
 
 ## 2026-09-04 — Minibrots cling to the field like fruit on…
 
