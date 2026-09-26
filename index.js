@@ -20,11 +20,12 @@ import {TILE_DATA_DIRECTORY, TILE_INDEX_ROOT} from './sdk/FractoTilePaths.js'
 import {handle_tile} from './handlers/main.js'
 import {handle_main_status} from './handlers/status.js'
 import {handle_logs} from './handlers/logs.js'
-import {handle_auth_callback, handle_auth_login, handle_auth_logout, handle_auth_session} from './handlers/auth.js'
+import {handle_auth_callback, handle_auth_login, handle_auth_logout, handle_auth_session, require_enabled_user_if_configured} from './handlers/auth.js'
 import {create_health_handler} from './handlers/health.js'
 import {validate_startup} from './scripts/startup_preflight.js'
 import {root_log} from './utils/logging.js'
 import {ansi_segments} from './utils/ansi_colors.js'
+import {validate_auth_config} from './utils/auth_config.js'
 
 const STARTUP_TIMEOUT_MS = Number(process.env.FRACTO_STARTUP_TIMEOUT_MS || 300000)
 const HEALTH_POLL_MS = 500
@@ -260,7 +261,7 @@ const create_main_server = () => {
       next()
    })
    app.get('/', handle_main_status)
-   app.get('/logs', handle_logs)
+   app.get('/logs', require_enabled_user_if_configured, handle_logs)
    app.get('/auth/login', handle_auth_login)
    app.get('/auth/callback', handle_auth_callback)
    app.get('/auth/session', handle_auth_session)
@@ -268,7 +269,7 @@ const create_main_server = () => {
    const health_response = create_health_handler(service_states, build_info)
    app.get('/healthz', health_response)
    app.get('/readyz', health_response)
-   app.get('/status', handle_tile)
+   app.get('/status', require_enabled_user_if_configured, handle_tile)
    const port = Number(process.env.FRACTO_SERVER_PORT || FRACTO_SERVER_PORT)
    return app.listen(port, () => {
       const message = `Fracto main server is running on http://localhost:${port}`; root_log(message); console.log(chalk.green(message))
@@ -283,6 +284,11 @@ for (const signal of ['SIGINT', 'SIGTERM']) {
 }
 
 ensure_runtime_directories()
+const auth_config = validate_auth_config()
+if (auth_config.errors.length) {
+   const message = `Authentication configuration warning: ${auth_config.errors.join('; ')}`
+   root_log(message, 'warn'); console.warn(chalk.yellow(message))
+}
 await validate_startup()
 
 try {

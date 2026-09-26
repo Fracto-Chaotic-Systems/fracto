@@ -33,16 +33,20 @@ updates both the public post archive (`social/Bluesky/POST_ARCHIVE.md`) and the
 image/video media ledger (`social/Bluesky/media/MEDIA_UPLOADS.md`). Entries
 remain newest-first and are deduplicated by post CID (and by blob CID for
 media). The script never downloads the media files themselves. Use
-`npm run social:sync` directly, or let one of the Docker launch workflows run
-it before building.
+`npm run social:sync` directly. Launch workflows do not contact Bluesky; the
+admin social endpoint refreshes stale snapshots on demand.
+The Admin Social page can force an immediate refresh with its refresh action;
+the equivalent endpoint request is `/social?refresh=true`.
+The root test suite validates the freshness contract without contacting Bluesky.
+
+Set `FRACTO_SOCIAL_SYNC_TTL_MS` in the root `.env` to change the freshness
+interval; the default is 24 hours (`86400000` milliseconds).
 
 The actor, feed limit, and page count can be overridden with
 `FRACTO_BLUESKY_ACTOR`, `FRACTO_BLUESKY_POST_LIMIT`, and
 `FRACTO_BLUESKY_MAX_PAGES`, or with the corresponding `--actor`, `--limit`, and
-`--pages` options. Add `--allow-failure` for a best-effort refresh; the launch
-workflows use this mode so an unavailable public feed leaves the last valid
-ledger in place instead of blocking a build. Manual `npm run social:sync` calls
-remain strict by default. A short-lived lock prevents concurrent sync processes
+`--pages` options. Add `--allow-failure` for a best-effort refresh. Manual
+`npm run social:sync` calls remain strict by default. A short-lived lock prevents concurrent sync processes
 from rewriting the ledger at the same time; a stale lock should be removed only
 after confirming that no sync process is still running.
 
@@ -203,22 +207,19 @@ without the root supervisor.
 
 ### Platform launchers
 
-- `launch-production.bat` / `launch-production.sh`: refresh the Bluesky post
-  archive and media ledger, then build and start production.
-- `launch-development.bat` / `launch-development.sh`: refresh the Bluesky post
-  archive and media ledger, then start the Vite-based
+- `launch-production.bat` / `launch-production.sh`: build and start production.
+- `launch-development.bat` / `launch-development.sh`: start the Vite-based
   development stack on ports 3101–3106.
-- `cold_boot.bat`: after a host restart, refreshes Git and the Bluesky post
-  archive/media ledger, rebuilds the image, refreshes the tile index, and
-  starts production with Compose.
+- `cold_boot.bat`: after a host restart, refreshes Git, rebuilds the image,
+  optionally refreshes the tile index, and starts production with Compose.
 - `ensure_exclusive.bat` / `ensure_exclusive.sh`: check for the other Docker
   mode before launch and, after confirmation, gracefully stop it with
   `docker compose stop`.
 - `shutdown.bat` / `shutdown.sh`: detect running production/development
   containers, ask for confirmation, and gracefully stop either selected mode or
   both when no parameter is supplied.
-- `first-run.bat`: Windows first-run workflow; refreshes the Bluesky post
-  archive/media ledger, builds the image, bootstraps or migrates the database,
+- `first-run.bat`: Windows first-run workflow; builds the image, bootstraps or
+  migrates the database,
   refreshes the index, and starts production. It is safe to rerun after
   correcting an error.
 

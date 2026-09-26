@@ -45,6 +45,7 @@ describe("authentication endpoint contract", () => {
 
     assert.equal(response.status, 200);
     assert.equal(body.authenticated, false);
+    assert.equal(body.auth_state, "anonymous");
     assert.equal(body.user, null);
     assert.equal(Object.hasOwn(body, "access_token"), false);
   });
@@ -82,6 +83,7 @@ describe("authentication endpoint contract", () => {
 
     assert.equal(response.status, 200);
     assert.equal(body.authenticated, true);
+    assert.equal(body.auth_state, "denied");
     assert.equal(body.user.email, "user@example.com");
     assert.equal(Object.hasOwn(body.user, "access_token"), false);
     assert.match(response.headers.get("set-cookie"), /HttpOnly/);
@@ -100,6 +102,17 @@ describe("authentication endpoint contract", () => {
     });
     const body = await response.json();
     assert.equal(body.authenticated, false);
+  });
+
+  test("reports enabled access separately from session validity", async () => {
+    const { token } = create_session({ id: 11, provider: "test", enabled: true });
+    const response = await fetch(`${base_url}/auth/session`, {
+      headers: { Cookie: `${AUTH_COOKIE_NAME}=${token}` },
+    });
+    const body = await response.json();
+    assert.equal(body.authenticated, true);
+    assert.equal(body.auth_state, "authenticated");
+    assert.equal(body.user.enabled, true);
   });
 
   test("uses the same unavailable contract for the callback", async () => {

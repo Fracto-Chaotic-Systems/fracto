@@ -58,6 +58,12 @@ The initial user record needs to support:
 - created, updated, last-login, and last-seen timestamps;
 - a reserved role value for future authorization work.
 
+The first administrator can be created or promoted only through the explicit
+`npm run auth:bootstrap-admin` operation. It requires the loopback data server,
+`FRACTO_BOOTSTRAP_ADMIN_CONFIRM`, and the provider subject from the trusted
+OIDC account. The operation sets `enabled=true` and `role=admin`; it is not a
+browser endpoint and must not be exposed through a public proxy.
+
 Authentication events should be retained separately from the user record so
 accepted, rejected, disabled-user, logout, and error events can be audited.
 
@@ -89,7 +95,7 @@ The main server reserves these routes:
 
 - `GET /auth/login` — begin provider login;
 - `GET /auth/callback` — receive and validate the provider callback;
-- `GET /auth/session` — return the current authenticated/anonymous state;
+- `GET /auth/session` — return the current authenticated/denied/anonymous state;
 - `POST /auth/logout` — invalidate the current session.
 
 Login and callback return a clear configuration response until an OIDC
@@ -105,9 +111,17 @@ The main server now provides two opt-in middleware functions:
 - `require_enabled_user` returns `403` when a session exists but the user is
   not enabled in the allowlist.
 
-Existing routes are not globally gated during this preparatory stage, so local
-development and current clients continue to work. Protected routes should use
-`require_enabled_user` once authentication is enabled for the deployment.
+Application routes use an environment-aware wrapper around the enabled-user
+middleware. When authentication is required, the main server protects its
+application endpoints while leaving health checks and authentication routes
+available. When authentication is optional, the wrapper passes through so
+local development retains its existing behavior.
+
+The UI applies the same boundary to client routes: only an enabled session (or
+explicit local bypass mode) can render application pages. Direct navigation to
+an application URL while anonymous, checking, or denied returns to the public
+welcome screen; this client guard complements rather than replaces server
+authorization.
 
 ## Administrative allowlist workflow
 
@@ -121,7 +135,17 @@ when the main-server session identifies a user whose reserved `role` value is
 - `GET /login_events` — list recent authentication audit events.
 
 The role check is intentionally narrow and is not yet a general role system.
-The admin UI can be added later without changing the data ownership boundary.
+The admin service also requires the session to be enabled before accepting the
+reserved admin role. The admin browser client uses credentialed requests, and
+the service allows them only from the configured UI origin (or the explicit
+development CORS escape hatch). The admin UI can be expanded later without
+changing the data ownership boundary.
+
+Successful enabled logins and disabled identities are recorded during user
+provisioning, and session logout appends a separate `logout` event. Audit
+recording is best-effort for lifecycle responses: failure to write an audit
+event does not leave a valid session active after logout and does not expose
+database or provider details to the browser.
 
 ## Production-readiness checklist
 
@@ -147,14 +171,67 @@ silently enabled when configuration is missing.
 The development mode is a convenience for local work, not a replacement for
 testing the real OIDC callback and session flow.
 
+## Startup configuration validation
+
+The main server validates authentication settings before starting its services.
+When `FRACTO_AUTH_REQUIRED=true`, OIDC mode requires a valid issuer URL, client
+ID, client secret, UI origin, and callback URL ending in `/auth/callback`.
+Invalid or incomplete required configuration stops startup. When authentication
+is optional, the same issues are reported as a sanitized warning without
+printing secret values, allowing local bypass mode to continue.
+
+Provider discovery is performed server-side and cached for a bounded interval
+(`FRACTO_OIDC_DISCOVERY_TTL_MS`, one hour by default). The cached metadata
+contains the provider authorization, token, and JWKS endpoints; it is never
+returned to the browser. The cache can be invalidated when provider metadata or
+signing keys need to be refreshed.
+
+Each login redirect creates a short-lived, single-use server-side transaction
+containing a random state, nonce, PKCE verifier, and validated return path. The
+state is also bound to an HTTP-only transaction cookie. The authorization URL
+requests the `openid`, `email`, and `profile` scopes and uses the S256 PKCE
+challenge. No verifier, client secret, or provider token is sent to the browser.
+
+The callback validates the transaction cookie and state before handling any
+provider response. Provider denials, missing codes, expired transactions, and
+state mismatches are converted to safe UI error codes such as `access_denied`,
+`missing_code`, or `invalid_state`; raw provider descriptions are not echoed
+to the browser. A valid code is reserved for the token-exchange stage.
+
+The server performs the authorization-code exchange with the discovered token
+endpoint using the stored PKCE verifier. The callback URL is reconstructed from
+the configured redirect URI rather than from request host headers. The token
+response is kept in memory for identity processing and is never written to logs,
+cookies, redirects, or API responses.
+
+After exchange, the ID-token claims are checked for issuer, audience, subject,
+expiry, issued-at time, and nonce. The application identity is keyed by the
+provider and stable `sub` claim; email is retained as profile metadata and is
+not used as the identity key.
+
+The normalized identity is upserted by the data server, which owns the MySQL
+connection. Login refreshes profile metadata and timestamps without changing
+the existing `enabled` or `role` values, then appends a successful
+`login_events` record. Provider tokens never cross into the data server.
+The provisioning endpoint is restricted to loopback requests because it is an
+internal main-server-to-data-server operation, not a browser API.
+
+After provisioning, the main server creates an opaque in-memory session and
+attaches it to the response as a separate HTTP-only session cookie. The
+one-time OIDC transaction cookie is cleared in the same response. The session
+stores the canonical user record, including its current `enabled` and `role`
+values, but never stores provider tokens. Authorization remains a separate
+middleware decision: a valid but disabled user can have a session while
+protected routes still return `403` until an administrator enables the user.
+
 ## Welcome-page behavior
 
-The welcome page remains the public entry screen. It will later show:
+The welcome page remains the public entry screen. It shows:
 
 - a session-checking state while `/auth/session` is evaluated;
 - a sign-in action for anonymous users;
 - an access-denied explanation for authenticated but disabled users;
-- the existing application entry action for authenticated users;
+- the existing application entry action for enabled users;
 - a logout action after entry.
 
 Until the authentication stages are implemented, the current welcome behavior

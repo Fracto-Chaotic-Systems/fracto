@@ -14,9 +14,6 @@ if not exist "servers\fracto-data-server\package.json" goto missing_services
 if not exist "servers\fracto-tiles-server\package.json" goto missing_services
 if not exist "servers\fracto-ui\package.json" goto missing_services
 echo Building the production image...
-echo Refreshing the Bluesky media ledger...
-call npm run social:sync -- --allow-failure
-if errorlevel 1 goto failed
 docker compose build fracto
 if errorlevel 1 goto failed
 

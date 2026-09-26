@@ -340,19 +340,27 @@ shared tile cache and index.
 
 ### Docker production
 
-The production and development launch scripts refresh the tracked Bluesky post
-archive and media ledger before building, so the UI sees newly published posts
-and media without downloading image files. The feed is fetched once for both
-documents, and the sync is idempotent: when the public feed contains no records
-not already recorded in `social/Bluesky/POST_ARCHIVE.md` or
-`social/Bluesky/media/MEDIA_UPLOADS.md`, neither document is rewritten.
-Launch-time refreshes are best-effort so a temporary Bluesky outage does not
-block an otherwise valid build; a direct manual sync remains strict.
-To refresh it without launching Docker, run:
+Launch scripts do not contact Bluesky, so startup remains independent of the
+social API. The existing local post archive and media ledger continue to be
+served immediately. The admin social endpoint refreshes stale snapshots on
+demand and preserves the last valid snapshot if Bluesky is unavailable. To
+refresh the documents manually, run:
 
 ```powershell
 npm run social:sync
 ```
+
+The Admin Social page also has a refresh action. It requests
+`/social?refresh=true` and forces a new Bluesky snapshot without rebuilding or
+restarting the application.
+
+The `/social` response includes a `social_sync` object with `complete`,
+`stale`, `age_ms`, `updated_at`, `refresh_ttl_ms`, `refreshed`, and `error`
+fields. A refresh error does not discard the last readable snapshot.
+
+The automatic refresh interval is controlled by
+`FRACTO_SOCIAL_SYNC_TTL_MS` in the root `.env`, in milliseconds. It defaults to
+24 hours (`86400000`).
 
 Start production directly with Compose:
 
