@@ -1,8 +1,8 @@
 # Fracto authentication contract
 
-This document defines the requirements for the user-aware application work.
-It is a design contract for the authentication stages; it does not itself
-enable authentication.
+This document records the implemented authentication contract and the remaining
+work. Google OIDC, user provisioning, server-side sessions, and enabled-user
+checks are implemented. Enforcement is selected through runtime configuration.
 
 ## Initial objective
 
@@ -16,7 +16,10 @@ The first authorization question is therefore:
 
 ## Identity provider
 
-The production integration is provider-agnostic OpenID Connect (OIDC). The
+The current provider is Google through OpenID Connect (OIDC), with issuer
+`https://accounts.google.com`. Discovery is configurable, but identity
+normalization currently assigns `provider: "google"`; other providers require
+additional implementation. The
 browser may initiate the redirect, but the main server must validate the
 returned authorization response and identity claims. Browser fingerprints,
 IP addresses, user-agent strings, local storage, and client-supplied identity
@@ -46,9 +49,10 @@ the UI. Hiding navigation is not an access-control mechanism.
 
 ## Initial user policy
 
-The first user record is created by an explicit administrative/bootstrap
-operation. There is no automatic approval based only on a successful login.
-New identities are disabled until an administrator enables them.
+Successful Google login provisions a user record with `enabled=0` by default.
+Login updates profile information without changing existing enabled or role
+values. There is no automatic approval based only on a successful login.
+The first administrator is explicitly created or promoted through bootstrap.
 
 The initial user record needs to support:
 
@@ -64,22 +68,46 @@ The first administrator can be created or promoted only through the explicit
 OIDC account. The operation sets `enabled=true` and `role=admin`; it is not a
 browser endpoint and must not be exposed through a public proxy.
 
+In Docker, run `scripts/bootstrap_auth_admin.js` inside the application
+container so its request to the data server is loopback. Development uses
+service `fracto-dev` and `FRACTO_DATA_PORT=3102`; production uses service
+`fracto` and port `3002`. Both Compose files forward
+`FRACTO_BOOTSTRAP_ADMIN_CONFIRM` along with the OIDC settings. The confirmation
+passed to the script must match the value configured in the running data
+server. Supply `FRACTO_BOOTSTRAP_ADMIN_SUBJECT` and optional email/name values
+to the script. Existing sessions reload the updated user state on their next
+session or protected-route check; signing out and in also refreshes the UI.
+
 Authentication events should be retained separately from the user record so
 accepted, rejected, disabled-user, logout, and error events can be audited.
 
 ## Session boundary
 
-After successful allowlist validation, the main server creates a server-side
-session and returns only an opaque session cookie to the browser. The cookie
+After successful OIDC validation and user provisioning, the main server creates
+a server-side session, including for disabled users, and returns only an opaque
+session cookie to the browser. Enabled-user authorization is separate. The cookie
 must be `HttpOnly`, `Secure` in production, and `SameSite`-restricted. Session
 expiry, renewal, logout invalidation, and direct endpoint enforcement belong
 to the main server.
 
-The initial implementation uses an in-memory session store so the endpoint
-contract can be exercised safely before the provider integration is enabled.
+The current implementation uses an in-memory session store.
 Those sessions intentionally expire when the main process restarts. A later
 production-hardening stage must move session state to a shared durable store
 before horizontal scaling is introduced.
+
+Before authorizing a session or a protected main-server request, the main server
+reloads the user through the data server's loopback-only
+`GET /user/session/:id` endpoint. Enabled and role changes therefore apply on the
+next check, including to sessions created before the change. Missing or replaced
+identities invalidate the session. Lookup failures return `503` and do not grant
+cached access. The lookup has a five-second timeout and adds a database read per
+check; no authorization cache is used. Requests already authorized before a
+change are not cancelled. Logout or expiry during the lookup cannot renew the
+invalidated session.
+
+The main server normalizes MySQL numeric `1` and boolean `true` as enabled in
+session responses and authorization checks. The admin service accepts both
+representations and also requires `auth_state: "authenticated"` and role `admin`.
 
 Credentialed browser requests are allowed only from `FRACTO_UI_ORIGIN` (which
 defaults to the local UI origin). Remote installations must set that value to
@@ -89,19 +117,43 @@ is available only as an explicit development escape hatch.
 Provider access tokens and client secrets must never be stored in browser
 storage or committed to the repository.
 
+### Session and request protections
+
+Logout invalidates the session before awaiting best-effort audit logging and
+clears both session and pending OIDC transaction cookies. Audit and provisioning
+requests have five-second timeouts. Successful login replaces the browser's old
+session token. Session expiry is sliding (eight hours by default); an expired
+session cannot be renewed. Cookies are host-only, `HttpOnly`, `SameSite=Lax`, and
+`Secure` in production or when explicitly configured. Session responses and
+authentication redirects use `Cache-Control: no-store`.
+
+Cookie-authenticated mutations through the main/admin authorization guards,
+including logout, require an `Origin` exactly matching `FRACTO_UI_ORIGIN`.
+Missing, opaque (`null`), and foreign origins are rejected. The development
+CORS escape hatch does not disable this check. Admin forwarding preserves the
+origin for the data service's second check. Internal provisioning, bootstrap,
+and session lookup additionally reject browser Origin/Fetch Metadata headers;
+they retain their loopback network boundary.
+
+Backups use `POST /backup?table=...` with administrator and origin checks;
+the previous GET endpoint is removed. Direct maintenance clients must use POST,
+an enabled administrator cookie, and the configured UI origin. Main, admin,
+and data CORS responses vary by Origin and handle preflight without requiring a
+session. These checks do not close the general service-access gap below.
+
 ## Endpoint contract
 
-The main server reserves these routes:
+The main server implements these routes:
 
 - `GET /auth/login` — begin provider login;
 - `GET /auth/callback` — receive and validate the provider callback;
 - `GET /auth/session` — return the current authenticated/denied/anonymous state;
 - `POST /auth/logout` — invalidate the current session.
 
-Login and callback return a clear configuration response until an OIDC
-provider is configured. Session and logout are operational with the temporary
-in-memory store, using stable anonymous and invalidation contracts so the UI
-can be built before provider integration is enabled.
+Login and callback return `503` if OIDC is not configured; otherwise they perform
+the provider flow. Session and logout operate against the in-memory store.
+`authenticated: true` in a session response means the identity has a valid
+session; `auth_state` distinguishes enabled access from `denied` access.
 
 ## Protected-route middleware
 
@@ -119,9 +171,11 @@ local development retains its existing behavior.
 
 The UI applies the same boundary to client routes: only an enabled session (or
 explicit local bypass mode) can render application pages. Direct navigation to
-an application URL while anonymous, checking, or denied returns to the public
-welcome screen; this client guard complements rather than replaces server
-authorization.
+an application URL while anonymous, denied, or in an error state returns to the
+public welcome screen. While checking, a protected route renders the welcome
+page with checking status without changing the requested URL. The application
+header stays hidden until access resolves to authenticated or bypass.
+This client guard complements server authorization.
 
 ## Administrative allowlist workflow
 
@@ -141,11 +195,32 @@ the service allows them only from the configured UI origin (or the explicit
 development CORS escape hatch). The admin UI can be expanded later without
 changing the data ownership boundary.
 
+The data server also checks enabled-administrator access directly for `/users`,
+`/login_events`, `PUT /user/:id`, queries of `users`, backups, and schema requests
+targeting `users` or `login_events`. The admin proxy forwards the session cookie
+for this second check. These admin checks remain active in bypass mode. Data
+query and backup clients send credentials, and data-service CORS permits them
+from the configured UI origin.
+
+### Remaining service-access boundary
+
+The audit found that general data, asset, and tile application APIs, plus admin
+logs/version/commits/social routes, do not yet use an authentication gate. Main
+server protection does not cover requests made directly to these service ports,
+which Compose publishes. This remains an authentication coverage gap; the
+enabled-user and administrator checks above must not be described as protecting
+the entire deployment. Extending enforcement requires authenticated internal
+service calls and corresponding credential handling in browser clients, while
+keeping health checks, port discovery, and welcome assets available as intended.
+The loopback-only provisioning, bootstrap, and session-lookup routes remain
+internal and must not be exposed through a public reverse proxy.
+
 Successful enabled logins and disabled identities are recorded during user
 provisioning, and session logout appends a separate `logout` event. Audit
-recording is best-effort for lifecycle responses: failure to write an audit
-event does not leave a valid session active after logout and does not expose
-database or provider details to the browser.
+recording is best-effort for logout: failure to write an audit event does not
+leave a valid session active. In contrast, an audit insert failure during
+provisioning currently fails that operation and prevents session creation.
+Complete rejected/error callback audit coverage remains to be verified.
 
 ## Production-readiness checklist
 
@@ -162,11 +237,16 @@ Before enabling authentication for a public deployment:
 
 ## Local development
 
-Production authentication is the default. A development bypass may exist only
-when explicitly selected through runtime configuration, for example an
-authentication mode environment variable, and should be limited to local
-development access. It must be visibly reported at startup and must never be
-silently enabled when configuration is missing.
+`FRACTO_AUTH_MODE` defaults to `oidc`, but enforcement is independently controlled
+by `FRACTO_AUTH_REQUIRED`. Only the exact value `true` enables enforcement;
+`false` or an unset value allows bypass. Both Compose files default this flag
+to `false`. Deployments requiring authentication must explicitly set it to `true`.
+
+With enforcement disabled, `/auth/session` reports `auth_enabled: false`, and
+the UI selects `bypass` regardless of session identity. The main server's
+environment-aware application gate passes requests through. Admin user-management
+operations still require an enabled administrator session. The existing welcome
+entry action remains manual in bypass mode.
 
 The development mode is a convenience for local work, not a replacement for
 testing the real OIDC callback and session flow.
@@ -196,7 +276,13 @@ The callback validates the transaction cookie and state before handling any
 provider response. Provider denials, missing codes, expired transactions, and
 state mismatches are converted to safe UI error codes such as `access_denied`,
 `missing_code`, or `invalid_state`; raw provider descriptions are not echoed
-to the browser. A valid code is reserved for the token-exchange stage.
+to the browser. A valid code proceeds to the server-side token exchange.
+
+Failure redirects always land on welcome. Return paths reject foreign origins,
+backslashes, and control/whitespace characters. A mismatched browser cookie does
+not consume another browser's transaction. Valid transactions are consumed once
+before exchange, so replay cannot create another session. The UI consumes the
+failure marker and shows a fixed retry message rather than raw provider text.
 
 The server performs the authorization-code exchange with the discovered token
 endpoint using the stored PKCE verifier. The callback URL is reconstructed from
@@ -211,8 +297,9 @@ not used as the identity key.
 
 The normalized identity is upserted by the data server, which owns the MySQL
 connection. Login refreshes profile metadata and timestamps without changing
-the existing `enabled` or `role` values, then appends a successful
-`login_events` record. Provider tokens never cross into the data server.
+the existing `enabled` or `role` values, then appends an `authenticated` event
+with success for enabled users or a `disabled` event without success for disabled
+users. Provider tokens never cross into the data server.
 The provisioning endpoint is restricted to loopback requests because it is an
 internal main-server-to-data-server operation, not a browser API.
 
@@ -222,7 +309,8 @@ one-time OIDC transaction cookie is cleared in the same response. The session
 stores the canonical user record, including its current `enabled` and `role`
 values, but never stores provider tokens. Authorization remains a separate
 middleware decision: a valid but disabled user can have a session while
-protected routes still return `403` until an administrator enables the user.
+protected routes still return `403`. After an administrator enables the user,
+the next session check reloads the enabled state.
 
 ## Welcome-page behavior
 
@@ -231,16 +319,86 @@ The welcome page remains the public entry screen. It shows:
 - a session-checking state while `/auth/session` is evaluated;
 - a sign-in action for anonymous users;
 - an access-denied explanation for authenticated but disabled users;
-- the existing application entry action for enabled users;
+- automatic application entry for enabled users who land on `/`;
 - a logout action after entry.
 
-Until the authentication stages are implemented, the current welcome behavior
-continues to operate without a login gate.
+The UI requests `/auth/login?return_to=%2F`, so the callback returns to welcome
+and waits for session validation. Starting login does not select an application
+page. The guarded authenticated transition is the sole automatic entry owner.
+`App.jsx` also invokes the existing application-entry callback and replaces `/`
+with `/study` when an authenticated session is detected on welcome. A guard
+remains mounted across routes, consumes each authenticated transition once, and
+resets when leaving authenticated. Session refreshes and effect replays do not
+repeat entry; an existing application route keeps its location and selection.
 
-Authentication remains opt-in during rollout. The main server only enforces
-the welcome access gate when `FRACTO_AUTH_REQUIRED=true`; leaving that value
-unset preserves the existing application entry behavior while the provider
-and initial administrator are being configured.
+Checking status now appears on welcome while preserving a protected destination.
+Neither welcome nor `WelcomeOIDC` offers a manual start action for authenticated
+users; bypass retains its manual entry behavior. Anonymous and error states offer
+sign-in, and denied users see their access status without an entry action.
+
+The manual welcome callback permits navigation only in bypass mode, keeping it
+separate from authenticated entry. Focused tests exercise the entry effect,
+actual JSX render decisions, and login initiation, including guard reset, route
+preservation, welcome actions, and the callback destination, without a browser
+or React mount. Full browser login remains outstanding; build and lint status is
+recorded in the step 8 validation notes below.
+
+Run `npm test` at the root for endpoint and session-security regressions and
+`npm run test:auth` in `servers/fracto-ui` for entry and callback-error tests.
+Callback tests simulate provider exchange; they do not replace a live Google
+login, deployment CORS checks, or browser cookie verification behind HTTPS.
+
+### Authentication regression coverage
+
+The step 7 checklist is covered by the following automated checks:
+
+| Scenario | Coverage |
+| --- | --- |
+| First enabled login enters once | UI session loading and entry-effect tests; simulated callback session creation |
+| Refresh preserves the application route | UI checks for all five application routes, including checking before session resolution |
+| Repeated checks do not navigate again | UI session refresh and effect replay tests |
+| Disabled users remain denied | UI denied state; HTTP enabled-user and administrator gates, including existing sessions |
+| Logout then login permits entry again | UI logout/session/entry sequence; HTTP old-token rejection and new-session acceptance |
+| Expired or invalid session returns to welcome | HTTP anonymous responses and protected-route rejection; UI anonymous response routing |
+| Bypass retains manual entry | Actual configuration checks for false/unset enforcement; UI bypass with or without a denied identity |
+
+`npm test` currently passes 62 root tests, and the UI's `npm run test:auth`
+passes 16 tests. The UI suite uses the actual component methods and JSX with
+simulated React/router behavior; provider exchange and database responses are
+also simulated. Browser mounting, real Google login, and live database behavior
+These passing tests do not cover or resolve the remaining general service-access
+boundary described above.
+
+### Step 8 validation record
+
+The UI dependency tree was restored on Windows with `npm ci` from the existing
+lockfile; no lockfile edit was needed. `npm run lint` passes with three existing
+`process`-undefined warnings in `vite.config.js`. `npm run build` succeeds, with
+Vite's warning that the minified JavaScript bundle exceeds 500 kB. The complete
+root suite passes 62 tests; UI authentication, automation, and audio suites pass
+16, 11, and 5 tests respectively.
+
+The running development deployment reports an anonymous `/auth/session`,
+returns `401` for anonymous main logs, data users, and admin users, and returns
+`403` for logout without the configured UI origin. These checks cover selected
+live service boundaries, not provider login. Browser automation reports no
+connected browser, so a real Google round trip, browser cookie behavior, and
+entry into the app after Google login have not been verified. Complete that
+check in a connected browser at `http://localhost:3106`; the running development
+environment has Google credentials configured and uses
+`http://localhost:3101/auth/callback` as its return URI.
+
+## Reconciliation baseline
+
+At `milestone/authentication-flow-v1`, the enabled-value normalization in the
+main and admin servers, OIDC environment forwarding, and bootstrap confirmation
+forwarding are committed. The handoff describing those edits as uncommitted is
+historical. The data server owns `users` and `login_events`; the main server owns
+OIDC transactions and session cookies. The remaining UI transition and session
+revocation work described above was added after that milestone. Root regression
+tests cover current-user authorization, role changes, lookup failures, deleted
+identities, and direct data-route administrator checks with a simulated data
+service; live database and deployment verification remain outstanding.
 
 ## Deferred decisions
 

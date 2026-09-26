@@ -1,4 +1,5 @@
 import { get_auth_config } from "../utils/auth_config.js";
+import { trusted_mutation_origin } from "../utils/auth_request_origin.js";
 import * as oidc from "openid-client";
 
 import { discover_oidc_provider } from "../utils/oidc_provider.js";
@@ -28,10 +29,32 @@ import {
   set_session_cookie,
 } from "../utils/auth_sessions.js";
 
-const session_from_request = (req) => {
+const session_from_request = async (req) => {
   const token = get_cookie(req, AUTH_COOKIE_NAME);
-  const session = renew_session(token);
-  return session ? { token, session } : null;
+  const session = get_session(token);
+  if (!session) return null;
+  const data_port = Number(process.env.FRACTO_DATA_PORT || 3002);
+  const response = await fetch(
+    `http://127.0.0.1:${data_port}/user/session/${encodeURIComponent(session.user.id)}`,
+    { signal: AbortSignal.timeout(5000) },
+  );
+  if (response.status === 404) {
+    destroy_session(token);
+    return null;
+  }
+  if (!response.ok) throw new Error("User authorization lookup failed");
+  const { user } = await response.json();
+  if (!user || `${user.id}` !== `${session.user.id}` ||
+      user.provider !== session.user.provider ||
+      user.provider_subject !== session.user.provider_subject) {
+    destroy_session(token);
+    return null;
+  }
+  // Logout or expiry may have invalidated the token while the lookup was pending.
+  if (get_session(token) !== session) return null;
+  session.user = public_user(user);
+  renew_session(token);
+  return { token, session };
 };
 
 const oidc_is_configured = () =>
@@ -45,20 +68,22 @@ const unavailable_response = (res) => {
 };
 
 const safe_return_to = (value) => {
-  const requested = `${value || "/"}`;
-  return requested.startsWith("/") && !requested.startsWith("//")
-    ? requested
-    : "/";
+  if (typeof value !== "string" || !value.startsWith("/") ||
+      value.startsWith("//") || /[\\\x00-\x20\x7f]/.test(value)) return "/";
+  const base = new URL(AUTH_CONFIG.ui_origin);
+  const destination = new URL(value, base);
+  return destination.origin === base.origin ? value : "/";
 };
 
 const redirect_to_ui = (res, return_to = "/", error_code = null) => {
   let destination;
   try {
-    destination = new URL(safe_return_to(return_to), AUTH_CONFIG.ui_origin);
+    destination = new URL(error_code ? "/" : safe_return_to(return_to), AUTH_CONFIG.ui_origin);
   } catch {
     destination = new URL("http://localhost:3006/");
   }
   if (error_code) destination.searchParams.set("auth_error", error_code);
+  res.setHeader("Cache-Control", "no-store");
   res.redirect(destination.href);
 };
 
@@ -91,6 +116,7 @@ const callback_url = (query) => {
 const provision_user = async (identity, request) => {
   const data_port = Number(process.env.FRACTO_DATA_PORT || 3002);
   const response = await fetch(`http://127.0.0.1:${data_port}/user/upsert`, {
+    signal: AbortSignal.timeout(5000),
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -110,6 +136,7 @@ const provision_user = async (identity, request) => {
 const record_auth_event = async ({ user, event_type, success, request, details }) => {
   const data_port = Number(process.env.FRACTO_DATA_PORT || 3002);
   const response = await fetch(`http://127.0.0.1:${data_port}/login_event`, {
+    signal: AbortSignal.timeout(5000),
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -130,6 +157,7 @@ const record_auth_event = async ({ user, event_type, success, request, details }
 
 /** Start an authentication redirect once the OIDC provider is configured. */
 export const handle_auth_login = async (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
   if (AUTH_MODE !== "oidc" || !oidc_is_configured()) {
     unavailable_response(res);
     return;
@@ -178,7 +206,6 @@ export const handle_auth_callback = async (req, res) => {
 
   if (!transaction) {
     clear_auth_transaction_cookie(res);
-    if (state) consume_auth_transaction(state);
     redirect_to_ui(res, return_to, "invalid_state");
     return;
   }
@@ -226,6 +253,7 @@ export const handle_auth_callback = async (req, res) => {
       return;
     }
     const session = create_session(user);
+    destroy_session(get_cookie(req, AUTH_COOKIE_NAME));
     set_session_cookie(res, session.token);
     redirect_to_ui(res, return_to);
   } catch (error) {
@@ -235,8 +263,15 @@ export const handle_auth_callback = async (req, res) => {
 };
 
 /** Return the current session state without exposing provider credentials. */
-export const handle_auth_session = (req, res) => {
-  const current = session_from_request(req);
+export const handle_auth_session = async (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  let current;
+  try {
+    current = await session_from_request(req);
+  } catch {
+    res.status(503).json({ error: "Unable to verify access" });
+    return;
+  }
   if (current) {
     const enabled =
       current.session.user?.enabled === true ||
@@ -262,8 +297,15 @@ export const handle_auth_session = (req, res) => {
 };
 
 /** Require any valid server-side session for a protected route. */
-export const require_authenticated = (req, res, next) => {
-  const current = session_from_request(req);
+export const require_authenticated = async (req, res, next) => {
+  if (!trusted_mutation_origin(req, res)) return;
+  let current;
+  try {
+    current = await session_from_request(req);
+  } catch {
+    res.status(503).json({ error: "Unable to verify access" });
+    return;
+  }
   if (!current) {
     res.status(401).json({ error: "Authentication required" });
     return;
@@ -276,7 +318,7 @@ export const require_authenticated = (req, res, next) => {
 
 /** Require a valid session whose user has been enabled in the allowlist. */
 export const require_enabled_user = (req, res, next) => {
-  require_authenticated(req, res, () => {
+  return require_authenticated(req, res, () => {
     if (
       req.auth_user?.enabled !== true &&
       Number(req.auth_user?.enabled) !== 1
@@ -294,13 +336,20 @@ export const require_enabled_user_if_configured = (req, res, next) => {
     next();
     return;
   }
-  require_enabled_user(req, res, next);
+  return require_enabled_user(req, res, next);
 };
 
 /** End the current session and append a non-secret logout audit event. */
 export const handle_auth_logout = async (req, res) => {
+  if (!trusted_mutation_origin(req, res)) return;
+  res.setHeader("Cache-Control", "no-store");
   const token = get_cookie(req, AUTH_COOKIE_NAME);
   const session = get_session(token);
+  destroy_session(token);
+  clear_session_cookie(res);
+  const transaction = get_auth_transaction_cookie(req);
+  if (transaction) consume_auth_transaction(transaction);
+  clear_auth_transaction_cookie(res);
   if (session) {
     try {
       await record_auth_event({
@@ -313,7 +362,5 @@ export const handle_auth_logout = async (req, res) => {
       console.warn("Authentication logout audit failed", error.message);
     }
   }
-  destroy_session(token);
-  clear_session_cookie(res);
   res.status(200).json({ ok: true });
 };
