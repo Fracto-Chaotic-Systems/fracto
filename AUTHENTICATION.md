@@ -1,8 +1,9 @@
 # Fracto authentication contract
 
-This document records the implemented authentication contract and the remaining
-work. Google OIDC, user provisioning, server-side sessions, and enabled-user
-checks are implemented. Enforcement is selected through runtime configuration.
+This document records the implemented authentication behavior and the target
+contract for remaining work. Google OIDC, user provisioning, server-side
+sessions, and enabled-user checks are implemented. Enforcement is selected
+through runtime configuration.
 
 ## Initial objective
 
@@ -49,10 +50,27 @@ the UI. Hiding navigation is not an access-control mechanism.
 
 ## Initial user policy
 
-Successful Google login provisions a user record with `enabled=0` by default.
-Login updates profile information without changing existing enabled or role
-values. There is no automatic approval based only on a successful login.
-The first administrator is explicitly created or promoted through bootstrap.
+The `users` schema is initialized empty. Schema creation and administrator
+provisioning are separate operations; no person-specific account data or
+administrator credentials are seeded in source code, SQL migrations, or other
+Git-tracked deployment files.
+
+Each deployment starts with exactly one explicitly designated administrator,
+provisioned through a qualified installer's private, deployment-specific
+bootstrap operation. The stable identity is the pair `provider` and
+`provider_subject`; email and display name are optional profile fields and do
+not establish identity or authorization. The bootstrap grants `enabled=1` and
+`role=admin` only to that verified identity. It must be internal, protected by a
+one-time deployment capability, and reject attempts to bootstrap a different
+identity or to create another administrator. Repeating the operation for the
+same identity safely confirms completion without changing the account, so a
+retry is safe if the first response was lost.
+
+Successful later Google logins provision a user record with `enabled=0` by
+default. Login updates profile information without changing existing enabled
+or role values. There is no automatic approval based only on a successful
+login. Any additional access or role change requires an explicit administrative
+action.
 
 The initial user record needs to support:
 
@@ -62,21 +80,122 @@ The initial user record needs to support:
 - created, updated, last-login, and last-seen timestamps;
 - a reserved role value for future authorization work.
 
-The first administrator can be created or promoted only through the explicit
+The current first-administrator workflow uses the explicit
 `npm run auth:bootstrap-admin` operation. It requires the loopback data server,
 `FRACTO_BOOTSTRAP_ADMIN_CONFIRM`, and the provider subject from the trusted
 OIDC account. The operation sets `enabled=true` and `role=admin`; it is not a
-browser endpoint and must not be exposed through a public proxy.
+browser endpoint and must not be exposed through a public proxy. Bootstrap now
+records the local administrator id in the deployment's `auth_bootstrap_state`
+table in the same transaction as provisioning. A retry for the identity
+referenced by the marker returns generic success without changing current user
+access; a different identity or unexpected existing user rows are rejected.
+The endpoint compares the confirmation without a direct string comparison. The
+database marker consumes bootstrap authorization and remains authoritative
+across process restarts; it permits only an idempotent confirmation for the
+same identity. Remove the secret from the deployment configuration after
+verifying completion.
 
-In Docker, run `scripts/bootstrap_auth_admin.js` inside the application
-container so its request to the data server is loopback. Development uses
-service `fracto-dev` and `FRACTO_DATA_PORT=3102`; production uses service
-`fracto` and port `3002`. Both Compose files forward
-`FRACTO_BOOTSTRAP_ADMIN_CONFIRM` along with the OIDC settings. The confirmation
-passed to the script must match the value configured in the running data
-server. Supply `FRACTO_BOOTSTRAP_ADMIN_SUBJECT` and optional email/name values
-to the script. Existing sessions reload the updated user state on their next
-session or protected-route check; signing out and in also refreshes the UI.
+The supported command is `npm run auth:bootstrap-admin`. In Docker, run it
+inside the application container so its request to the data server is loopback.
+Development uses service `fracto-dev` and `FRACTO_DATA_PORT=3102`; production
+uses service `fracto` and port `3002`. Both Compose files forward
+`FRACTO_BOOTSTRAP_ADMIN_CONFIRM` along with the OIDC settings. Supply a JSON
+object on the installer's standard input with `confirmation`, `provider`, and
+`provider_subject`, plus optional `email` and `display_name` fields. The
+confirmation must match the deployment secret. The CLI does not accept identity
+or confirmation values through command-line arguments or environment
+variables, and it does not print them. Provide the input through an approved
+secret manager or a protected file outside the repository; do not save it in
+Git or shell history. Existing sessions reload the updated user state on their
+next session or protected-route check; signing out and in also refreshes the UI.
+
+### Qualified installer procedure
+
+Only an installer authorized to administer the deployment and its identity
+provider should perform this one-time operation. Confirm the target host,
+Compose project, environment, database, and designated administrator with the
+deployment owner before starting. Use an organization-controlled Google
+account, and verify the person through the organization's identity process.
+The Google `sub` value is the identity key; an email match alone is not enough.
+A practical method is to have the designated person complete Google OIDC
+sign-in first. The callback creates a disabled user from Google's validated
+`sub`. Through the deployment's restricted database inspection process, match
+that row to the independently verified person and read its `provider_subject`.
+If a matching disabled row already exists, verify the same stable subject there.
+Do not derive the subject from email or manually decode an unverified token, or
+place the subject in a command line, shell history, Git, or routine logs.
+
+Before bootstrap, bring up the intended deployment with its schema and OIDC
+settings configured. Keep the application unavailable to ordinary users until
+the administrator is enabled. Using the deployment's approved restricted
+database inspection process, confirm that `auth_bootstrap_state` has no row and
+that `users` is empty, or contains only the single disabled user matching the
+verified Google subject. Login may have created that disabled row already.
+An initial bootstrap rejects a marker belonging to another identity or
+unexpected existing user rows. If the state differs, stop and ask the
+deployment database owner to investigate; do not delete users, clear the marker,
+or reset tables to force bootstrap.
+
+Generate a unique, high-entropy confirmation value for this deployment with
+the cryptographic secret-generation feature in the approved secret manager.
+Provide it to the running application through that manager or a protected,
+untracked deployment secret file. Do not put it in Compose command arguments or
+a tracked `.env` file. Prepare the JSON input through the approved
+secret-handling process. Its fields are `confirmation`, `provider` (use
+`google`), and `provider_subject`; `email` and `display_name` are optional.
+Keep this input outside the repository with access restricted to the installer,
+and avoid displaying it in a terminal or capturing it in deployment logs.
+
+Run the CLI inside the application container so its data-server request remains
+loopback-only. From PowerShell, set `$bootstrapInputPath` to the protected file
+path without putting its contents in the command, then run one of these:
+
+```powershell
+Get-Content -Raw -LiteralPath $bootstrapInputPath |
+  docker compose -f compose.yaml exec -T fracto npm run auth:bootstrap-admin
+```
+
+For development, use the development Compose file and service:
+
+```powershell
+Get-Content -Raw -LiteralPath $bootstrapInputPath |
+  docker compose -f compose.yaml -f compose.dev.yaml exec -T fracto-dev npm run auth:bootstrap-admin
+```
+
+The installer reports generic success without printing the submitted identity,
+confirmation, or user record. Verify the deployment-local marker and
+administrator state through the restricted inspection process: the marker must
+reference the one enabled `admin` user, and the provider subject must match the
+verified identity. Then sign in with that Google account and confirm
+administrator access to a protected admin operation. Remove the confirmation
+from the secret manager or deployment secret source immediately after
+verification, recreate/redeploy the application container so its configured
+environment no longer contains it, and securely remove any temporary input file
+under the organization's media-handling policy. The database marker keeps
+bootstrap closed after a restart.
+
+### Bootstrap recovery
+
+The operation is safe to retry with the same provider and subject after a
+timeout or lost response. If the first attempt committed, the marker confirms
+that identity and the retry returns generic success without changing the user;
+if the first transaction rolled back, the retry performs the bootstrap. Still
+inspect the marker and user through the restricted process when the result is
+ambiguous or another error occurs.
+
+An HTTP `409` means the marker belongs to another identity or the user table is
+outside the permitted initial state. Stop and have the database owner review
+it.
+
+An HTTP `403` means the confirmation is invalid or the request did not come through the
+required internal path; check secret configuration and run the CLI in the
+application container without weakening the loopback restriction. An HTTP
+`503` means the bootstrap lock could not be acquired; wait for any active
+installer to finish, then retry only with the same verified identity. An HTTP
+`500` indicates an unexpected failure: review sanitized service logs and
+database state without exposing the payload; retrying with the same verified
+identity is safe after correcting the underlying issue. Never clear the marker
+or delete user records in production as a recovery shortcut.
 
 Authentication events should be retained separately from the user record so
 accepted, rejected, disabled-user, logout, and error events can be audited.
@@ -238,7 +357,9 @@ Before enabling authentication for a public deployment:
 - configure and verify the OIDC issuer, client id, and redirect URI;
 - set `FRACTO_UI_ORIGIN` to the exact browser origin;
 - enable secure cookies behind HTTPS;
-- create and explicitly enable the first administrator;
+- initialize the first administrator using the [qualified installer procedure](#qualified-installer-procedure): verify the Google account and stable subject, provide the one-time confirmation through protected channels, and run `npm run auth:bootstrap-admin` inside the target application container;
+- verify that the bootstrap marker references the enabled administrator, sign in with that account, and test a protected admin operation; then remove the confirmation from deployment secrets and recreate the application container;
+- if the database has unexpected users or a marker for another identity, stop and contact the deployment database owner; do not clear user records or bootstrap state to force setup;
 - verify rejected and disabled-user audit events;
 - replace the temporary in-memory session store with a shared durable store
   before running more than one main-server instance;

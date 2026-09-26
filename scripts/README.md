@@ -227,7 +227,9 @@ without the root supervisor.
 - `first-run.bat`: Windows first-run workflow; builds the image, bootstraps or
   migrates the database,
   refreshes the index, and starts production. It is safe to rerun after
-  correcting an error.
+  correcting an error. For the separately controlled first administrator
+  provisioning and installer recovery procedure, follow
+  [AUTHENTICATION.md](../AUTHENTICATION.md#qualified-installer-procedure).
 
 ## Database setup and schema changes
 
