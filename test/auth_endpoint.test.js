@@ -47,6 +47,8 @@ const route_globals = {
 for (const name of new Set(route_source.match(/\bhandle_\w+/g))) {
   route_globals[name] = (req, res) => res.json({ handler: name });
 }
+route_globals.create_user_upsert_route = () =>
+  (req, res) => res.json({ handler: "handle_user_upsert" });
 data_app.use(express.json());
 vm.runInNewContext(route_source, route_globals);
 let data_server;

@@ -115,7 +115,8 @@ const callback_url = (query) => {
 
 const provision_user = async (identity, request) => {
   const data_port = Number(process.env.FRACTO_DATA_PORT || 3002);
-  const response = await fetch(`http://127.0.0.1:${data_port}/user/upsert`, {
+  const endpoint = `http://127.0.0.1:${data_port}/user/upsert`;
+  const response = await fetch(endpoint, {
     signal: AbortSignal.timeout(5000),
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -127,7 +128,11 @@ const provision_user = async (identity, request) => {
   });
   const body = await response.json().catch(() => ({}));
   if (!response.ok || !body.user) {
-    throw new Error(body.error || `User provisioning failed (${response.status})`);
+    const response_type = response.headers.get("content-type") || "unknown content type";
+    throw new Error(
+      `User provisioning failed (HTTP ${response.status}; requested ${endpoint}; ` +
+      `responded at ${response.url || endpoint}; ${response_type})`,
+    );
   }
   return body.user;
 };
