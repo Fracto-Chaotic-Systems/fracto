@@ -41,6 +41,17 @@ const cookie_attributes = (max_age) =>
     .filter(Boolean)
     .join("; ");
 
+/** Append a cookie without discarding cookies already attached to the response. */
+export const append_set_cookie = (response, cookie) => {
+  const existing = response.getHeader("Set-Cookie");
+  const cookies = existing
+    ? Array.isArray(existing)
+      ? existing
+      : [existing]
+    : [];
+  response.setHeader("Set-Cookie", [...cookies, cookie]);
+};
+
 /** Create an opaque server-side session for a validated user identity. */
 export const create_session = (user) => {
   remove_expired_sessions();
@@ -105,16 +116,16 @@ export const get_cookie = (request, name) => {
 
 /** Attach the opaque session cookie to a response. */
 export const set_session_cookie = (response, token, max_age = SESSION_TTL_MS) => {
-  response.setHeader(
-    "Set-Cookie",
+  append_set_cookie(
+    response,
     `${AUTH_COOKIE_NAME}=${encodeURIComponent(token)}; ${cookie_attributes(max_age)}`,
   );
 };
 
 /** Clear the browser session cookie. */
 export const clear_session_cookie = (response) => {
-  response.setHeader(
-    "Set-Cookie",
+  append_set_cookie(
+    response,
     `${AUTH_COOKIE_NAME}=; ${cookie_attributes(0)}`,
   );
 };
@@ -126,5 +137,7 @@ export const public_user = (user) => ({
   provider_subject: user?.provider_subject ?? null,
   email: user?.email ?? null,
   display_name: user?.display_name ?? null,
+  // MySQL commonly returns TINYINT(1) as numeric 0/1; normalize it for the UI.
+  enabled: user?.enabled === true || Number(user?.enabled) === 1,
   role: user?.role ?? null,
 });
