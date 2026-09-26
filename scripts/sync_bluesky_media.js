@@ -1,5 +1,5 @@
 import fetch from "node-fetch";
-import { open, readFile, rename, unlink, writeFile } from "node:fs/promises";
+import { mkdir, open, readFile, rename, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -20,7 +20,13 @@ const POST_ARCHIVE_DOCUMENT_PATH = path.join(
   "Bluesky",
   "POST_ARCHIVE.md",
 );
-const SYNC_LOCK_PATH = `${MEDIA_DOCUMENT_PATH}.sync.lock`;
+// Locks are runtime state, not part of the source documents. The logs volume
+// remains writable when social content is mounted read-only by a deployment.
+const SYNC_LOCK_PATH = process.env.FRACTO_BLUESKY_SYNC_LOCK_PATH || path.join(
+  ROOT_DIR,
+  "logs",
+  "bluesky-media-sync.lock",
+);
 const BLUESKY_FEED_ENDPOINT =
   "https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed";
 const DEFAULT_ACTOR = "fracto-studio.bsky.social";
@@ -224,8 +230,13 @@ const escape_html = (value) =>
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
 
+const escape_html_attribute = (value) =>
+  escape_html(value).replace(/\r\n|\r|\n/g, "&#10;");
+
 const decode_html_entities = (value) =>
   String(value ?? "")
+    .replaceAll("&#10;", "\n")
+    .replaceAll("&#13;", "\r")
     .replaceAll("&quot;", '"')
     .replaceAll("&#39;", "'")
     .replaceAll("&lt;", "<")
@@ -237,10 +248,10 @@ const decode_html_entities = (value) =>
     .replaceAll("&gt;", ">");
 
 const format_copy_alt_button = (alt_text) =>
-  `<button type="button" class="media-copy-alt" data-copy-alt-text="${escape_html(alt_text)}" title="copy alt text to clipboard" aria-label="copy alt text to clipboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V5.5C8 4.67 8.67 4 9.5 4h9C19.33 4 20 4.67 20 5.5v9c0 .83-.67 1.5-1.5 1.5H16v2.5c0 .83-.67 1.5-1.5 1.5h-9C4.67 20 4 19.33 4 18.5v-9C4 8.67 4.67 8 5.5 8H8Zm-2.5 2c-.28 0-.5.22-.5.5v8c0 .28.22.5.5.5h9c.28 0 .5-.22.5-.5V10.5c0-.28-.22-.5-.5-.5h-9ZM10 6v2h4.5c.83 0 1.5.67 1.5 1.5V14h2V6.5c0-.28-.22-.5-.5-.5h-7.5Z"/></svg></button>`;
+  `<button type="button" class="media-copy-alt" data-copy-alt-text="${escape_html_attribute(alt_text)}" title="copy alt text to clipboard" aria-label="copy alt text to clipboard"><svg height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V5.5C8 4.67 8.67 4 9.5 4h9C19.33 4 20 4.67 20 5.5v9c0 .83-.67 1.5-1.5 1.5H16v2.5c0 .83-.67 1.5-1.5 1.5h-9C4.67 20 4 19.33 4 18.5v-9C4 8.67 4.67 8 5.5 8H8Zm-2.5 2c-.28 0-.5.22-.5.5v8c0 .28.22.5.5.5h9c.28 0 .5-.22.5-.5V10.5c0-.28-.22-.5-.5-.5h-9ZM10 6v2h4.5c.83 0 1.5.67 1.5 1.5V14h2V6.5c0-.28-.22-.5-.5-.5h-7.5Z"/></svg></button>`;
 
 const format_copy_post_button = (text) =>
-  `<button type="button" class="post-copy-content" data-copy-post-content="${escape_html(text)}" title="copy post content to clipboard" aria-label="copy post content to clipboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V5.5C8 4.67 8.67 4 9.5 4h9C19.33 4 20 4.67 20 5.5v9c0 .83-.67 1.5-1.5 1.5H16v2.5c0 .83-.67 1.5-1.5 1.5h-9C4.67 20 4 19.33 4 18.5v-9C4 8.67 4.67 8 5.5 8H8Zm-2.5 2c-.28 0-.5.22-.5.5v8c0 .28.22.5.5.5h9c.28 0 .5-.22.5-.5V10.5c0-.28-.22-.5-.5-.5h-9ZM10 6v2h4.5c.83 0 1.5.67 1.5 1.5V14h2V6.5c0-.28-.22-.5-.5-.5h-7.5Z"/></svg></button>`;
+  `<button type="button" class="post-copy-content" data-copy-post-content="${escape_html_attribute(text)}" title="copy post content to clipboard" aria-label="copy post content to clipboard"><svg height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V5.5C8 4.67 8.67 4 9.5 4h9C19.33 4 20 4.67 20 5.5v9c0 .83-.67 1.5-1.5 1.5H16v2.5c0 .83-.67 1.5-1.5 1.5h-9C4.67 20 4 19.33 4 18.5v-9C4 8.67 4.67 8 5.5 8H8Zm-2.5 2c-.28 0-.5.22-.5.5v8c0 .28.22.5.5.5h9c.28 0 .5-.22.5-.5V10.5c0-.28-.22-.5-.5-.5h-9ZM10 6v2h4.5c.83 0 1.5.67 1.5 1.5V14h2V6.5c0-.28-.22-.5-.5-.5h-7.5Z"/></svg></button>`;
 
 const format_technical_details = (record) => {
   const technical_values = [
@@ -833,11 +844,14 @@ const add_post_copy_controls = (content) => {
   ranges.forEach((range) => {
     const section = content.slice(range.start, range.end);
     if (section.includes("data-copy-post-content")) {
-      const normalized_section = section.replace(
-        /data-copy-post-content="([^"]*)"/,
-        (_match, value) =>
-          `data-copy-post-content="${escape_html(decode_html_entities(value))}"`,
-      );
+      const normalized_section = section
+        .replace(
+          /data-copy-post-content="([^"]*)"/,
+          (_match, value) =>
+            `data-copy-post-content="${escape_html_attribute(decode_html_entities(value))}"`,
+        )
+        .replace(/(<svg\b[^>]*?)\swidth="[^"]*"/g, "$1")
+        .replace(/<svg(?![^>]*\bheight=)/g, '<svg height="16"');
       if (normalized_section !== section) {
         insertions.push({
           index: range.start,
@@ -1091,6 +1105,7 @@ const main = async () => {
   const options = parse_args(process.argv.slice(2));
   let lock_handle;
   try {
+    await mkdir(path.dirname(SYNC_LOCK_PATH), { recursive: true });
     lock_handle = await acquire_sync_lock();
     await lock_handle.writeFile(
       `${JSON.stringify({ pid: process.pid, started_at: new Date().toISOString() })}\n`,
@@ -1108,18 +1123,11 @@ const main = async () => {
         feed_items,
         actor: options.actor,
       });
-    if (media_result.changed) {
-      await write_document_atomically(
-        MEDIA_DOCUMENT_PATH,
-        media_result.content,
-      );
-    }
-    if (post_result.changed) {
-      await write_document_atomically(
-        POST_ARCHIVE_DOCUMENT_PATH,
-        post_result.content,
-      );
-    }
+    // Snapshot freshness represents the last successful feed check, not only
+    // the last time new content appeared. Refresh both file timestamps after
+    // every successful sync so an unchanged feed clears the stale status too.
+    await write_document_atomically(MEDIA_DOCUMENT_PATH, media_result.content);
+    await write_document_atomically(POST_ARCHIVE_DOCUMENT_PATH, post_result.content);
     console.log(
       JSON.stringify(
         {

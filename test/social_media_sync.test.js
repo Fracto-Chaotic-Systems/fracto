@@ -5,12 +5,58 @@ import {
   add_new_media_entries,
   add_new_post_entries,
   extract_post_record,
+  format_post_entry,
   parse_media_document,
   parse_post_archive,
   synchronize_feed_snapshot,
 } from "../scripts/sync_bluesky_media.js";
 
 describe("Bluesky media ledger sync", () => {
+  it("keeps multiline clipboard text inside valid inline HTML", () => {
+    const entry = format_post_entry({
+      created_at: "2026-09-26T12:00:00.000Z",
+      post_cid: "copy-test",
+      text: "First line\n\nSecond line",
+    });
+
+    assert.match(
+      entry,
+      /data-copy-post-content="First line&#10;&#10;Second line"/,
+    );
+    assert.doesNotMatch(entry, /data-copy-post-content="[^\"]*\n/);
+    assert.match(entry, /<svg height="16" viewBox=/);
+    assert.doesNotMatch(entry, /<svg[^>]*\bwidth=/);
+  });
+
+  it("repairs multiline clipboard controls in existing post archives", () => {
+    const archive = `# Public post archive
+
+## 2026-09-26 — multiline copy test
+
+<p><strong>Post content:</strong> <button data-copy-post-content="First line
+
+Second line" title="copy post content to clipboard" aria-label="copy post content to clipboard"><svg viewBox="0 0 24 24"></svg></button></p>
+
+> First line
+>
+> Second line
+`;
+
+    const result = add_new_post_entries(archive, []);
+
+    assert.equal(result.changed, true);
+    assert.match(
+      result.content,
+      /data-copy-post-content="First line&#10;&#10;Second line"/,
+    );
+    assert.doesNotMatch(
+      result.content,
+      /data-copy-post-content="[^\"]*\n/,
+    );
+    assert.match(result.content, /<svg height="16" viewBox=/);
+    assert.doesNotMatch(result.content, /<svg[^>]*\bwidth=/);
+  });
+
   it("normalizes a public post and its engagement metadata", () => {
     const record = extract_post_record(
       {

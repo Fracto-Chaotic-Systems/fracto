@@ -10,9 +10,7 @@ posts are listed newest first.
 
 <!-- post-cid: bafyreid4pqy34sjfnqfu6h2wm254bi4d7ooayovuh4fz43kf4hwh6rxanq -->
 
-<p><strong>Post content:</strong> <button type="button" class="post-copy-content" data-copy-post-content="While examining the paths of orbitals, I noticed something unexpected: they look like gravitational fields.
-
-The points sweep around a center and take a familiar path. It's only an analogy, but makes me wonder what the geometry is trying to tell us. #Mandelbrot #Fractals #MathArt #SciArt" title="copy post content to clipboard" aria-label="copy post content to clipboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V5.5C8 4.67 8.67 4 9.5 4h9C19.33 4 20 4.67 20 5.5v9c0 .83-.67 1.5-1.5 1.5H16v2.5c0 .83-.67 1.5-1.5 1.5h-9C4.67 20 4 19.33 4 18.5v-9C4 8.67 4.67 8 5.5 8H8Zm-2.5 2c-.28 0-.5.22-.5.5v8c0 .28.22.5.5.5h9c.28 0 .5-.22.5-.5V10.5c0-.28-.22-.5-.5-.5h-9ZM10 6v2h4.5c.83 0 1.5.67 1.5 1.5V14h2V6.5c0-.28-.22-.5-.5-.5h-7.5Z"/></svg></button></p>
+<p><strong>Post content:</strong> <button type="button" class="post-copy-content" data-copy-post-content="While examining the paths of orbitals, I noticed something unexpected: they look like gravitational fields.&#10;&#10;The points sweep around a center and take a familiar path. It's only an analogy, but makes me wonder what the geometry is trying to tell us. #Mandelbrot #Fractals #MathArt #SciArt" title="copy post content to clipboard" aria-label="copy post content to clipboard"><svg height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V5.5C8 4.67 8.67 4 9.5 4h9C19.33 4 20 4.67 20 5.5v9c0 .83-.67 1.5-1.5 1.5H16v2.5c0 .83-.67 1.5-1.5 1.5h-9C4.67 20 4 19.33 4 18.5v-9C4 8.67 4.67 8 5.5 8H8Zm-2.5 2c-.28 0-.5.22-.5.5v8c0 .28.22.5.5.5h9c.28 0 .5-.22.5-.5V10.5c0-.28-.22-.5-.5-.5h-9ZM10 6v2h4.5c.83 0 1.5.67 1.5 1.5V14h2V6.5c0-.28-.22-.5-.5-.5h-7.5Z"/></svg></button></p>
 
 > While examining the paths of orbitals, I noticed something unexpected: they look like gravitational fields.
 > 
@@ -31,7 +29,7 @@ The points sweep around a center and take a familiar path. It's only an analogy,
 
 <!-- post-cid: bafyreif57qkdsfdyiihi6zk67vxmika7he7rufgqgfdsdpqwld5brponcm -->
 
-<p><strong>Post content:</strong> <button type="button" class="post-copy-content" data-copy-post-content="My lifelong study of both music and art helped me understand that the geometric patterns within the Mandelbrot Set could be represented visually. Each &quot;orbital&quot; of the interior has a specific frequency, like a musical tone or a specific shade of color. (2/4)" title="copy post content to clipboard" aria-label="copy post content to clipboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V5.5C8 4.67 8.67 4 9.5 4h9C19.33 4 20 4.67 20 5.5v9c0 .83-.67 1.5-1.5 1.5H16v2.5c0 .83-.67 1.5-1.5 1.5h-9C4.67 20 4 19.33 4 18.5v-9C4 8.67 4.67 8 5.5 8H8Zm-2.5 2c-.28 0-.5.22-.5.5v8c0 .28.22.5.5.5h9c.28 0 .5-.22.5-.5V10.5c0-.28-.22-.5-.5-.5h-9ZM10 6v2h4.5c.83 0 1.5.67 1.5 1.5V14h2V6.5c0-.28-.22-.5-.5-.5h-7.5Z"/></svg></button></p>
+<p><strong>Post content:</strong> <button type="button" class="post-copy-content" data-copy-post-content="My lifelong study of both music and art helped me understand that the geometric patterns within the Mandelbrot Set could be represented visually. Each &quot;orbital&quot; of the interior has a specific frequency, like a musical tone or a specific shade of color. (2/4)" title="copy post content to clipboard" aria-label="copy post content to clipboard"><svg height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V5.5C8 4.67 8.67 4 9.5 4h9C19.33 4 20 4.67 20 5.5v9c0 .83-.67 1.5-1.5 1.5H16v2.5c0 .83-.67 1.5-1.5 1.5h-9C4.67 20 4 19.33 4 18.5v-9C4 8.67 4.67 8 5.5 8H8Zm-2.5 2c-.28 0-.5.22-.5.5v8c0 .28.22.5.5.5h9c.28 0 .5-.22.5-.5V10.5c0-.28-.22-.5-.5-.5h-9ZM10 6v2h4.5c.83 0 1.5.67 1.5 1.5V14h2V6.5c0-.28-.22-.5-.5-.5h-7.5Z"/></svg></button></p>
 
 > My lifelong study of both music and art helped me understand that the geometric patterns within the Mandelbrot Set could be represented visually. Each &quot;orbital&quot; of the interior has a specific frequency, like a musical tone or a specific shade of color. (2/4)
 
@@ -44,9 +42,7 @@ The points sweep around a center and take a familiar path. It's only an analogy,
 
 ### (4/4)
 
-<p><strong>Post content:</strong> <button type="button" class="post-copy-content" data-copy-post-content="What could we expect to find in there if we looked closely enough? A fantastic
-new recipe for gumbo soup? Maybe, or maybe it's the proverbial works of the
-Bard as typed out by monkeys. It could be anything! (4/4)" title="copy post content to clipboard" aria-label="copy post content to clipboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V5.5C8 4.67 8.67 4 9.5 4h9C19.33 4 20 4.67 20 5.5v9c0 .83-.67 1.5-1.5 1.5H16v2.5c0 .83-.67 1.5-1.5 1.5h-9C4.67 20 4 19.33 4 18.5v-9C4 8.67 4.67 8 5.5 8H8Zm-2.5 2c-.28 0-.5.22-.5.5v8c0 .28.22.5.5.5h9c.28 0 .5-.22.5-.5V10.5c0-.28-.22-.5-.5-.5h-9ZM10 6v2h4.5c.83 0 1.5.67 1.5 1.5V14h2V6.5c0-.28-.22-.5-.5-.5h-7.5Z"/></svg></button></p>
+<p><strong>Post content:</strong> <button type="button" class="post-copy-content" data-copy-post-content="What could we expect to find in there if we looked closely enough? A fantastic&#10;new recipe for gumbo soup? Maybe, or maybe it's the proverbial works of the&#10;Bard as typed out by monkeys. It could be anything! (4/4)" title="copy post content to clipboard" aria-label="copy post content to clipboard"><svg height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V5.5C8 4.67 8.67 4 9.5 4h9C19.33 4 20 4.67 20 5.5v9c0 .83-.67 1.5-1.5 1.5H16v2.5c0 .83-.67 1.5-1.5 1.5h-9C4.67 20 4 19.33 4 18.5v-9C4 8.67 4.67 8 5.5 8H8Zm-2.5 2c-.28 0-.5.22-.5.5v8c0 .28.22.5.5.5h9c.28 0 .5-.22.5-.5V10.5c0-.28-.22-.5-.5-.5h-9ZM10 6v2h4.5c.83 0 1.5.67 1.5 1.5V14h2V6.5c0-.28-.22-.5-.5-.5h-7.5Z"/></svg></button></p>
 
 > What could we expect to find in there if we looked closely enough? A fantastic
 > new recipe for gumbo soup? Maybe, or maybe it's the proverbial works of the
@@ -62,10 +58,7 @@ tree with primates swinging by their tails.”
 
 ### (3/4)
 
-<p><strong>Post content:</strong> <button type="button" class="post-copy-content" data-copy-post-content="Part of this investigation is devoted to understanding the mathematical
-dynamics within the core regions. It seems obvious to me that for all the
-endless intricacy of the exterior areas, the real party must be on the inside.
-(3/4)" title="copy post content to clipboard" aria-label="copy post content to clipboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V5.5C8 4.67 8.67 4 9.5 4h9C19.33 4 20 4.67 20 5.5v9c0 .83-.67 1.5-1.5 1.5H16v2.5c0 .83-.67 1.5-1.5 1.5h-9C4.67 20 4 19.33 4 18.5v-9C4 8.67 4.67 8 5.5 8H8Zm-2.5 2c-.28 0-.5.22-.5.5v8c0 .28.22.5.5.5h9c.28 0 .5-.22.5-.5V10.5c0-.28-.22-.5-.5-.5h-9ZM10 6v2h4.5c.83 0 1.5.67 1.5 1.5V14h2V6.5c0-.28-.22-.5-.5-.5h-7.5Z"/></svg></button></p>
+<p><strong>Post content:</strong> <button type="button" class="post-copy-content" data-copy-post-content="Part of this investigation is devoted to understanding the mathematical&#10;dynamics within the core regions. It seems obvious to me that for all the&#10;endless intricacy of the exterior areas, the real party must be on the inside.&#10;(3/4)" title="copy post content to clipboard" aria-label="copy post content to clipboard"><svg height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V5.5C8 4.67 8.67 4 9.5 4h9C19.33 4 20 4.67 20 5.5v9c0 .83-.67 1.5-1.5 1.5H16v2.5c0 .83-.67 1.5-1.5 1.5h-9C4.67 20 4 19.33 4 18.5v-9C4 8.67 4.67 8 5.5 8H8Zm-2.5 2c-.28 0-.5.22-.5.5v8c0 .28.22.5.5.5h9c.28 0 .5-.22.5-.5V10.5c0-.28-.22-.5-.5-.5h-9ZM10 6v2h4.5c.83 0 1.5.67 1.5 1.5V14h2V6.5c0-.28-.22-.5-.5-.5h-7.5Z"/></svg></button></p>
 
 > Part of this investigation is devoted to understanding the mathematical
 > dynamics within the core regions. It seems obvious to me that for all the
@@ -82,10 +75,7 @@ singularities that emphasize the geometry of those interactions.”
 
 ### (2/4)
 
-<p><strong>Post content:</strong> <button type="button" class="post-copy-content" data-copy-post-content="My lifelong study of both music and art helped me understand that the geometric
-patterns within the Mandelbrot Set could be represented visually. Each
-“orbital” of the interior has a specific frequency, like a musical tone or a
-specific shade of color. (2/4)" title="copy post content to clipboard" aria-label="copy post content to clipboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V5.5C8 4.67 8.67 4 9.5 4h9C19.33 4 20 4.67 20 5.5v9c0 .83-.67 1.5-1.5 1.5H16v2.5c0 .83-.67 1.5-1.5 1.5h-9C4.67 20 4 19.33 4 18.5v-9C4 8.67 4.67 8 5.5 8H8Zm-2.5 2c-.28 0-.5.22-.5.5v8c0 .28.22.5.5.5h9c.28 0 .5-.22.5-.5V10.5c0-.28-.22-.5-.5-.5h-9ZM10 6v2h4.5c.83 0 1.5.67 1.5 1.5V14h2V6.5c0-.28-.22-.5-.5-.5h-7.5Z"/></svg></button></p>
+<p><strong>Post content:</strong> <button type="button" class="post-copy-content" data-copy-post-content="My lifelong study of both music and art helped me understand that the geometric&#10;patterns within the Mandelbrot Set could be represented visually. Each&#10;“orbital” of the interior has a specific frequency, like a musical tone or a&#10;specific shade of color. (2/4)" title="copy post content to clipboard" aria-label="copy post content to clipboard"><svg height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V5.5C8 4.67 8.67 4 9.5 4h9C19.33 4 20 4.67 20 5.5v9c0 .83-.67 1.5-1.5 1.5H16v2.5c0 .83-.67 1.5-1.5 1.5h-9C4.67 20 4 19.33 4 18.5v-9C4 8.67 4.67 8 5.5 8H8Zm-2.5 2c-.28 0-.5.22-.5.5v8c0 .28.22.5.5.5h9c.28 0 .5-.22.5-.5V10.5c0-.28-.22-.5-.5-.5h-9ZM10 6v2h4.5c.83 0 1.5.67 1.5 1.5V14h2V6.5c0-.28-.22-.5-.5-.5h-7.5Z"/></svg></button></p>
 
 > My lifelong study of both music and art helped me understand that the geometric
 > patterns within the Mandelbrot Set could be represented visually. Each
@@ -99,10 +89,7 @@ the visible light spectrum, just like musical tones.”
 
 ### (1/4)
 
-<p><strong>Post content:</strong> <button type="button" class="post-copy-content" data-copy-post-content="The interior colors have an actual purpose, aside from the thrill of
-transforming a bleak chasm into a fantastical world of rainbow geysers and
-cyclones of brightly colored candy (1/4) #MathArt #Mandelbrot #SciArt
-#MathMystery #ChaosTheory" title="copy post content to clipboard" aria-label="copy post content to clipboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V5.5C8 4.67 8.67 4 9.5 4h9C19.33 4 20 4.67 20 5.5v9c0 .83-.67 1.5-1.5 1.5H16v2.5c0 .83-.67 1.5-1.5 1.5h-9C4.67 20 4 19.33 4 18.5v-9C4 8.67 4.67 8 5.5 8H8Zm-2.5 2c-.28 0-.5.22-.5.5v8c0 .28.22.5.5.5h9c.28 0 .5-.22.5-.5V10.5c0-.28-.22-.5-.5-.5h-9ZM10 6v2h4.5c.83 0 1.5.67 1.5 1.5V14h2V6.5c0-.28-.22-.5-.5-.5h-7.5Z"/></svg></button></p>
+<p><strong>Post content:</strong> <button type="button" class="post-copy-content" data-copy-post-content="The interior colors have an actual purpose, aside from the thrill of&#10;transforming a bleak chasm into a fantastical world of rainbow geysers and&#10;cyclones of brightly colored candy (1/4) #MathArt #Mandelbrot #SciArt&#10;#MathMystery #ChaosTheory" title="copy post content to clipboard" aria-label="copy post content to clipboard"><svg height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V5.5C8 4.67 8.67 4 9.5 4h9C19.33 4 20 4.67 20 5.5v9c0 .83-.67 1.5-1.5 1.5H16v2.5c0 .83-.67 1.5-1.5 1.5h-9C4.67 20 4 19.33 4 18.5v-9C4 8.67 4.67 8 5.5 8H8Zm-2.5 2c-.28 0-.5.22-.5.5v8c0 .28.22.5.5.5h9c.28 0 .5-.22.5-.5V10.5c0-.28-.22-.5-.5-.5h-9ZM10 6v2h4.5c.83 0 1.5.67 1.5 1.5V14h2V6.5c0-.28-.22-.5-.5-.5h-7.5Z"/></svg></button></p>
 
 > The interior colors have an actual purpose, aside from the thrill of
 > transforming a bleak chasm into a fantastical world of rainbow geysers and
@@ -121,10 +108,7 @@ row of hedges when applying color according to orbital properties.”
 
 ## 2026-08-30 — research artifacts
 
-<p><strong>Post content:</strong> <button type="button" class="post-copy-content" data-copy-post-content="While investigating the inner workings of the Set, I happened across some
-interesting artifacts. (Honestly, most anything seemed interesting to me back
-when I started this project, which was in the height of a global pandemic)
-#MathSky #Fractals #MathMystery #Mandelbrot" title="copy post content to clipboard" aria-label="copy post content to clipboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V5.5C8 4.67 8.67 4 9.5 4h9C19.33 4 20 4.67 20 5.5v9c0 .83-.67 1.5-1.5 1.5H16v2.5c0 .83-.67 1.5-1.5 1.5h-9C4.67 20 4 19.33 4 18.5v-9C4 8.67 4.67 8 5.5 8H8Zm-2.5 2c-.28 0-.5.22-.5.5v8c0 .28.22.5.5.5h9c.28 0 .5-.22.5-.5V10.5c0-.28-.22-.5-.5-.5h-9ZM10 6v2h4.5c.83 0 1.5.67 1.5 1.5V14h2V6.5c0-.28-.22-.5-.5-.5h-7.5Z"/></svg></button></p>
+<p><strong>Post content:</strong> <button type="button" class="post-copy-content" data-copy-post-content="While investigating the inner workings of the Set, I happened across some&#10;interesting artifacts. (Honestly, most anything seemed interesting to me back&#10;when I started this project, which was in the height of a global pandemic)&#10;#MathSky #Fractals #MathMystery #Mandelbrot" title="copy post content to clipboard" aria-label="copy post content to clipboard"><svg height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V5.5C8 4.67 8.67 4 9.5 4h9C19.33 4 20 4.67 20 5.5v9c0 .83-.67 1.5-1.5 1.5H16v2.5c0 .83-.67 1.5-1.5 1.5h-9C4.67 20 4 19.33 4 18.5v-9C4 8.67 4.67 8 5.5 8H8Zm-2.5 2c-.28 0-.5.22-.5.5v8c0 .28.22.5.5.5h9c.28 0 .5-.22.5-.5V10.5c0-.28-.22-.5-.5-.5h-9ZM10 6v2h4.5c.83 0 1.5.67 1.5 1.5V14h2V6.5c0-.28-.22-.5-.5-.5h-7.5Z"/></svg></button></p>
 
 > While investigating the inner workings of the Set, I happened across some
 > interesting artifacts. (Honestly, most anything seemed interesting to me back
@@ -142,10 +126,7 @@ resemble vertical “geysers.”
 
 ## 2026-08-26 — why study the interior?
 
-<p><strong>Post content:</strong> <button type="button" class="post-copy-content" data-copy-post-content="Why study the interior of the Mandelbrot Set? For me, it began as an attempt
-to exclude it! When programming, the interior regions take the longest time to
-calculate if you really want to see every beautiful detail surrounding it
-#MathSky #Fractals #sciart #digitalart" title="copy post content to clipboard" aria-label="copy post content to clipboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V5.5C8 4.67 8.67 4 9.5 4h9C19.33 4 20 4.67 20 5.5v9c0 .83-.67 1.5-1.5 1.5H16v2.5c0 .83-.67 1.5-1.5 1.5h-9C4.67 20 4 19.33 4 18.5v-9C4 8.67 4.67 8 5.5 8H8Zm-2.5 2c-.28 0-.5.22-.5.5v8c0 .28.22.5.5.5h9c.28 0 .5-.22.5-.5V10.5c0-.28-.22-.5-.5-.5h-9ZM10 6v2h4.5c.83 0 1.5.67 1.5 1.5V14h2V6.5c0-.28-.22-.5-.5-.5h-7.5Z"/></svg></button></p>
+<p><strong>Post content:</strong> <button type="button" class="post-copy-content" data-copy-post-content="Why study the interior of the Mandelbrot Set? For me, it began as an attempt&#10;to exclude it! When programming, the interior regions take the longest time to&#10;calculate if you really want to see every beautiful detail surrounding it&#10;#MathSky #Fractals #sciart #digitalart" title="copy post content to clipboard" aria-label="copy post content to clipboard"><svg height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V5.5C8 4.67 8.67 4 9.5 4h9C19.33 4 20 4.67 20 5.5v9c0 .83-.67 1.5-1.5 1.5H16v2.5c0 .83-.67 1.5-1.5 1.5h-9C4.67 20 4 19.33 4 18.5v-9C4 8.67 4.67 8 5.5 8H8Zm-2.5 2c-.28 0-.5.22-.5.5v8c0 .28.22.5.5.5h9c.28 0 .5-.22.5-.5V10.5c0-.28-.22-.5-.5-.5h-9ZM10 6v2h4.5c.83 0 1.5.67 1.5 1.5V14h2V6.5c0-.28-.22-.5-.5-.5h-7.5Z"/></svg></button></p>
 
 > Why study the interior of the Mandelbrot Set? For me, it began as an attempt
 > to exclude it! When programming, the interior regions take the longest time to
@@ -162,12 +143,7 @@ per tradition.”
 
 ## 2026-08-23 — timelessness
 
-<p><strong>Post content:</strong> <button type="button" class="post-copy-content" data-copy-post-content="The Mandelbrot Set is timeless.
-It requires computation, but existed before computers.
-It requires calculation, but has been around before numbers were imagined.
-It existed before the Big Bang, and will outlive us all.
-It's nature's work of art, and is worthy of our study. #GOAT #Mandelbrot
-#Fractal" title="copy post content to clipboard" aria-label="copy post content to clipboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V5.5C8 4.67 8.67 4 9.5 4h9C19.33 4 20 4.67 20 5.5v9c0 .83-.67 1.5-1.5 1.5H16v2.5c0 .83-.67 1.5-1.5 1.5h-9C4.67 20 4 19.33 4 18.5v-9C4 8.67 4.67 8 5.5 8H8Zm-2.5 2c-.28 0-.5.22-.5.5v8c0 .28.22.5.5.5h9c.28 0 .5-.22.5-.5V10.5c0-.28-.22-.5-.5-.5h-9ZM10 6v2h4.5c.83 0 1.5.67 1.5 1.5V14h2V6.5c0-.28-.22-.5-.5-.5h-7.5Z"/></svg></button></p>
+<p><strong>Post content:</strong> <button type="button" class="post-copy-content" data-copy-post-content="The Mandelbrot Set is timeless.&#10;It requires computation, but existed before computers.&#10;It requires calculation, but has been around before numbers were imagined.&#10;It existed before the Big Bang, and will outlive us all.&#10;It's nature's work of art, and is worthy of our study. #GOAT #Mandelbrot&#10;#Fractal" title="copy post content to clipboard" aria-label="copy post content to clipboard"><svg height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V5.5C8 4.67 8.67 4 9.5 4h9C19.33 4 20 4.67 20 5.5v9c0 .83-.67 1.5-1.5 1.5H16v2.5c0 .83-.67 1.5-1.5 1.5h-9C4.67 20 4 19.33 4 18.5v-9C4 8.67 4.67 8 5.5 8H8Zm-2.5 2c-.28 0-.5.22-.5.5v8c0 .28.22.5.5.5h9c.28 0 .5-.22.5-.5V10.5c0-.28-.22-.5-.5-.5h-9ZM10 6v2h4.5c.83 0 1.5.67 1.5 1.5V14h2V6.5c0-.28-.22-.5-.5-.5h-7.5Z"/></svg></button></p>
 
 > The Mandelbrot Set is timeless.
 > It requires computation, but existed before computers.
@@ -186,9 +162,7 @@ orbital dynamics.”
 
 ## 2026-08-21 — account introduction
 
-<p><strong>Post content:</strong> <button type="button" class="post-copy-content" data-copy-post-content="Ever wonder what's going on inside of the Mandelbrot? I have. I'll be using
-this platform to discuss and present my findings. Stay tuned!
-#beautyisontheinside #Mandelbrot #Mathisbeautiful" title="copy post content to clipboard" aria-label="copy post content to clipboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V5.5C8 4.67 8.67 4 9.5 4h9C19.33 4 20 4.67 20 5.5v9c0 .83-.67 1.5-1.5 1.5H16v2.5c0 .83-.67 1.5-1.5 1.5h-9C4.67 20 4 19.33 4 18.5v-9C4 8.67 4.67 8 5.5 8H8Zm-2.5 2c-.28 0-.5.22-.5.5v8c0 .28.22.5.5.5h9c.28 0 .5-.22.5-.5V10.5c0-.28-.22-.5-.5-.5h-9ZM10 6v2h4.5c.83 0 1.5.67 1.5 1.5V14h2V6.5c0-.28-.22-.5-.5-.5h-7.5Z"/></svg></button></p>
+<p><strong>Post content:</strong> <button type="button" class="post-copy-content" data-copy-post-content="Ever wonder what's going on inside of the Mandelbrot? I have. I'll be using&#10;this platform to discuss and present my findings. Stay tuned!&#10;#beautyisontheinside #Mandelbrot #Mathisbeautiful" title="copy post content to clipboard" aria-label="copy post content to clipboard"><svg height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V5.5C8 4.67 8.67 4 9.5 4h9C19.33 4 20 4.67 20 5.5v9c0 .83-.67 1.5-1.5 1.5H16v2.5c0 .83-.67 1.5-1.5 1.5h-9C4.67 20 4 19.33 4 18.5v-9C4 8.67 4.67 8 5.5 8H8Zm-2.5 2c-.28 0-.5.22-.5.5v8c0 .28.22.5.5.5h9c.28 0 .5-.22.5-.5V10.5c0-.28-.22-.5-.5-.5h-9ZM10 6v2h4.5c.83 0 1.5.67 1.5 1.5V14h2V6.5c0-.28-.22-.5-.5-.5h-7.5Z"/></svg></button></p>
 
 > Ever wonder what's going on inside of the Mandelbrot? I have. I'll be using
 > this platform to discuss and present my findings. Stay tuned!

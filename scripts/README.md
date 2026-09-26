@@ -38,6 +38,12 @@ admin social endpoint refreshes stale snapshots on demand.
 The Admin Social page can force an immediate refresh with its refresh action;
 the equivalent endpoint request is `/social?refresh=true`.
 The root test suite validates the freshness contract without contacting Bluesky.
+The development container mounts `social/` writable so a successful refresh
+can publish updated snapshots. Its temporary concurrency lock is stored under
+`logs/`, which is runtime storage rather than part of the social source tree.
+A successful refresh updates both snapshot timestamps even when the feed has no
+new entries, so the Admin page reports the last successful check rather than the
+last content change.
 
 Set `FRACTO_SOCIAL_SYNC_TTL_MS` in the root `.env` to change the freshness
 interval; the default is 24 hours (`86400000` milliseconds).

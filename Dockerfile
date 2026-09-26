@@ -2,10 +2,20 @@
 FROM node:22-bookworm AS dependencies
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential python3 pkg-config \
+    build-essential python3 pkg-config git \
     ffmpeg \
     libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev \
     && rm -rf /var/lib/apt/lists/*
+
+# Development bind mounts can appear owned by a different UID than the
+# container's `node` user. Trust only the known Fracto repositories so Git's
+# ownership check remains enabled for every other path.
+RUN git config --system --add safe.directory /app \
+    && git config --system --add safe.directory /app/servers/fracto-admin-server \
+    && git config --system --add safe.directory /app/servers/fracto-asset-server \
+    && git config --system --add safe.directory /app/servers/fracto-data-server \
+    && git config --system --add safe.directory /app/servers/fracto-tiles-server \
+    && git config --system --add safe.directory /app/servers/fracto-ui
 
 WORKDIR /app
 
