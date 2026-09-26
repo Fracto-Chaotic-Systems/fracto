@@ -14,6 +14,10 @@ import {
 } from "../handlers/auth.js";
 import { AUTH_COOKIE_NAME, create_session as store_session, get_session } from "../utils/auth_sessions.js";
 import { require_administrator } from "../utils/admin_authorization.js";
+import {
+  require_enabled_user_if_configured,
+  require_internal_service,
+} from "../utils/service_authorization.js";
 
 const users = new Map();
 const create_session = (user) => {
@@ -33,7 +37,13 @@ data_app.post("/login_event", (req, res) => res.sendStatus(201));
 // replaced by markers, retaining its real authorization middleware.
 const data_routes = readFileSync(new URL("../servers/fracto-data-server/index.js", import.meta.url), "utf8");
 const route_source = data_routes.slice(data_routes.indexOf('app.get("/",'));
-const route_globals = { app: data_app, require_administrator };
+const route_globals = {
+  app: data_app,
+  require_administrator,
+  require_enabled_user_if_configured,
+  require_internal_service,
+  process,
+};
 for (const name of new Set(route_source.match(/\bhandle_\w+/g))) {
   route_globals[name] = (req, res) => res.json({ handler: name });
 }
@@ -42,6 +52,7 @@ vm.runInNewContext(route_source, route_globals);
 let data_server;
 const previous_data_port = process.env.FRACTO_DATA_PORT;
 const previous_main_port = process.env.FRACTO_SERVER_PORT;
+const previous_auth_required = process.env.FRACTO_AUTH_REQUIRED;
 const ui_origin = process.env.FRACTO_UI_ORIGIN || "http://localhost:3006";
 
 const app = express();
@@ -64,6 +75,7 @@ before(
     new Promise((resolve) => {
       data_server = data_app.listen(0, () => {
         process.env.FRACTO_DATA_PORT = `${data_server.address().port}`;
+      process.env.FRACTO_AUTH_REQUIRED = "true";
       server = app.listen(0, () => {
         base_url = `http://127.0.0.1:${server.address().port}`;
         process.env.FRACTO_SERVER_PORT = `${server.address().port}`;
@@ -79,6 +91,8 @@ after(async () => {
   else process.env.FRACTO_DATA_PORT = previous_data_port;
   if (previous_main_port === undefined) delete process.env.FRACTO_SERVER_PORT;
   else process.env.FRACTO_SERVER_PORT = previous_main_port;
+  if (previous_auth_required === undefined) delete process.env.FRACTO_AUTH_REQUIRED;
+  else process.env.FRACTO_AUTH_REQUIRED = previous_auth_required;
 });
 
 describe("authentication endpoint contract", () => {
@@ -265,6 +279,25 @@ describe("authentication endpoint contract", () => {
       users.get("30").role = "admin";
       assert.equal((await fetch(url, options)).status, 200, path);
     }
+  });
+
+  test("general data APIs require an enabled user but do not require an admin role", async () => {
+    const routes = ["/fracto_calc", "/assets", "/automation"];
+    for (const route of routes) {
+      const url = `http://127.0.0.1:${data_server.address().port}${route}`;
+      assert.equal((await fetch(url)).status, 401, route);
+      const { token } = create_session({ id: 31, provider: "test", enabled: 1, role: null });
+      const response = await fetch(url, {
+        headers: { Cookie: `${AUTH_COOKIE_NAME}=${token}` },
+      });
+      assert.equal(response.status, 200, route);
+    }
+  });
+
+  test("only the fixed welcome-image query remains public", async () => {
+    const data_origin = `http://127.0.0.1:${data_server.address().port}`;
+    assert.equal((await fetch(`${data_origin}/assets?asset_type=image&width=4800&height=4800`)).status, 200);
+    assert.equal((await fetch(`${data_origin}/assets?asset_type=image&width=4800&height=4800&limit=1000`)).status, 401);
   });
 
   test("expired and unknown tokens are anonymous and cannot access protected endpoints", async () => {

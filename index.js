@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import {randomBytes} from 'node:crypto'
 import path from 'node:path'
 import {spawn, spawnSync} from 'node:child_process'
 
@@ -41,6 +42,11 @@ const build_info = fs.existsSync(build_info_path)
    : null
 let shutting_down = false
 let server
+
+// Child services share a per-process secret for authenticated internal API calls.
+if (process.env.FRACTO_AUTH_REQUIRED === 'true' && !process.env.FRACTO_INTERNAL_SERVICE_TOKEN) {
+   process.env.FRACTO_INTERNAL_SERVICE_TOKEN = randomBytes(32).toString('hex')
+}
 
 if (!Number.isFinite(STARTUP_TIMEOUT_MS) || STARTUP_TIMEOUT_MS <= 0) {
    throw new Error('FRACTO_STARTUP_TIMEOUT_MS must be a positive number')
@@ -134,8 +140,11 @@ const start_service = async (service, show_output = false) => {
    const message = `Starting ${service.name}...`; root_log(message); console.log(chalk.cyan(message))
    const log_path = path.join(import.meta.dirname, LOGS_DIRECTORY, service.logfile)
    const log_stream = fs.createWriteStream(log_path, {flags: 'a'})
+   const service_env = {...process.env}
+   if (service.name === SERVICE_NAME_UI) delete service_env.FRACTO_INTERNAL_SERVICE_TOKEN
    const child = spawn(process.execPath, ['scripts/launch_service.js', service.name], {
       cwd: import.meta.dirname,
+      env: service_env,
       stdio: ['ignore', 'pipe', 'pipe'],
       shell: false,
    })
@@ -258,7 +267,7 @@ const create_main_server = () => {
       res.vary('Origin')
       if (allow_credentials) res.setHeader('Access-Control-Allow-Credentials', 'true')
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With')
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With, X-Fracto-Service-Token')
       if (req.method === 'OPTIONS') return res.status(204).end()
       next()
    })

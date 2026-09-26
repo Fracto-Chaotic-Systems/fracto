@@ -202,18 +202,27 @@ for this second check. These admin checks remain active in bypass mode. Data
 query and backup clients send credentials, and data-service CORS permits them
 from the configured UI origin.
 
-### Remaining service-access boundary
+### Service API access controls
 
-The audit found that general data, asset, and tile application APIs, plus admin
-logs/version/commits/social routes, do not yet use an authentication gate. Main
-server protection does not cover requests made directly to these service ports,
-which Compose publishes. This remains an authentication coverage gap; the
-enabled-user and administrator checks above must not be described as protecting
-the entire deployment. Extending enforcement requires authenticated internal
-service calls and corresponding credential handling in browser clients, while
-keeping health checks, port discovery, and welcome assets available as intended.
-The loopback-only provisioning, bootstrap, and session-lookup routes remain
-internal and must not be exposed through a public reverse proxy.
+When `FRACTO_AUTH_REQUIRED=true`, application APIs on the main, data, asset,
+tile, and admin services require a current enabled-user session. Admin-service
+application routes and the data user-management routes require an enabled
+administrator. Health and status routes remain available for monitoring, and
+admin `/ports` remains available for UI service discovery. The data service
+allows only the UI's fixed 4800-by-4800 image query anonymously so the public
+welcome page can display its background; other asset-list queries require an
+enabled session.
+
+The supervisor generates a random per-process `FRACTO_INTERNAL_SERVICE_TOKEN`
+and passes it to backend services, but not to the UI. Internal asset and tile
+calls use the token to reach protected APIs. Data schema provisioning and other
+narrowly scoped internal calls require the token, while OIDC provisioning,
+login-event recording, bootstrap, and session lookup retain their loopback
+checks. If authentication is disabled, application routes keep bypass behavior.
+
+Browser requests send the session cookie across service ports. Cookie-authenticated
+mutations must match the configured UI origin. Backend CORS permits credentialed
+requests only from that origin (or an explicitly configured all-origins setting).
 
 Successful enabled logins and disabled identities are recorded during user
 provisioning, and session logout appends a separate `logout` event. Audit
@@ -340,8 +349,8 @@ The manual welcome callback permits navigation only in bypass mode, keeping it
 separate from authenticated entry. Focused tests exercise the entry effect,
 actual JSX render decisions, and login initiation, including guard reset, route
 preservation, welcome actions, and the callback destination, without a browser
-or React mount. Full browser login remains outstanding; build and lint status is
-recorded in the step 8 validation notes below.
+or React mount. Live Google login, refresh, and logout/login behavior are also
+verified in the step 8 validation notes below.
 
 Run `npm test` at the root for endpoint and session-security regressions and
 `npm run test:auth` in `servers/fracto-ui` for entry and callback-error tests.
@@ -362,31 +371,54 @@ The step 7 checklist is covered by the following automated checks:
 | Expired or invalid session returns to welcome | HTTP anonymous responses and protected-route rejection; UI anonymous response routing |
 | Bypass retains manual entry | Actual configuration checks for false/unset enforcement; UI bypass with or without a denied identity |
 
-`npm test` currently passes 62 root tests, and the UI's `npm run test:auth`
-passes 16 tests. The UI suite uses the actual component methods and JSX with
-simulated React/router behavior; provider exchange and database responses are
-also simulated. Browser mounting, real Google login, and live database behavior
-These passing tests do not cover or resolve the remaining general service-access
-boundary described above.
+The UI suite exercises the actual component methods and JSX with simulated
+React/router behavior. Provider exchange and database responses are simulated
+in automated tests; live Google and development-service checks are recorded
+below.
+
+### Service API access controls
+
+When `FRACTO_AUTH_REQUIRED=true`, data, asset, tile, admin, and main-server
+application APIs require a current enabled user session. Administrative routes
+continue to require the administrator role. Health and status routes remain
+available for service monitoring, and the admin `/ports` endpoint remains
+available so the UI can discover backend ports before it has loaded a session.
+
+The supervisor creates a random per-process
+`FRACTO_INTERNAL_SERVICE_TOKEN` and passes it to backend services, but not the
+UI process. Internal asset and tile calls use that token when calling protected
+services. Schema provisioning and other narrowly scoped data-server internals
+require the token, while OIDC provisioning, login-event recording, bootstrap,
+and session lookup retain their loopback-only checks. If auth is disabled, the
+application service APIs retain bypass behavior.
+
+Browser requests send the session cookie with credentials across the UI's
+service ports. Cookie-authenticated mutations must also match the configured UI
+origin. The data, asset, tile, and admin services answer credentialed CORS only
+for that origin (or an explicitly configured all-origins setting).
 
 ### Step 8 validation record
 
 The UI dependency tree was restored on Windows with `npm ci` from the existing
-lockfile; no lockfile edit was needed. `npm run lint` passes with three existing
-`process`-undefined warnings in `vite.config.js`. `npm run build` succeeds, with
-Vite's warning that the minified JavaScript bundle exceeds 500 kB. The complete
-root suite passes 62 tests; UI authentication, automation, and audio suites pass
-16, 11, and 5 tests respectively.
+lockfile; no lockfile edit was needed. All 69 root tests and 16 UI authentication
+tests pass. Lint reports the same three existing `process`-undefined warnings in
+`vite.config.js`; the production build succeeds with Vite's large-chunk warning.
+The machine's global `npm` launcher is broken, so validation commands were run
+with Node directly.
 
-The running development deployment reports an anonymous `/auth/session`,
-returns `401` for anonymous main logs, data users, and admin users, and returns
-`403` for logout without the configured UI origin. These checks cover selected
-live service boundaries, not provider login. Browser automation reports no
-connected browser, so a real Google round trip, browser cookie behavior, and
-entry into the app after Google login have not been verified. Complete that
-check in a connected browser at `http://localhost:3106`; the running development
-environment has Google credentials configured and uses
-`http://localhost:3101/auth/callback` as its return URI.
+The live browser completed Google OIDC sign-in through the configured callback
+(`http://localhost:3101/auth/callback`) and entered `/study` automatically.
+Refreshing `/study` preserved the route and authenticated UI; signing out
+returned to welcome; signing in again automatically re-entered `/study`. This
+verifies the callback, browser session, enabled-user decision, refresh behavior,
+and one-click entry in the development UI.
+
+After restarting the development container, anonymous probes returned `401`
+for main logs, general data and asset APIs, tile metrics, and admin version.
+The exact welcome-image query returns `200`, while other asset-list queries
+return `401`; health checks and admin port discovery remain public. With an
+enabled browser session, the data query view and asset gallery loaded their
+records successfully across service ports.
 
 ## Reconciliation baseline
 
@@ -398,7 +430,9 @@ OIDC transactions and session cookies. The remaining UI transition and session
 revocation work described above was added after that milestone. Root regression
 tests cover current-user authorization, role changes, lookup failures, deleted
 identities, and direct data-route administrator checks with a simulated data
-service; live database and deployment verification remain outstanding.
+service. Development browser login and database-backed service behavior are
+verified above; production HTTPS configuration, shared session storage, and
+multi-instance deployment behavior remain outstanding.
 
 ## Deferred decisions
 
