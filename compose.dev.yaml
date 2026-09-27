@@ -41,6 +41,7 @@ services:
       - "3105:3105"
       - "3106:3106"
     volumes:
+      - ./.git:/app/.git:ro
       - ./config:/app/config:ro
       - ./constants.js:/app/constants.js:ro
       - ./index.js:/app/index.js:ro
