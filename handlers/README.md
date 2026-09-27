@@ -15,8 +15,11 @@ checks.
   the deployment's access policy. It also records non-secret login lifecycle
   events and enforces trusted request origins for mutations.
 - `health.js` builds the `/healthz` and `/readyz` response handler. It reports
-  uptime, service states, and optional build information; `/readyz` returns
-  HTTP 503 until every tracked service is healthy.
+  contract version, the configured `FRACTO_SERVER_NAME`, uptime, service
+  states, and optional build information. Callers use `GET /healthz` for status
+  and identity; `/readyz` returns HTTP 503 until every tracked service is
+  healthy. Both read-only endpoints allow cross-origin browser reads without
+  credentials so other Fracto main-server UIs can monitor this service.
 - `logs.js` implements `/logs`. It validates the requested service selector,
   collects that service's log records (or all services), and formats them for
   the response. Unknown selectors return HTTP 400.

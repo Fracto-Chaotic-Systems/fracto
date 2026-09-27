@@ -30,6 +30,27 @@ location and `FRACTO_*_PORT` environment variables override file values.
 During migration, standalone maintenance scripts retain environment/default
 fallbacks when the supervisor is not present.
 
+### Main-server identity
+
+Give each installation a distinct human-readable name by setting
+`FRACTO_SERVER_NAME` in its ignored local `.env` file. Compose passes that value
+to the main server, which returns it as `server_name` from `/healthz` and
+`/readyz`. Choose a stable name that is unique among the Fracto main servers
+this installation monitors; do not commit deployment-specific `.env` values.
+
+These endpoints form health contract version 1. A caller requests
+`<server-base-url>/healthz`; the callee returns `contract_version`,
+`server_name`, `status`, `uptime_seconds`, `services`, and `build_info`.
+`/readyz` uses the same response and returns HTTP 503 while required services
+are unhealthy. These read-only health endpoints allow cross-origin browser
+reads without credentials so one Fracto UI can monitor other main servers.
+The browser-local server address book stores URL strings only and does not
+share them with another installation. A future address-list import should use
+a separate, administrator-protected export contract with its own schema
+version and a list of URLs only. Machine-to-machine import will require a
+server-side export source; a user-mediated import can merge exported URLs into
+local storage.
+
 ### Central log endpoint
 
 The main server exposes the shared log stream through:

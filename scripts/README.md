@@ -24,6 +24,57 @@ The root supervisor starts the tile service first, then the root server and the
 remaining services sequentially. It waits for health endpoints before continuing.
 See the root README for Docker production/development and first-run workflows.
 
+## Admin page scaffolding contract
+
+The initial page generator is scoped to the admin section. Common inputs are
+the target section, unique page identifier, sidebar label, page title, and
+scaffold type. The command contract is:
+
+```powershell
+npm run page:add -- --section admin --name <page-name> `
+  --sidebar-label "<sidebar-label>" --title "<page-title>" `
+  --scaffold title-only [--dry-run | --apply]
+```
+
+For example, `npm run page:add -- --section admin --name servers
+--sidebar-label servers --title "server awareness" --scaffold title-only`
+previews the admin page scaffold for the `servers` sidebar item. `<page-name>`
+is a lowercase kebab-case identifier used to derive the section code,
+component name, and text key. The sidebar label and page title are separate
+user-visible values so they can differ. `title-only` renders only the
+registered page title. `documentation` renders a left tree panel and a right
+Markdown panel, with empty tree and Markdown data until a source is defined.
+
+All five fields above belong to the shared page request. The initial admin
+request has no additional section-specific options. Future section
+configurations may define their own options—for example, study-specific
+layout or subsection inputs—without changing these shared fields or the
+command's common workflow. Those future options must remain distinct from the
+shared request rather than being inferred from admin arguments.
+
+The generated change is limited to the UI admin feature: a page component under
+`servers/fracto-ui/src/pages/admin/`, the admin section constant in
+`src/settings/AdminSettings.jsx`, the sidebar label and page title in
+`src/text/AdminText.jsx`, its sidebar registration in `src/pages/Admin.jsx`,
+and the admin-pages README. Both templates render the registered page title
+using the existing `MainStyles.SectionTitle` and `AppText` patterns. The
+documentation scaffold uses the shared Markdown renderer and tree control; its
+tree and Markdown lookup are empty until a content source is defined. Neither
+template adds page-specific settings, backend behavior, navigation outside the
+admin section, or application routes.
+
+The command previews each proposed file creation and registry or README
+addition without modifying files by default. Add `--dry-run` to make that
+no-write behavior explicit, or add `--apply` to install the preview after all
+checks pass. The apply path stages all five outputs and keeps temporary backups
+until installation succeeds. Before showing a preview it rejects malformed or
+unknown options, invalid names, existing generated files or identifiers, and
+missing admin source files or expected insertion anchors. If the source layout
+has changed, it stops and reports the affected file and anchor. Other
+sections, including study, are outside this contract and can define additional
+inputs through section-specific configuration in a later step. Run
+`npm run test:page-scaffold` to test the generator against temporary fixtures.
+
 ## Social media synchronization
 
 ### `sync_bluesky_media.js`

@@ -5,6 +5,7 @@ services:
       target: development
     image: fracto:dev
     environment:
+      FRACTO_SERVER_NAME: ${FRACTO_SERVER_NAME:-}
       FRACTO_UI_MODE: vite
       FRACTO_WATCH: "true"
       FRACTO_TILE_CACHE_READ_ONLY: "true"

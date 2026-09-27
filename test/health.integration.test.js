@@ -9,8 +9,8 @@ const service_states = new Map([
    ['fracto-tiles-server', 'starting'],
 ])
 const app = express()
-app.get('/healthz', create_health_handler(service_states))
-app.get('/readyz', create_health_handler(service_states))
+app.get('/healthz', create_health_handler(service_states, null, 'test-main-server'))
+app.get('/readyz', create_health_handler(service_states, null, 'test-main-server'))
 let server
 let base_url
 
@@ -29,6 +29,9 @@ describe('health endpoints', () => {
       const body = await response.json()
 
       assert.equal(response.status, 200)
+      assert.equal(response.headers.get('access-control-allow-origin'), '*')
+      assert.equal(body.contract_version, 1)
+      assert.equal(body.server_name, 'test-main-server')
       assert.equal(body.status, 'starting')
       assert.deepEqual(body.services, Object.fromEntries(service_states))
    })
@@ -42,6 +45,8 @@ describe('health endpoints', () => {
       const body = await response.json()
 
       assert.equal(response.status, 200)
+      assert.equal(body.contract_version, 1)
+      assert.equal(body.server_name, 'test-main-server')
       assert.equal(body.status, 'ready')
       assert.deepEqual(body.services, {
          'fracto-data-server': 'healthy',
