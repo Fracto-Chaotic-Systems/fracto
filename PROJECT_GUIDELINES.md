@@ -78,6 +78,25 @@ in the README for that feature or service.
 - Use monospace styling where values are compared or copied, and preserve
   complete values in the data model even when the UI displays abbreviations.
 
+## Documentation and code structure
+
+- Treat documentation as part of completing a functional change. Whenever
+  functionality is added or modified, update the relevant README or other
+  nearby project documentation to explain the behavior and any affected
+  structural or semantic details.
+- Document details that help a future maintainer understand why the code is
+  organized as it is: module and file responsibilities, ownership boundaries,
+  data flow, invariants, important state transitions, and extension points.
+  Prioritize details that are not obvious from names or signatures.
+- Before making changes in a working folder, check whether it has a README.
+  If it does not, create one and initialize it with the purpose of the folder
+  and a description of the function of its files. Keep it current as that
+  folder evolves.
+- Prefer the README closest to the affected code for folder-specific structure
+  and behavior. Use this project-level guide for durable principles shared by
+  multiple areas, and avoid leaving contradictory descriptions in either
+  place.
+
 ## Data, logging, and operations
 
 - Treat the cloud tile source and database migration history as authoritative;
