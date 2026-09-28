@@ -49,6 +49,10 @@ const MIN_FREE_BYTES = Number(process.env.FRACTO_TILE_MIN_FREE_BYTES || 1024 ** 
 const CACHE_READ_ONLY = process.env.FRACTO_TILE_CACHE_READ_ONLY === 'true'
 
 const remote_tile_url = async remote_filepath => {
+   const configured_base_url = process.env.FRACTO_TILE_REMOTE_BASE_URL
+   if (typeof configured_base_url === 'string' && configured_base_url.trim()) {
+      return `${configured_base_url.trim().replace(/\/$/, '')}/${remote_filepath}`
+   }
    if (!REMOTE_TILE_BASE_URL_PROMISE) {
       REMOTE_TILE_BASE_URL_PROMISE = import('../config/network.json', {with: {type: 'json'}})
          .then(({default: network}) => {

@@ -48,7 +48,8 @@ const result = FractoFastCalc.calc(point.re, point.im);
 - `FractoTileCache.js` retrieves and manages tile files. Remote-cache mode
   uses the configured HTTP tile origin and local disk cache; local-source mode
   reads from the mounted filesystem and does not load that network
-  configuration.
+  configuration. Remote mode accepts `FRACTO_TILE_REMOTE_BASE_URL` as an
+  optional override before falling back to `config/network.json`.
 - `FractoIndexedTiles.js` loads tile short-code CSV listings. Local-source mode
   streams them from `FRACTO_TILE_SOURCE_DIR/manifest/` (including `indexed`,
   `interior`, and `blank` listings); remote-cache mode retains the configured

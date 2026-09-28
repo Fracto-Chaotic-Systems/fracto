@@ -429,6 +429,7 @@ test('remote-cache mode still downloads once, persists the tile, and serves late
          FRACTO_TILE_DATA_DIR: cache_directory,
          FRACTO_TILE_CACHE_READ_ONLY: 'false',
          FRACTO_TILE_MIN_FREE_BYTES: '0',
+         FRACTO_TILE_REMOTE_BASE_URL: 'https://tiles.example.test',
          TEST_TILE_FIXTURE: fixture_path,
       },
    })
