@@ -1,0 +1,12 @@
+# One-time release preparation only. Combine with compose.local-tiles.yaml
+# when creating the small pairing manifest, then use the read-only overlay
+# for all service startup and normal operation.
+services:
+  fracto:
+    volumes:
+      - type: bind
+        source: ${FRACTO_TILE_SOURCE_HOST_DIR:?Set FRACTO_TILE_SOURCE_HOST_DIR to the EC2 tile directory}
+        target: /mnt/fracto-tile-source
+        read_only: false
+        bind:
+          create_host_path: false

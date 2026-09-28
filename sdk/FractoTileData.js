@@ -5,6 +5,7 @@ import chalk from "chalk";
 import FractoIndexedTiles, {TILE_SET_INDEXED} from "./FractoIndexedTiles.js";
 import FractoFastCalc from "./FractoFastCalc.js";
 import FractoTileCache from "./FractoTileCache.js";
+import {TileSourceError} from './FractoTileSource.js'
 import {tile_index_paths} from './FractoTilePaths.js'
 import {color_shortcode} from '../utils/ansi_colors.js'
 
@@ -301,6 +302,7 @@ export const raster_fill = async (
                         found_point = true
 
                      } catch (e) {
+                        if (e instanceof TileSourceError) throw e
                         console.log(`exception on tile: ${color_shortcode(tile.short_code)}`, e.message)
                         BAD_TILES[tile.short_code] = true
                         continue;
@@ -322,6 +324,7 @@ export const raster_fill = async (
          }
       }
    } catch (error) {
+      if (error instanceof TileSourceError) throw error
       console.error('raster_fill error', error)
    }
    if (unfound) {
@@ -389,6 +392,7 @@ export const raster_fill_turbo = async (
          try {
             tile_data = await FractoTileCache.get_tile(tile.short_code)
          } catch (error) {
+            if (error instanceof TileSourceError) throw error
             console.error(`turbo tile load error ${color_shortcode(tile.short_code)}`, error.message)
             continue
          }

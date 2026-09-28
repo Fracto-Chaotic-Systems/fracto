@@ -4,7 +4,11 @@ import path from 'node:path'
 import {deserialize, serialize} from 'node:v8'
 
 import FractoIndexedTiles, {TILE_SET_INDEXED} from './FractoIndexedTiles.js'
-import {tile_index_paths} from './FractoTilePaths.js'
+import {
+   TILE_SOURCE_GENERATION,
+   TILE_SOURCE_MODE,
+   tile_index_paths,
+} from './FractoTilePaths.js'
 
 export const TILE_INDEX_CACHE_SCHEMA = 1
 const read_source_descriptor = () => {
@@ -33,6 +37,69 @@ const cache_paths = (cache, fingerprint) => {
    return {directory, metadata_file: path.join(directory, 'metadata.json')}
 }
 
+export const validate_tile_index_cache = () => {
+   const {manifest, fingerprint} = read_source_descriptor()
+   const {cache} = tile_index_paths()
+   const {directory, metadata_file} = cache_paths(cache, fingerprint)
+   if (!fs.existsSync(metadata_file)) {
+      throw new Error('Compiled tile index is missing or stale; run npm run tiles:refresh')
+   }
+
+   let metadata
+   try {
+      metadata = JSON.parse(fs.readFileSync(metadata_file, 'utf8'))
+   } catch {
+      throw new Error('Compiled tile index metadata is unreadable or invalid JSON')
+   }
+   if (metadata.schema !== TILE_INDEX_CACHE_SCHEMA) {
+      throw new Error(`Compiled tile index schema ${metadata.schema} is unsupported; run npm run tiles:index`)
+   }
+   if (metadata.fingerprint !== fingerprint) {
+      throw new Error('Compiled tile index fingerprint does not match the published source generation')
+   }
+   if (metadata.packet_count !== manifest.packet_files.length) {
+      throw new Error('Compiled tile index packet count does not match the published source generation')
+   }
+   if (TILE_SOURCE_MODE === 'local' &&
+      metadata.tile_source_generation !== TILE_SOURCE_GENERATION) {
+      throw new Error(
+         'Compiled tile index was not built for FRACTO_TILE_SOURCE_GENERATION; ' +
+         'refresh the index with the matching generation configured',
+      )
+   }
+
+   let representative_short_code = null
+   manifest.packet_files.forEach((packet_file, packet_index) => {
+      const cache_file = path.join(directory, `${packet_index.toString().padStart(4, '0')}.bin`)
+      if (!fs.existsSync(cache_file)) {
+         throw new Error(`Compiled tile index packet ${packet_index + 1} is missing; run npm run tiles:index`)
+      }
+      try {
+         fs.accessSync(cache_file, fs.constants.R_OK)
+      } catch {
+         throw new Error(`Compiled tile index packet ${packet_index + 1} is not readable by this user`)
+      }
+      if (representative_short_code) return
+      let packet_data
+      try {
+         packet_data = deserialize(fs.readFileSync(cache_file))
+      } catch {
+         throw new Error(`Compiled tile index packet ${packet_index + 1} is unreadable; run npm run tiles:index`)
+      }
+      if (!Array.isArray(packet_data?.columns)) {
+         throw new Error(`Compiled tile index packet ${packet_index + 1} has an invalid structure; run npm run tiles:index`)
+      }
+      representative_short_code = packet_data.columns
+         .flatMap(column => Array.isArray(column.tiles) ? column.tiles : [])
+         .map(tile => tile.short_code)
+         .find(short_code => typeof short_code === 'string' && /^\d+$/.test(short_code)) || null
+   })
+   if (!representative_short_code) {
+      throw new Error('Compiled tile index contains no representative tile to validate')
+   }
+   return {metadata, representative_short_code}
+}
+
 const count_packet_tiles = packet_data => packet_data.columns.reduce((total, column) => {
    return total + column.tiles.length
 }, 0)
@@ -52,6 +119,13 @@ export const build_tile_index_cache = (on_progress = null) => {
       if (metadata.schema !== TILE_INDEX_CACHE_SCHEMA ||
          metadata.packet_count !== manifest.packet_files.length) {
          throw new Error(`Incomplete cache exists at ${directory}; remove it and rebuild`)
+      }
+      if (TILE_SOURCE_MODE === 'local' &&
+         metadata.tile_source_generation !== TILE_SOURCE_GENERATION) {
+         throw new Error(
+            'Existing compiled index cache is paired with a different tile-source generation; ' +
+            'build a new published index generation with FRACTO_TILE_SOURCE_GENERATION set',
+         )
       }
       if (metadata.source_manifest_tile_count !== undefined) {
          return {...metadata, reused: true}
@@ -106,6 +180,9 @@ export const build_tile_index_cache = (on_progress = null) => {
       const metadata = {
          schema: TILE_INDEX_CACHE_SCHEMA,
          fingerprint,
+         tile_source_generation: TILE_SOURCE_MODE === 'local'
+            ? TILE_SOURCE_GENERATION
+            : null,
          created_at: new Date().toISOString(),
          packet_count: manifest.packet_files.length,
          tile_count: computed_tile_count,

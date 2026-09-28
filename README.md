@@ -85,6 +85,30 @@ npm start
 
 `npm run tiles:index` compiles the source JSON tile packets into a fingerprinted binary cache under `tiles/cache/indexed/`. Run it whenever the source manifest or packets change. `npm start` first updates the root and all five service repositories, then validates and loads that compiled cache while no HTTP server is listening. A missing or stale cache aborts startup with instructions to rebuild it. Use `npm run update:repos` to run only the repository-update phase. After the tile service becomes healthy, it starts the root server and remaining services sequentially, waiting for each health endpoint before continuing. Tile-index progress is shown in the console. The default health timeout is 300 seconds and can be changed with `FRACTO_STARTUP_TIMEOUT_MS`. Service output is appended to dated files under `logs/`.
 
+### Tile source modes
+
+The default `remote-cache` mode is for ordinary installations whose tile server
+does not have the authoritative tile dataset mounted locally. It fetches missing
+tiles from the configured source, stores them in the persistent tile-file cache
+(except in read-only development mode), and keeps decoded tiles in memory.
+
+Use `local` mode only when the tile server runs on the system that stores the
+authoritative tile files and can read that dataset directly. It requires an
+permanent source directory paired to its compiled tile index by
+`fracto-tile-release.json` and the index's dataset/index ID metadata. That ID
+is logical and does not require versioned tile directories. Requests never
+fall back to network access or write copies to the demand cache. Start this
+service with `npm run start:tiles-local-source` when running the tile server
+alone. The EC2 full-stack installation uses the local-source Compose overlay
+and the root supervisor. The detailed source mount, permissions, update,
+health-check, and recovery procedure is in the
+[tile-server deployment guide](servers/fracto-tiles-server/DEPLOYMENT.md).
+
+For the public EC2 deployment at
+`https://fracto.mikehallstudio.com:3000`, the UI supports same-origin nginx
+routes to each private service. See the [nginx example, OIDC settings, and
+Linux first-run/update workflow](deploy/README.md).
+
 Stop the root process with Ctrl+C to forward shutdown to every child service.
 
 ## Docker
@@ -413,6 +437,14 @@ The running tile server keeps its existing in-memory index until restarted. Inde
 refreshes are built as isolated generations and are published only after the source
 packets and binary cache both complete. The current and previous completed
 generations are retained.
+
+For a tile server running beside its authoritative tile files, configure the
+permanent local tile directory and a stable dataset/index ID, then start only that service with
+`npm run start:tiles-local-source`. Run
+`npm run start:tiles-local-source -- --check` first to validate the source
+directory, matching compiled index, and a representative indexed tile. See the
+[tile service guide](servers/fracto-tiles-server/README.md#start-the-local-source-service)
+for configuration and generation-update instructions.
 
 ### Download the latest tiles
 

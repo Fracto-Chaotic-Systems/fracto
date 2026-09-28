@@ -236,14 +236,20 @@ exclusions. All other tracked or staged changes still abort the update.
 ### `startup_preflight.js`
 
 Checks service package files, ports, entry points, dependencies, and the MySQL
-connection (`SELECT 1`) without opening service ports:
+connection (`SELECT 1`) without opening service ports. In local tile-source
+mode it also checks that the mounted corpus is readable/searchable, verifies
+the `LNN` layout and paired compiled-index metadata, and decodes an indexed
+representative tile before the root supervisor opens any listener:
 
 ```powershell
 npm run start:check
 ```
 
 It honors `FRACTO_MYSQL_HOST`, `FRACTO_MYSQL_PORT`, and
-`FRACTO_MYSQL_DATABASE`. Database errors identify the endpoint and likely fix.
+`FRACTO_MYSQL_DATABASE`. Database and local tile-source errors identify the
+failed check and likely fix. Local-source startup skips creation of the
+writable demand-cache directory; tile reads fail closed without network or
+demand-cache writes.
 
 ### `launch_service.js` and `serve_ui.js`
 
@@ -281,6 +287,42 @@ without the root supervisor.
   correcting an error. For the separately controlled first administrator
   provisioning and installer recovery procedure, follow
   [AUTHENTICATION.md](../AUTHENTICATION.md#qualified-installer-procedure).
+- `ec2_deploy.sh`: Linux EC2 first-run and update workflow. Run
+  `npm run deploy:ec2:first-run` for the initial installation or
+  `npm run deploy:ec2:update` for a later release. It clones any missing
+  service repositories from the root repository's Git remote (or the
+  non-secret `FRACTO_SERVICE_REPOSITORY_BASE_URL` override), then uses the
+  root's fast-forward-only repository updater. Git credentials should come
+  from the host's SSH agent or credential helper, never from a URL containing
+  a token.
+
+  Before changing repositories or containers, the script validates Compose,
+  requires OIDC with secure cookies and HTTPS public URLs, checks `.env` and
+  `config/*.json` are ignored by Git and have protected permissions, and
+  verifies that `config/mysql.json` is usable by the container's `node` user.
+  Keep `.env` owned by the installer with mode `600`. A common config setup is
+  `sudo chown root:1000 config/*.json && sudo chmod 640 config/*.json`; UID/GID
+  1000 is the container's `node` account. Protect any additional files in
+  `config/` the same way.
+
+  First-run initializes or migrates the database. If the host tile corpus has
+  no `fracto-tile-release.json`, it builds a candidate compiled index from the
+  configured indexed manifest, compares every indexed code with the local tile
+  inventory, and writes the pairing manifest only after an exact match. It
+  then runs `startup_preflight.js` inside the production image and starts the
+  single `fracto` container; that container supervises the complete six-port
+  application. It does not invoke the standalone tile-service launcher.
+  If a pairing manifest already exists, first-run preserves it and validates
+  the existing index/source pairing instead of refreshing the index.
+
+  Updates require the existing pairing manifest, fast-forward repositories,
+  build the image, stop the running supervisor before applying database
+  migrations, run the same full-stack preflight, and start the complete stack.
+  They do not refresh or replace the tile index. To intentionally change the
+  local corpus/index pairing, use the documented tile release preparation
+  procedure before deploying the new pairing. Both paths fail before startup
+  when checks fail, retain Docker volumes, and can be rerun after correcting
+  the reported problem.
 
 ## Database setup and schema changes
 
@@ -316,6 +358,16 @@ It does not modify the database.
 
 ## Tile index and persistent tile cache
 
+### `start_tiles_local_source.js`
+
+The root command `npm run start:tiles-local-source` starts only the tile service
+in strict local-source mode. Before launching, it checks the source directory's
+permissions and `LNN` layout, validates the published compiled-index metadata
+and packet files, then reads a representative indexed tile. It reads the root
+`.env` file when present, with process environment values taking precedence.
+Use `npm run start:tiles-local-source -- --check` to run these checks without
+starting the service. The normal `npm start` path is unchanged.
+
 ### `build_tile_index.js` and `refresh_tile_index.js`
 
 `build_tile_index.js` compiles source packets into a fingerprinted binary cache:
@@ -324,7 +376,8 @@ It does not modify the database.
 npm run tiles:index
 ```
 
-`refresh_tile_index.js` downloads the current manifest and publishes a complete
+`refresh_tile_index.js` asks the configured Fracto source for the current
+`/manifest/indexed.csv` short-code list, builds packets and publishes a complete
 generation atomically:
 
 ```powershell
@@ -333,6 +386,48 @@ npm run tiles:refresh
 
 Incomplete generations are not published. Startup rejects missing or stale
 generations. Refreshing can take about an hour.
+
+For a side-by-side release, set `FRACTO_TILE_INDEX_PUBLISH_CURRENT=false` on
+the one-off `index-refresh` container. It leaves the prior `CURRENT` selection
+unchanged and prints the completed candidate generation ID. Preflight that
+generation by setting `FRACTO_TILE_INDEX_GENERATION_DIR` to its path under
+`/var/lib/fracto/index/generations/`. After the candidate source/index pair
+passes preflight, select the generation with:
+
+```sh
+docker compose -f compose.yaml -f compose.local-tiles.yaml run --rm --no-deps \
+  --entrypoint node fracto scripts/select_tile_index_generation.js <generation-id>
+```
+
+The selector requires a `COMPLETE` marker, refuses to run while index refresh
+holds its lock, and atomically replaces `CURRENT`. It does not delete the
+previous generation, so it remains available for rollback.
+Refresh and selection both use `REFRESH.lock`; if a lock remains after a
+process stops, confirm no index operation is active before removing that lock.
+
+For a local tile-source release, set `FRACTO_TILE_SOURCE_MODE=local` and
+`FRACTO_TILE_SOURCE_GENERATION` before compiling the index. Refresh still gets
+short codes from the configured remote manifest; the local-source settings do
+not make it scan local tile files. A successful refresh is not proof of a
+match. Once the completed index generation is selected and local tile files
+are available, run `npm run tiles:source-release`. It compares the complete
+short-code set from the compiled packets with `.gz` filenames under every
+`LNN` directory and refuses to write the release manifest if either side has
+missing or extra tiles. This one-time comparison is streaming by level and
+uses memory proportional to the largest level directory. The schema-2
+`fracto-tile-release.json` records the dataset/index ID, compiled fingerprint,
+tile count, and exact-inventory attestation. Create it before making the source
+root read-only; never edit an existing manifest in place. Startup rejects an
+absent, old-schema, or mismatched binding.
+
+### `create_tile_source_release_manifest.js`
+
+Creates the source-side pairing manifest for a local tile corpus. It
+uses `FRACTO_TILE_SOURCE_DIR`, `FRACTO_TILE_SOURCE_GENERATION`, and the
+compiled index selected by `FRACTO_TILE_INDEX_DIR` or
+`FRACTO_TILE_INDEX_GENERATION_DIR`. It verifies exact equality between indexed
+short codes and local tile filenames before writing. It refuses to overwrite
+an existing manifest, so each dataset/index pairing is certified once.
 
 ### `cold_boot.bat`
 

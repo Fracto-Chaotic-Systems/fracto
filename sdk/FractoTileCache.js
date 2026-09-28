@@ -3,13 +3,19 @@ import zlib from "zlib";
 import path from "path";
 import fs from "fs";
 import https from "https";
-import {TILE_DATA_DIRECTORY} from './FractoTilePaths.js'
+import {
+   TILE_DATA_DIRECTORY,
+   TILE_SOURCE_DIRECTORY,
+   TILE_SOURCE_GENERATION,
+   TILE_SOURCE_MODE,
+} from './FractoTilePaths.js'
+import {read_source_tile, tile_cache_identity} from './FractoTileSource.js'
 import {color_shortcode} from '../utils/ansi_colors.js'
 
 const SEPARATOR = path.sep;
 const TILES_DIR = TILE_DATA_DIRECTORY;
 console.log('TILES_DIR is', TILES_DIR);
-if (!fs.existsSync(TILES_DIR)) {
+if (TILE_SOURCE_MODE !== 'local' && !fs.existsSync(TILES_DIR)) {
    fs.mkdirSync(TILES_DIR, {recursive: true})
 }
 let CACHED_TILES = {}
@@ -20,6 +26,9 @@ const CACHE_STATS = {
    disk_hits: 0,
    downloads: 0,
    readonly_downloads: 0,
+   local_source_reads: 0,
+   local_source_failures: 0,
+   last_source_error: null,
    failures: 0,
    coalesced_requests: 0,
    evictions: 0,
@@ -27,6 +36,11 @@ const CACHE_STATS = {
    download_duration_ms: 0,
    last_download_at: null,
 }
+const cache_identity = short_code => tile_cache_identity(
+   TILE_SOURCE_MODE,
+   TILE_SOURCE_GENERATION,
+   short_code,
+)
 const CACHE_TIMEOUT = 2 * 1000 * 60;
 const QUICK_CACHE_TIMEOUT = 1000 * 60;
 const MIN_CACHE = 750
@@ -179,25 +193,49 @@ export class FractoTileCache {
 
    static get_tile = async (short_code) => {
       CACHE_STATS.requests++
-      if (CACHED_TILES[short_code]) {
+      const identity = cache_identity(short_code)
+      if (CACHED_TILES[identity]) {
          CACHE_STATS.memory_hits++
-         CACHED_TILES[short_code].last_access = Date.now()
-         CACHED_TILES[short_code].access_count++
-         return CACHED_TILES[short_code].uncompressed;
+         CACHED_TILES[identity].last_access = Date.now()
+         CACHED_TILES[identity].access_count++
+         return CACHED_TILES[identity].uncompressed;
       }
-      if (FractoTileCache.error_count > 100) {
+      if (TILE_SOURCE_MODE !== 'local' && FractoTileCache.error_count > 100) {
          return null;
       }
-      if (IN_FLIGHT_DOWNLOADS.has(short_code)) {
+      if (IN_FLIGHT_DOWNLOADS.has(identity)) {
          CACHE_STATS.coalesced_requests++
-         return IN_FLIGHT_DOWNLOADS.get(short_code)
+         return IN_FLIGHT_DOWNLOADS.get(identity)
       }
       const load_or_download = (async () => {
+         if (TILE_SOURCE_MODE === 'local') {
+            try {
+               const tile = read_source_tile(TILE_SOURCE_DIRECTORY, short_code)
+               CACHED_TILES[identity] = {
+                  uncompressed: tile,
+                  last_access: Date.now(),
+                  access_count: 1,
+               }
+               CACHE_STATS.local_source_reads++
+               return tile
+            } catch (e) {
+               CACHE_STATS.failures++
+               CACHE_STATS.local_source_failures++
+               CACHE_STATS.last_source_error = {
+                  code: e.code || 'TILE_SOURCE_READ_FAILED',
+                  kind: e.kind || 'read_failed',
+                  short_code,
+                  timestamp: new Date().toISOString(),
+               }
+               console.error(`local source tile read failed ${color_shortcode(short_code)} (${CACHE_STATS.last_source_error.code})`)
+               throw e
+            }
+         }
          const coded_dir = dir_from_short_code(short_code)
          try {
             let tile = await load_tile(short_code, coded_dir)
             if (tile) {
-               CACHED_TILES[short_code] = {
+               CACHED_TILES[identity] = {
                   uncompressed: tile,
                   last_access: Date.now(),
                   access_count: 1,
@@ -207,7 +245,7 @@ export class FractoTileCache {
             }
             tile = await store_tile(short_code, coded_dir)
             if (tile) {
-               CACHED_TILES[short_code] = {
+               CACHED_TILES[identity] = {
                   uncompressed: tile,
                   last_access: Date.now(),
                   access_count: 1,
@@ -222,11 +260,11 @@ export class FractoTileCache {
             return null
          }
       })()
-      IN_FLIGHT_DOWNLOADS.set(short_code, load_or_download)
+      IN_FLIGHT_DOWNLOADS.set(identity, load_or_download)
       try {
          return await load_or_download
       } finally {
-         IN_FLIGHT_DOWNLOADS.delete(short_code)
+         IN_FLIGHT_DOWNLOADS.delete(identity)
       }
    }
 
@@ -254,11 +292,12 @@ export class FractoTileCache {
 
    static get_stats = () => ({
       ...CACHE_STATS,
+      source_mode: TILE_SOURCE_MODE,
+      source_generation: TILE_SOURCE_MODE === 'local' ? TILE_SOURCE_GENERATION : null,
       in_memory: Object.keys(CACHED_TILES).length,
       in_flight: IN_FLIGHT_DOWNLOADS.size,
       error_count: FractoTileCache.error_count,
-      read_only: CACHE_READ_ONLY,
-      cache_directory: TILES_DIR,
+      read_only: TILE_SOURCE_MODE === 'local' || CACHE_READ_ONLY,
       limits: {min: MIN_CACHE, max: MAX_CACHE},
    })
 }

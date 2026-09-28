@@ -116,6 +116,34 @@ The command writes a fingerprinted binary cache beneath `tiles/cache/indexed/`. 
 
 After port 3004 opens, coverage initialization downloads category CSV files from the configured production endpoint. Coverage data is separate from the compiled local tile index and may represent a newer dataset.
 
+Tile selection, source-of-truth downloads, the persistent tile-file cache, and
+the decoded in-memory cache form separate stages. The [tile service guide](fracto-tiles-server/README.md#tile-data-access-and-cache-lifecycle)
+documents their request order, read-only development behavior, disk-space
+guard, and memory eviction policy.
+
+Choose **remote-cache** for the usual deployment, where the tile server cannot
+read the authoritative tile tree directly. Missing tiles are downloaded and
+cached on disk in writable production; development can download without
+persistent writes. Choose **local-source** only for a tile server running on
+the host that owns, or has a read-only mount of, the authoritative tile tree.
+Its contract requires `FRACTO_TILE_SOURCE_MODE=local`,
+an absolute `FRACTO_TILE_SOURCE_DIR`, and a stable
+`FRACTO_TILE_SOURCE_GENERATION` dataset/index ID; it reads `L<two-digit-level>` files
+directly, never writes tile files or makes network requests, and fails on a
+missing or invalid tile. A `fracto-tile-release.json` manifest and matching
+compiled-index metadata pair the tile corpus with its index; startup rejects a
+missing or mismatched pair. The ID is logical and does not imply a versioned
+tile directory. Keep the corpus at its permanent path, and update the ID and
+matching index together if the dataset changes. Use `npm run start:tiles-local-source`
+after configuring the root `.env`; run `npm run start:tiles-local-source -- --check`
+to validate configuration and the compiled index without starting the service.
+See the [local-source startup procedure](fracto-tiles-server/README.md#start-the-local-source-service).
+For source-mount permissions, matching index preparation, health checks,
+generation updates, and recovery, follow the dedicated
+[tile-server deployment guide](fracto-tiles-server/DEPLOYMENT.md). The full
+request sequence and cache-layer behavior are described in the
+[tile service guide](fracto-tiles-server/README.md#tile-data-access-and-cache-lifecycle).
+
 The tile service exposes `GET /cache_status` for cache observability. It returns
 JSON counters for requests, in-memory hits, persistent-disk loads, source
 downloads, read-only downloads, failures, coalesced requests, evictions, and
@@ -144,6 +172,11 @@ Invoke-RestMethod http://localhost:3004/metrics
 | `disk_hits` | Requests loaded from a persistent `.gz` tile file. |
 | `downloads` | Successful source downloads, including read-only downloads. |
 | `readonly_downloads` | Downloads made without writing to disk (development mode). |
+| `source_mode` | `remote-cache` for demand-cache operation, or `local` for direct authoritative filesystem reads. |
+| `source_generation` | The configured non-secret dataset/index ID in local mode, otherwise `null`. This is the API field name. |
+| `local_source_reads` | Successful reads from the authoritative local-source tree. |
+| `local_source_failures` | Missing, unreadable, or invalid files in local-source mode. |
+| `last_source_error` | Last local-source error code, kind, short code, and timestamp; it contains no filesystem path. |
 | `failures` | Tile load, download, decompression, or parsing failures. |
 | `coalesced_requests` | Requests that joined an existing download in progress. |
 | `evictions` | In-memory entries removed by cache trimming. |
@@ -154,7 +187,6 @@ Invoke-RestMethod http://localhost:3004/metrics
 | `in_flight` | Current number of unique tile downloads in progress. |
 | `error_count` | Legacy consecutive-error circuit-breaker count. |
 | `read_only` | Whether this process can write the tile cache. |
-| `cache_directory` | Effective local tile-cache path. |
 | `limits` | Configured in-memory trim thresholds (`min` and `max`). |
 | `history` | Up to 60 five-second snapshots with a `timestamp` and the fields above. |
 
@@ -164,6 +196,9 @@ tile service restarts. Compare two snapshots to calculate rates or hit ratios;
 for example, persistent cache effectiveness is represented by
 `disk_hits / requests`, while remote fetch activity is represented by
 `downloads`.
+In local-source mode, `disk_hits` and `downloads` do not count authoritative
+reads; use `local_source_reads` and `local_source_failures`. The endpoint omits
+tile filesystem paths so deployments do not disclose their storage layout.
 
 `/metrics` returns `started_at`, `requests`, `responses_by_status`,
 `duration_ms`, `max_duration_ms`, and `average_duration_ms` for all tile-service

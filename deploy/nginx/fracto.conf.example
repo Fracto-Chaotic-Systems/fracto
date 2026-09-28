@@ -1,0 +1,59 @@
+# Fracto behind nginx on HTTPS port 3000
+#
+# Install as an nginx server configuration in the http context (for example,
+# sites-available/fracto), then enable it using the host's normal nginx setup.
+# Replace certificate paths below with the certificate paths already used by
+# this EC2 instance.
+
+server {
+    listen 3000 ssl http2;
+    listen [::]:3000 ssl http2;
+    server_name fracto.mikehallstudio.com;
+
+    ssl_certificate     /etc/letsencrypt/live/fracto.mikehallstudio.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/fracto.mikehallstudio.com/privkey.pem;
+
+    client_max_body_size 2g;
+    proxy_connect_timeout 30s;
+    proxy_send_timeout 600s;
+    proxy_read_timeout 600s;
+
+    # The browser UI uses one origin. These prefixes are stripped by the
+    # trailing slash on proxy_pass before reaching each Express service.
+    location ^~ /api/main/ {
+        proxy_pass http://127.0.0.1:3001/;
+        include snippets/fracto-proxy-headers.conf;
+    }
+    location ^~ /api/data/ {
+        proxy_pass http://127.0.0.1:3002/;
+        include snippets/fracto-proxy-headers.conf;
+    }
+    location ^~ /api/asset/ {
+        proxy_pass http://127.0.0.1:3003/;
+        include snippets/fracto-proxy-headers.conf;
+    }
+    location ^~ /api/tiles/ {
+        proxy_pass http://127.0.0.1:3004/;
+        include snippets/fracto-proxy-headers.conf;
+    }
+    location ^~ /api/admin/ {
+        proxy_pass http://127.0.0.1:3005/;
+        include snippets/fracto-proxy-headers.conf;
+    }
+
+    # Do not accidentally expose an unrecognized API path through the UI app.
+    location ^~ /api/ {
+        return 404;
+    }
+
+    # The production UI server serves the built React app on localhost:3006.
+    location / {
+        proxy_pass http://127.0.0.1:3006;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+    }
+}

@@ -6,6 +6,30 @@ This is the initial archive of posts returned by the public author feed on
 2026-09-20. Engagement values are the observed snapshot at that time. The
 posts are listed newest first.
 
+## 2026-09-27 — The basic program is small enough to write…
+
+<!-- post-cid: bafyreie2e3jcy5zcjxqvhzga64tm5xuaiuei6ctbdqlr2a22wgu2mcht64 -->
+
+<p><strong>Post content:</strong> <button type="button" class="post-copy-content" data-copy-post-content="The basic program is small enough to write on a whiteboard:&#10;&#10;z₀ = 0&#10;zₙ₊₁ = zₙ² + c&#10;&#10;With this set of equations, the computer is not drawing a path that was already there; it is translating repeated complex arithmetic into a shape we can inspect.&#10;&#10;#Fractals #Programming #MathIsBeautiful" title="copy post content to clipboard" aria-label="copy post content to clipboard"><svg height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V5.5C8 4.67 8.67 4 9.5 4h9C19.33 4 20 4.67 20 5.5v9c0 .83-.67 1.5-1.5 1.5H16v2.5c0 .83-.67 1.5-1.5 1.5h-9C4.67 20 4 19.33 4 18.5v-9C4 8.67 4.67 8 5.5 8H8Zm-2.5 2c-.28 0-.5.22-.5.5v8c0 .28.22.5.5.5h9c.28 0 .5-.22.5-.5V10.5c0-.28-.22-.5-.5-.5h-9ZM10 6v2h4.5c.83 0 1.5.67 1.5 1.5V14h2V6.5c0-.28-.22-.5-.5-.5h-7.5Z"/></svg></button></p>
+
+> The basic program is small enough to write on a whiteboard:
+>
+> z₀ = 0
+> zₙ₊₁ = zₙ² + c
+>
+> With this set of equations, the computer is not drawing a path that was already there; it is translating repeated complex arithmetic into a shape we can inspect.
+>
+> #Fractals #Programming #MathIsBeautiful
+
+<p><strong>Source post:</strong> <a href="https://bsky.app/profile/fracto-studio.bsky.social/post/3mwjyk3j7dk2w">view post</a></p>
+
+<strong>Media alt text:</strong> In this roller-coaster representation depicting the distances from the center of each orbital point, we can tell that a shape is suggested by the points themselves.
+
+<strong>Media details:</strong> [media 1 details](media/MEDIA_UPLOADS.md#media-bafyreie2e3jcy5zcjxqvhzga64tm5xuaiuei6ctbdqlr2a22wgu2mcht64-0)
+
+<strong>Snapshot:</strong> 0 likes, 0 replies, 0 reposts.
+
+
 ## 2026-09-25 — While examining the paths of orbitals, I noticed…
 
 <!-- post-cid: bafyreid4pqy34sjfnqfu6h2wm254bi4d7ooayovuh4fz43kf4hwh6rxanq -->
@@ -182,4 +206,3 @@ The engagement pattern is early-stage and small, so it should guide hypotheses,
 not conclusions. In particular, the introduction and the interior-color post
 received the highest like counts in this snapshot, suggesting that accessible
 curiosity and visually legible results are useful entry points.
-

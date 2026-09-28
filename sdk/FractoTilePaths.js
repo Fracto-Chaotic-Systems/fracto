@@ -6,6 +6,22 @@ import {ROOT_DIR} from '../constants.js'
 export const TILE_DATA_DIRECTORY = path.resolve(
    process.env.FRACTO_TILE_DATA_DIR || path.join(ROOT_DIR, 'tiles'),
 )
+export const TILE_SOURCE_MODE = process.env.FRACTO_TILE_SOURCE_MODE || 'remote-cache'
+if (!['remote-cache', 'local'].includes(TILE_SOURCE_MODE)) {
+   throw new Error(
+      `FRACTO_TILE_SOURCE_MODE must be 'remote-cache' or 'local', received '${TILE_SOURCE_MODE}'`,
+   )
+}
+export const TILE_SOURCE_DIRECTORY = process.env.FRACTO_TILE_SOURCE_DIR
+   ? path.resolve(process.env.FRACTO_TILE_SOURCE_DIR)
+   : null
+export const TILE_SOURCE_GENERATION = process.env.FRACTO_TILE_SOURCE_GENERATION || null
+if (TILE_SOURCE_MODE === 'local' && !TILE_SOURCE_DIRECTORY) {
+   throw new Error('FRACTO_TILE_SOURCE_DIR is required when FRACTO_TILE_SOURCE_MODE=local')
+}
+if (TILE_SOURCE_MODE === 'local' && !TILE_SOURCE_GENERATION) {
+   throw new Error('FRACTO_TILE_SOURCE_GENERATION is required when FRACTO_TILE_SOURCE_MODE=local')
+}
 export const TILE_INDEX_ROOT = path.resolve(
    process.env.FRACTO_TILE_INDEX_DIR || path.join(ROOT_DIR, 'tiles'),
 )

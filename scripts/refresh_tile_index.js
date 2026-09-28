@@ -10,6 +10,7 @@ import {
 } from '../sdk/FractoTilePaths.js'
 
 const retention_count = Number(process.env.FRACTO_TILE_INDEX_GENERATIONS_TO_KEEP || 2)
+const publish_current_generation = process.env.FRACTO_TILE_INDEX_PUBLISH_CURRENT !== 'false'
 if (!Number.isInteger(retention_count) || retention_count < 1) {
    throw new Error('FRACTO_TILE_INDEX_GENERATIONS_TO_KEEP must be a positive integer')
 }
@@ -28,13 +29,14 @@ const acquire_lock = () => {
          const same_host = existing.hostname === owner.hostname
          const process_exists = same_host && fs.existsSync(`/proc/${existing.pid}`)
          if (process_exists) {
-            throw new Error(`Tile index refresh is already running as PID ${existing.pid}`)
+            throw new Error(`Tile index operation is already running as PID ${existing.pid}`)
          }
-         console.warn(`Removing stale tile index refresh lock from ${existing.hostname}:${existing.pid}`)
-         fs.rmSync(lock_file, {force: true})
+         throw new Error(
+            `Tile index operation lock exists for ${existing.hostname || 'unknown'}:${existing.pid || 'unknown'}; confirm no refresh or generation switch is running, then remove ${lock_file} if stale`,
+         )
       } catch (error) {
-         if (error.message.startsWith('Tile index refresh is already running')) throw error
-         fs.rmSync(lock_file, {force: true})
+         if (error.message.startsWith('Tile index operation')) throw error
+         throw new Error(`Tile index operation lock is unreadable; confirm no operation is running, then inspect ${lock_file}`)
       }
    }
    const handle = fs.openSync(lock_file, 'wx')
@@ -98,13 +100,17 @@ try {
    run(path.join(import.meta.dirname, '..'), ['scripts/build_coverage_cache.js'], generation_env)
 
    fs.writeFileSync(path.join(generation_directory, 'COMPLETE'), `${new Date().toISOString()}\n`)
-   publish_current(generation)
    published = true
-   console.log(`Published tile index generation ${generation}`)
-   try {
-      prune_generations(generation)
-   } catch (error) {
-      console.warn(`Unable to prune old tile index generations: ${error.message}`)
+   if (publish_current_generation) {
+      publish_current(generation)
+      console.log(`Published tile index generation ${generation}`)
+      try {
+         prune_generations(generation)
+      } catch (error) {
+         console.warn(`Unable to prune old tile index generations: ${error.message}`)
+      }
+   } else {
+      console.log(`Prepared complete tile index generation ${generation} without changing CURRENT`)
    }
 } catch (error) {
    if (!published && generation_directory && fs.existsSync(generation_directory)) {

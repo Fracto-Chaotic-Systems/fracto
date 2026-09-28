@@ -1,0 +1,26 @@
+services:
+  fracto:
+    environment:
+      FRACTO_TILE_SOURCE_MODE: local
+      FRACTO_TILE_SOURCE_DIR: /mnt/fracto-tile-source
+      FRACTO_TILE_SOURCE_GENERATION: ${FRACTO_TILE_SOURCE_GENERATION:?Set FRACTO_TILE_SOURCE_GENERATION in the deployment environment}
+    volumes:
+      - type: bind
+        source: ${FRACTO_TILE_SOURCE_HOST_DIR:?Set FRACTO_TILE_SOURCE_HOST_DIR to the EC2 tile directory}
+        target: /mnt/fracto-tile-source
+        read_only: true
+        bind:
+          create_host_path: false
+
+  index-refresh:
+    environment:
+      FRACTO_TILE_SOURCE_MODE: local
+      FRACTO_TILE_SOURCE_DIR: /mnt/fracto-tile-source
+      FRACTO_TILE_SOURCE_GENERATION: ${FRACTO_TILE_SOURCE_GENERATION:?Set FRACTO_TILE_SOURCE_GENERATION in the deployment environment}
+    volumes:
+      - type: bind
+        source: ${FRACTO_TILE_SOURCE_HOST_DIR:?Set FRACTO_TILE_SOURCE_HOST_DIR to the EC2 tile directory}
+        target: /mnt/fracto-tile-source
+        read_only: true
+        bind:
+          create_host_path: false

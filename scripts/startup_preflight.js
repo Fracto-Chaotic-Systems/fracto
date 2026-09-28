@@ -7,6 +7,105 @@ import {ALL_SERVICES, SERVICE_NAME_UI} from '../constants.js'
 const ROOT_DIRECTORY = path.join(import.meta.dirname, '..')
 const DATABASE_CONNECT_TIMEOUT_MS = 5000
 
+/** Validates the local tile mount and its compiled-index pairing before startup. */
+export const validate_local_tile_source = async () => {
+   if (process.env.FRACTO_TILE_SOURCE_MODE !== 'local') return null
+   const {TILE_SOURCE_DIRECTORY, TILE_SOURCE_GENERATION} =
+      await import('../sdk/FractoTilePaths.js')
+   const {validate_tile_index_cache} =
+      await import('../sdk/FractoTileIndexCache.js')
+   const {validate_tile_source_release} =
+      await import('../sdk/FractoTileSource.js')
+   const {read_source_tile, tile_source_path} =
+      await import('../sdk/FractoTileSource.js')
+
+   let source_stats
+   try {
+      fs.accessSync(TILE_SOURCE_DIRECTORY, fs.constants.R_OK | fs.constants.X_OK)
+      source_stats = fs.statSync(TILE_SOURCE_DIRECTORY)
+   } catch {
+      throw new Error(
+         'FRACTO_TILE_SOURCE_DIR is missing or not readable or searchable; verify the mount and grant the service user read and directory-search permissions',
+      )
+   }
+   if (!source_stats.isDirectory()) {
+      throw new Error('FRACTO_TILE_SOURCE_DIR must point to a directory')
+   }
+
+   const level_directories = fs.readdirSync(TILE_SOURCE_DIRECTORY, {withFileTypes: true})
+      .filter(entry => entry.isDirectory() && /^L\d{2}$/.test(entry.name))
+   if (!level_directories.length) {
+      throw new Error('Tile source layout is invalid: expected level directories named LNN')
+   }
+   for (const entry of level_directories) {
+      try {
+         fs.accessSync(
+            path.join(TILE_SOURCE_DIRECTORY, entry.name),
+            fs.constants.R_OK | fs.constants.X_OK,
+         )
+      } catch {
+         throw new Error(`Tile source directory ${entry.name} is not readable/searchable by the service user`)
+      }
+   }
+
+   let index
+   try {
+      index = validate_tile_index_cache()
+   } catch (error) {
+      throw new Error(`Compiled tile index preflight failed: ${error.message}`)
+   }
+   try {
+      validate_tile_source_release({
+         source_directory: TILE_SOURCE_DIRECTORY,
+         source_generation: TILE_SOURCE_GENERATION,
+         index_metadata: index.metadata,
+      })
+   } catch (error) {
+      throw new Error(`Tile source/index release preflight failed: ${error.message}`)
+   }
+
+   const representative_path = tile_source_path(
+      TILE_SOURCE_DIRECTORY,
+      index.representative_short_code,
+   )
+   try {
+      fs.accessSync(representative_path, fs.constants.R_OK)
+   } catch (error) {
+      if (error.code !== 'ENOENT') {
+         throw new Error(
+            `Indexed representative tile ${index.representative_short_code} is not readable by the service user`,
+         )
+      }
+      const level_directory = `L${String(index.representative_short_code.length).padStart(2, '0')}`
+      throw new Error(
+         `Tile source is missing indexed representative tile ${index.representative_short_code} under ${level_directory}`,
+      )
+   }
+
+   let representative_tile
+   try {
+      representative_tile = read_source_tile(TILE_SOURCE_DIRECTORY, index.representative_short_code)
+   } catch (error) {
+      throw new Error(
+         `Indexed representative tile ${index.representative_short_code} cannot be decoded (${error.kind || 'invalid tile data'})`,
+      )
+   }
+   if (!Array.isArray(representative_tile) || representative_tile.length !== 256 ||
+      !Array.isArray(representative_tile[0]) || representative_tile[0].length !== 256 ||
+      !Array.isArray(representative_tile[0][0]) || representative_tile[0][0].length !== 2) {
+      throw new Error(`Indexed representative tile ${index.representative_short_code} has an invalid tile-data shape`)
+   }
+
+   return {
+      source_generation: TILE_SOURCE_GENERATION,
+      packet_count: index.metadata.packet_count,
+      representative_short_code: index.representative_short_code,
+   }
+}
+
+// Retain the old helper name for scripts and integrations that used it.
+export const validate_local_tile_release_pairing = validate_local_tile_source
+
 const database_options = () => {
    const config_path = path.join(ROOT_DIRECTORY, 'config', 'mysql.json')
    if (!fs.existsSync(config_path)) {
@@ -106,6 +205,11 @@ export const validate_startup = async () => {
 
    if (errors.length) {
       throw new Error(`Startup preflight failed:\n- ${errors.join('\n- ')}`)
+   }
+   try {
+      await validate_local_tile_source()
+   } catch (error) {
+      throw new Error(`Startup preflight failed:\n- Local tile source/index release: ${error.message}`)
    }
    try {
       const database = await validate_database()

@@ -46,7 +46,13 @@ const result = FractoFastCalc.calc(point.re, point.im);
 - `FractoCoverageUtils.js` initializes and queries tile coverage.
 - `FractoTileData.js` loads manifests and packets, selects tiles in scope, and fills raster buffers.
 - `FractoTileCache.js` retrieves and manages locally cached tile files.
-- `FractoTileIndexCache.js` builds and loads the compiled tile-index cache used at startup.
+- `FractoTileSource.js` resolves and decodes authoritative tiles from a local
+  `L<two-digit-level>/<short-code>.gz` source tree and validates the paired
+  schema-2 release manifest for local-source deployments.
+- `FractoTileSourceIndex.js` verifies exact equality between the compiled
+  index short-code set and the `.gz` filenames in the local tile corpus before
+  a release manifest can certify the pairing.
+- `FractoTileIndexCache.js` builds, validates, and loads the compiled tile-index cache used at startup. Local-source index metadata also records its paired source-generation identifier.
 - `utils/StreamJson.js` streams JSON data from disk.
 
 ### Orbital pipeline contracts

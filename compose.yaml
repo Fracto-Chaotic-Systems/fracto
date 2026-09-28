@@ -20,12 +20,12 @@ services:
       FRACTO_AUTH_SECURE_COOKIES: ${FRACTO_AUTH_SECURE_COOKIES:-false}
       FRACTO_BOOTSTRAP_ADMIN_CONFIRM: ${FRACTO_BOOTSTRAP_ADMIN_CONFIRM:-}
     ports:
-      - "3001:3001"
-      - "3002:3002"
-      - "3003:3003"
-      - "3004:3004"
-      - "3005:3005"
-      - "3006:3006"
+      - "127.0.0.1:3001:3001"
+      - "127.0.0.1:3002:3002"
+      - "127.0.0.1:3003:3003"
+      - "127.0.0.1:3004:3004"
+      - "127.0.0.1:3005:3005"
+      - "127.0.0.1:3006:3006"
     volumes:
       - ./config:/app/config:ro
       - fracto-tile-data:/var/lib/fracto/tiles

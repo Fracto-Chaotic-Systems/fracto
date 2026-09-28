@@ -72,12 +72,17 @@ const cleanup_old_logs = () => {
 }
 
 const ensure_runtime_directories = () => {
-   [
-      TILE_DATA_DIRECTORY,
+   const runtime_directories = [
       TILE_INDEX_ROOT,
       path.join(import.meta.dirname, ASSETS_DIRECTORY),
       path.join(import.meta.dirname, LOGS_DIRECTORY),
-   ].forEach(directory => {
+   ]
+   // Local-source mode reads authoritative tiles directly and must not create
+   // or write into the persistent demand-cache directory.
+   if (process.env.FRACTO_TILE_SOURCE_MODE !== 'local') {
+      runtime_directories.push(TILE_DATA_DIRECTORY)
+   }
+   runtime_directories.forEach(directory => {
       fs.mkdirSync(directory, {recursive: true})
    })
    cleanup_old_logs()
