@@ -119,6 +119,13 @@ requested; local mode has no network fallback. If a manifest already exists,
 first-run preserves it; the full-stack preflight checks its source identifier,
 index fingerprint, tile count, and representative tile.
 
+The EC2 Compose overlay maps `host.docker.internal` to Docker's host gateway
+for Linux Engine. This supports MySQL running on the EC2 host when
+`FRACTO_MYSQL_HOST` is unset. For a separately hosted database, set
+`FRACTO_MYSQL_HOST` to its reachable private DNS name or address. A host-local
+MySQL server must listen on an interface reachable from Docker and its account
+and firewall rules must allow the container connection.
+
 For subsequent releases, use:
 
 ```sh

@@ -1,5 +1,7 @@
 services:
   fracto:
+    extra_hosts:
+      - host.docker.internal:host-gateway
     environment:
       FRACTO_TILE_SOURCE_MODE: local
       FRACTO_TILE_SOURCE_DIR: /mnt/fracto-tile-source

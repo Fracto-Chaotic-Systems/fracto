@@ -46,6 +46,7 @@ test('EC2 deployment waits for full-stack readiness and has read-only local tile
    assert.match(compose, /127\.0\.0\.1:3001:3001/)
    assert.match(dockerfile, /readyz/)
    assert.match(local_tiles, /FRACTO_TILE_SOURCE_MODE: local/)
+   assert.match(local_tiles, /host\.docker\.internal:host-gateway/)
    assert.match(local_tiles, /target: \/mnt\/fracto-tile-source\s+read_only: true/)
    assert.match(deploy, /scripts\/startup_preflight\.js/)
    assert.match(deploy, /up -d --wait --wait-timeout 300 fracto/)
