@@ -24,6 +24,12 @@ const prepare_fixture = () => {
    const index_source_directory = path.join(index_directory, 'manifest', 'indexed')
    fs.mkdirSync(index_source_directory, {recursive: true})
    fs.mkdirSync(path.join(source_directory, 'L02'), {recursive: true})
+   const source_manifest_directory = path.join(source_directory, 'manifest')
+   fs.mkdirSync(source_manifest_directory, {recursive: true})
+   fs.writeFileSync(path.join(source_manifest_directory, 'indexed.csv'), 'short_code\n12\n')
+   fs.writeFileSync(path.join(source_manifest_directory, 'interior.csv'), 'short_code\n13\n')
+   fs.writeFileSync(path.join(source_manifest_directory, 'blank.csv'), 'short_code\n14\n')
+   fs.writeFileSync(path.join(source_manifest_directory, 'needs_update.csv'), 'short_code\n15\n')
    fs.writeFileSync(
       path.join(index_source_directory, 'tile_packet_bin_indexed_level_02.json'),
       JSON.stringify({
@@ -73,6 +79,33 @@ const local_environment = {
    FRACTO_TILE_SOURCE_GENERATION: 'test-generation-1',
    FRACTO_TILE_INDEX_DIR: index_directory,
 }
+
+test('local tile-index preparation reads all coverage listings from disk', () => {
+   const result = run_node([
+      '--input-type=module',
+      '-e',
+      "const {FractoIndexedTiles}=await import('./sdk/FractoIndexedTiles.js'); const names=['indexed','interior','blank','needs_update']; const values={}; for (const name of names) values[name]=await new Promise(resolve=>FractoIndexedTiles.load_short_codes(name,resolve)); console.log('LOCAL_LISTINGS:'+JSON.stringify(values))",
+   ], local_environment)
+   assert.equal(result.status, 0, result.stderr)
+   const output = result.stdout.split('\n').find(line => line.startsWith('LOCAL_LISTINGS:'))
+   assert.deepEqual(JSON.parse(output.slice('LOCAL_LISTINGS:'.length)), {
+      indexed: ['12'],
+      interior: ['13'],
+      blank: ['14'],
+      needs_update: ['15'],
+   })
+})
+
+test('local tile-index preparation fails when the listing is absent instead of using the network', () => {
+   const result = run_node([
+      '--input-type=module',
+      '-e',
+      "const {FractoIndexedTiles}=await import('./sdk/FractoIndexedTiles.js'); FractoIndexedTiles.load_short_codes('absent',()=>console.log('UNEXPECTED_CALLBACK'))",
+   ], local_environment)
+   assert.notEqual(result.status, 0)
+   assert.match(result.stderr, /Unable to read local tile listing manifest[\\/]absent\.csv/)
+   assert.doesNotMatch(result.stdout, /UNEXPECTED_CALLBACK/)
+})
 
 test('dedicated command validates the source and compiled index before service start', () => {
    const result = run_node(

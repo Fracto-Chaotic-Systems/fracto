@@ -377,9 +377,10 @@ starting the service. The normal `npm start` path is unchanged.
 npm run tiles:index
 ```
 
-`refresh_tile_index.js` asks the configured Fracto source for the current
-`/manifest/indexed.csv` short-code list, builds packets and publishes a complete
-generation atomically:
+`refresh_tile_index.js` rebuilds the short-code index and publishes a complete
+generation atomically. In local-source mode it reads
+`${FRACTO_TILE_SOURCE_DIR}/manifest/indexed.csv` directly; remote-cache mode
+continues to fetch `/manifest/indexed.csv` from the configured Fracto source:
 
 ```powershell
 npm run tiles:refresh
@@ -406,10 +407,14 @@ previous generation, so it remains available for rollback.
 Refresh and selection both use `REFRESH.lock`; if a lock remains after a
 process stops, confirm no index operation is active before removing that lock.
 
-For a local tile-source release, set `FRACTO_TILE_SOURCE_MODE=local` and
-`FRACTO_TILE_SOURCE_GENERATION` before compiling the index. The twice-daily
-indexed manifest is trusted as generated from the authoritative file listing;
-the release preparation does not enumerate the local corpus. After selecting
+For a local tile-source release, set `FRACTO_TILE_SOURCE_MODE=local`,
+`FRACTO_TILE_SOURCE_DIR`, and `FRACTO_TILE_SOURCE_GENERATION` before compiling
+the index. The twice-daily `${FRACTO_TILE_SOURCE_DIR}/manifest/indexed.csv`
+listing is read directly and trusted as generated from the authoritative file
+listing; the release preparation does not enumerate the local corpus. The same
+loader reads `blank.csv`, `interior.csv`, and `needs_update.csv` from that
+manifest directory for coverage-cache generation. EC2 preflight requires all
+four files. A missing local listing fails without an HTTP fallback. After selecting
 the completed index generation, `npm run tiles:source-release` checks and
 decodes one representative tile, then writes schema-3
 `fracto-tile-release.json` with the dataset/index ID, compiled fingerprint,

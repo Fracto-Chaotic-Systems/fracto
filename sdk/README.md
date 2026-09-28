@@ -45,7 +45,14 @@ const result = FractoFastCalc.calc(point.re, point.im);
 - `FractoIndexedTiles.js` defines tile-set names and retrieves indexed tile information.
 - `FractoCoverageUtils.js` initializes and queries tile coverage.
 - `FractoTileData.js` loads manifests and packets, selects tiles in scope, and fills raster buffers.
-- `FractoTileCache.js` retrieves and manages locally cached tile files.
+- `FractoTileCache.js` retrieves and manages tile files. Remote-cache mode
+  uses the configured HTTP tile origin and local disk cache; local-source mode
+  reads from the mounted filesystem and does not load that network
+  configuration.
+- `FractoIndexedTiles.js` loads tile short-code CSV listings. Local-source mode
+  streams them from `FRACTO_TILE_SOURCE_DIR/manifest/` (including `indexed`,
+  `interior`, and `blank` listings); remote-cache mode retains the configured
+  HTTP listing source.
 - `FractoTileSource.js` resolves and decodes authoritative tiles from a local
   `L<two-digit-level>/<short-code>.gz` source tree and validates the paired
   release manifest for local-source deployments. New schema-3 manifests bind

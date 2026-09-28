@@ -105,9 +105,13 @@ fast-forwarded only, and tracked local changes or divergent histories stop the
 workflow.
 
 On first install, the workflow builds the production image and runs the
-non-destructive database bootstrap/migration command. If the tile directory
+non-destructive database bootstrap/migration command. The index refresh reads
+trusted short-code listings directly from
+`$FRACTO_TILE_SOURCE_HOST_DIR/manifest/`. The deployment preflight requires
+`indexed.csv`, `blank.csv`, `interior.csv`, and `needs_update.csv`, which the
+index refresh uses to build the compiled index and coverage cache. If the tile directory
 does not yet have `fracto-tile-release.json`, it refreshes a candidate index
-from the trusted indexed manifest, decodes one representative local tile, and
+from that local listing, decodes one representative local tile, and
 records the source generation and compiled index fingerprint in that manifest.
 It does not enumerate the corpus, avoiding a disruptive scan of tens of
 millions of files. Other missing or malformed tiles are reported when

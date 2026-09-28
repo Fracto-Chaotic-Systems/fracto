@@ -1,4 +1,3 @@
-import network from "../config/network.json" with {type: "json"};
 import zlib from "zlib";
 import path from "path";
 import fs from "fs";
@@ -20,6 +19,7 @@ if (TILE_SOURCE_MODE !== 'local' && !fs.existsSync(TILES_DIR)) {
 }
 let CACHED_TILES = {}
 const IN_FLIGHT_DOWNLOADS = new Map()
+let REMOTE_TILE_BASE_URL_PROMISE = null
 const CACHE_STATS = {
    requests: 0,
    memory_hits: 0,
@@ -47,6 +47,20 @@ const MIN_CACHE = 750
 const MAX_CACHE = 1250
 const MIN_FREE_BYTES = Number(process.env.FRACTO_TILE_MIN_FREE_BYTES || 1024 ** 3)
 const CACHE_READ_ONLY = process.env.FRACTO_TILE_CACHE_READ_ONLY === 'true'
+
+const remote_tile_url = async remote_filepath => {
+   if (!REMOTE_TILE_BASE_URL_PROMISE) {
+      REMOTE_TILE_BASE_URL_PROMISE = import('../config/network.json', {with: {type: 'json'}})
+         .then(({default: network}) => {
+            const base_url = network['fracto-prod']
+            if (typeof base_url !== 'string' || !base_url.trim()) {
+               throw new Error('config/network.json must provide a non-empty fracto-prod URL for remote-cache mode')
+            }
+            return base_url.replace(/\/$/, '')
+         })
+   }
+   return `${await REMOTE_TILE_BASE_URL_PROMISE}/${remote_filepath}`
+}
 
 if (!Number.isFinite(MIN_FREE_BYTES) || MIN_FREE_BYTES < 0) {
    throw new Error('FRACTO_TILE_MIN_FREE_BYTES must be a non-negative number')
@@ -79,11 +93,11 @@ const dir_from_short_code = (short_code) => {
    return level_dir;
 }
 
-const https_get = (remote_filepath, localSavePath) => {
+const https_get = async (remote_filepath, localSavePath) => {
+   const remoteGzUrl = await remote_tile_url(remote_filepath)
    return new Promise((resolve, reject) => {
       const temporaryPath = `${localSavePath}.tmp-${process.pid}-${Date.now()}`
       const fileStream = fs.createWriteStream(temporaryPath, {flags: 'wx'});
-      const remoteGzUrl = `${network["fracto-prod"]}/${remote_filepath}`
       https.get(remoteGzUrl, (response) => {
          if (response.statusCode !== 200) {
             response.resume()
@@ -119,9 +133,9 @@ const https_get = (remote_filepath, localSavePath) => {
    })
 }
 
-const https_load = (remote_filepath) => {
+const https_load = async remote_filepath => {
+   const remoteGzUrl = await remote_tile_url(remote_filepath)
    return new Promise((resolve, reject) => {
-      const remoteGzUrl = `${network["fracto-prod"]}/${remote_filepath}`
       https.get(remoteGzUrl, (response) => {
          if (response.statusCode !== 200) {
             response.resume()

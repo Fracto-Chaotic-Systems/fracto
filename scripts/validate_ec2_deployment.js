@@ -4,6 +4,18 @@ import {spawnSync} from 'node:child_process'
 
 const ROOT_DIRECTORY = path.resolve(import.meta.dirname, '..')
 const SOURCE_TARGET = '/mnt/fracto-tile-source'
+export const REQUIRED_LOCAL_TILE_LISTINGS = ['indexed', 'blank', 'interior', 'needs_update']
+export const validate_local_tile_listings = source_directory => {
+   for (const listing_name of REQUIRED_LOCAL_TILE_LISTINGS) {
+      const listing_path = path.join(source_directory, 'manifest', `${listing_name}.csv`)
+      try {
+         fs.accessSync(listing_path, fs.constants.R_OK)
+         if (!fs.statSync(listing_path).isFile()) throw new Error('not a file')
+      } catch {
+         throw new Error(`The local tile corpus must include a readable manifest/${listing_name}.csv listing`)
+      }
+   }
+}
 
 const require_value = (environment, name) => {
    const value = environment[name]
@@ -188,6 +200,7 @@ const validate_host_source = source_directory => {
    } catch {
       throw new Error('FRACTO_TILE_SOURCE_HOST_DIR must name an existing readable/searchable corpus with LNN directories')
    }
+   validate_local_tile_listings(source_directory)
 }
 
 const main = () => {

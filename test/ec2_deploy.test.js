@@ -1,7 +1,14 @@
 import assert from 'node:assert/strict'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 import test from 'node:test'
 
-import {validate_ec2_compose_model} from '../scripts/validate_ec2_deployment.js'
+import {
+   REQUIRED_LOCAL_TILE_LISTINGS,
+   validate_ec2_compose_model,
+   validate_local_tile_listings,
+} from '../scripts/validate_ec2_deployment.js'
 
 const valid_model = () => ({
    services: {
@@ -56,4 +63,23 @@ test('EC2 Compose validation rejects a writable tile mount and an invalid genera
    const invalid_generation = valid_model()
    invalid_generation.services.fracto.environment.FRACTO_TILE_SOURCE_GENERATION = '../dataset'
    assert.throws(() => validate_ec2_compose_model(invalid_generation), /stable 1-128 character identifier/)
+})
+
+test('local tile source preflight requires all listings consumed during index refresh', () => {
+   const source_root = fs.mkdtempSync(path.join(os.tmpdir(), 'fracto-local-source-'))
+   try {
+      fs.mkdirSync(path.join(source_root, 'L02'))
+      fs.mkdirSync(path.join(source_root, 'manifest'))
+      REQUIRED_LOCAL_TILE_LISTINGS.forEach(name => {
+         fs.writeFileSync(path.join(source_root, 'manifest', `${name}.csv`), 'short_code\n12\n')
+      })
+      assert.equal(validate_local_tile_listings(source_root), undefined)
+      fs.unlinkSync(path.join(source_root, 'manifest', 'needs_update.csv'))
+      assert.throws(
+         () => validate_local_tile_listings(source_root),
+         /readable manifest\/needs_update\.csv listing/,
+      )
+   } finally {
+      fs.rmSync(source_root, {recursive: true, force: true})
+   }
 })

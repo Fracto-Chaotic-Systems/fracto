@@ -1,10 +1,24 @@
-import network from "./../config/network.json" with {type: "json"};
-
+import fs from 'node:fs'
+import path from 'node:path'
 import fetch from 'node-fetch';
 import csv from 'csv-parser';
+import {TILE_SOURCE_DIRECTORY, TILE_SOURCE_MODE} from './FractoTilePaths.js'
 
-const URL_BASE = network["fracto-prod"];
-// const SERVER_BASE = network.fracto_server_url;
+let REMOTE_TILE_BASE_URL_PROMISE = null
+
+const get_remote_tile_base_url = () => {
+   if (!REMOTE_TILE_BASE_URL_PROMISE) {
+      REMOTE_TILE_BASE_URL_PROMISE = import('../config/network.json', {with: {type: 'json'}})
+         .then(({default: network}) => {
+            const base_url = network['fracto-prod']
+            if (typeof base_url !== 'string' || !base_url.trim()) {
+               throw new Error('config/network.json must provide a non-empty fracto-prod URL for remote index listings')
+            }
+            return base_url.replace(/\/$/, '')
+         })
+   }
+   return REMOTE_TILE_BASE_URL_PROMISE
+}
 
 export const TILE_SET_INDEXED = 'indexed'
 export const TILE_SET_READY = 'ready'
@@ -57,6 +71,35 @@ async function streamCsvFromUrl(url, cb) {
       console.error('Fetch operation failed:', error);
       cb([])
    }
+}
+
+function streamCsvFromFile(filepath, relative_path, cb) {
+   const results = []
+   const file_stream = fs.createReadStream(filepath)
+   const csv_stream = file_stream.pipe(csv())
+   let failed = false
+   csv_stream.on('data', data => {
+      if (typeof data.short_code === 'string' && data.short_code.trim()) {
+         results.push(data.short_code.trim())
+      }
+      if (results.length && results.length % 1000000 === 0) {
+         console.log(`[${results.length}] from local ${relative_path}`)
+      }
+   })
+   csv_stream.once('end', () => {
+      console.log(`Read ${results.length} short codes from local ${relative_path}`)
+      cb(results)
+   })
+   const fail = error => {
+      if (failed) return
+      failed = true
+      console.error(`Unable to read local tile listing ${relative_path}: ${error.message}`)
+      process.exitCode = 1
+      file_stream.destroy()
+      csv_stream.destroy()
+   }
+   file_stream.once('error', fail)
+   csv_stream.once('error', fail)
 }
 
 export class FractoIndexedTiles {
@@ -112,9 +155,27 @@ export class FractoIndexedTiles {
    }
 
    static load_short_codes = (tile_set_name, cb) => {
-      const directory_url = `${URL_BASE}/manifest/${tile_set_name}.csv`;
-      streamCsvFromUrl(directory_url, result => {
-         cb(result)
+      if (typeof tile_set_name !== 'string' || !/^[a-z0-9_-]+$/i.test(tile_set_name)) {
+         throw new Error('Tile listing name must contain only letters, digits, underscores, or hyphens')
+      }
+      if (typeof cb !== 'function') {
+         throw new Error('A short-code callback is required')
+      }
+      if (TILE_SOURCE_MODE === 'local') {
+         const relative_path = path.join('manifest', `${tile_set_name}.csv`)
+         streamCsvFromFile(
+            path.join(TILE_SOURCE_DIRECTORY, relative_path),
+            relative_path,
+            cb,
+         )
+         return
+      }
+      get_remote_tile_base_url().then(base_url => {
+         const listing_url = `${base_url}/manifest/${encodeURIComponent(tile_set_name)}.csv`
+         streamCsvFromUrl(listing_url, cb)
+      }).catch(error => {
+         console.error('Unable to resolve remote tile listing URL:', error.message)
+         cb([])
       })
    }
 
