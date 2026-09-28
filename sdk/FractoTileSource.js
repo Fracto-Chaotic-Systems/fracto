@@ -3,8 +3,7 @@ import path from 'node:path'
 import zlib from 'node:zlib'
 
 export const TILE_SOURCE_RELEASE_MANIFEST = 'fracto-tile-release.json'
-export const TILE_SOURCE_RELEASE_SCHEMA = 2
-export const TILE_SOURCE_INDEX_MATCH_METHOD = 'exact-short-code-set-v1'
+export const TILE_SOURCE_RELEASE_SCHEMA = 3
 
 export class TileSourceError extends Error {
    constructor(short_code, kind) {
@@ -21,6 +20,7 @@ export const validate_tile_source_release = ({
    source_directory,
    source_generation,
    index_metadata,
+   representative_short_code,
 }) => {
    const manifest_path = path.join(source_directory, TILE_SOURCE_RELEASE_MANIFEST)
    let manifest
@@ -32,7 +32,8 @@ export const validate_tile_source_release = ({
       )
    }
 
-   if (manifest.schema_version !== TILE_SOURCE_RELEASE_SCHEMA) {
+   if (manifest.schema_version !== 2 &&
+      manifest.schema_version !== TILE_SOURCE_RELEASE_SCHEMA) {
       throw new Error(
          `Unsupported tile source release manifest schema ${manifest.schema_version}`,
       )
@@ -54,11 +55,15 @@ export const validate_tile_source_release = ({
          'Tile source release tile count does not match the compiled tile index',
       )
    }
-   if (manifest.tile_inventory?.method !== TILE_SOURCE_INDEX_MATCH_METHOD ||
-      manifest.tile_inventory?.verified_tile_count !== index_metadata?.tile_count) {
-      throw new Error(
-         'Tile source release manifest does not certify an exact local-source/index inventory match',
-      )
+   if (manifest.schema_version === 2 &&
+      (manifest.tile_inventory?.method !== 'exact-short-code-set-v1' ||
+       manifest.tile_inventory?.verified_tile_count !== index_metadata?.tile_count)) {
+      throw new Error('Legacy tile source release manifest has an invalid inventory attestation')
+   }
+   if (manifest.schema_version === TILE_SOURCE_RELEASE_SCHEMA &&
+      (manifest.tile_validation?.method !== 'representative-tile-shape-v1' ||
+       manifest.tile_validation?.short_code !== representative_short_code)) {
+      throw new Error('Tile source release manifest has an invalid representative tile validation')
    }
 
    return manifest

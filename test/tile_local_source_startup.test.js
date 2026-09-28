@@ -233,7 +233,7 @@ test('release manifest command refuses to replace a published manifest', () => {
    assert.match(result.stderr, /already exists/)
 })
 
-test('release manifest refuses an index that omits local corpus tiles', () => {
+test('release manifest creation does not scan the corpus inventory', () => {
    const extra_tile_source = path.join(temporary_root, 'source-with-extra-tile')
    fs.cpSync(source_directory, extra_tile_source, {recursive: true})
    fs.rmSync(path.join(extra_tile_source, 'fracto-tile-release.json'))
@@ -247,9 +247,16 @@ test('release manifest refuses an index that omits local corpus tiles', () => {
       ...local_environment,
       FRACTO_TILE_SOURCE_DIR: extra_tile_source,
    })
-   assert.notEqual(result.status, 0)
-   assert.match(result.stderr, /Local corpus tile 13 in L02 is not present in the compiled index/)
-   assert.equal(fs.existsSync(path.join(extra_tile_source, 'fracto-tile-release.json')), false)
+   assert.equal(result.status, 0, result.stderr)
+   const manifest = JSON.parse(fs.readFileSync(
+      path.join(extra_tile_source, 'fracto-tile-release.json'),
+      'utf8',
+   ))
+   assert.equal(manifest.schema_version, 3)
+   assert.deepEqual(manifest.tile_validation, {
+      method: 'representative-tile-shape-v1',
+      short_code: tile_short_code,
+   })
 })
 
 test('dedicated command fails actionably when the source directory is missing', () => {

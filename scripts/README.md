@@ -307,9 +307,10 @@ without the root supervisor.
 
   First-run initializes or migrates the database. If the host tile corpus has
   no `fracto-tile-release.json`, it builds a candidate compiled index from the
-  configured indexed manifest, compares every indexed code with the local tile
-  inventory, and writes the pairing manifest only after an exact match. It
-  then runs `startup_preflight.js` inside the production image and starts the
+  configured indexed manifest, decodes one representative local tile, and
+  writes a source/index binding manifest. It does not enumerate the corpus.
+  Missing tiles are reported when requested. It then runs
+  `startup_preflight.js` inside the production image and starts the
   single `fracto` container; that container supervises the complete six-port
   application. It does not invoke the standalone tile-service launcher.
   If a pairing manifest already exists, first-run preserves it and validates
@@ -406,28 +407,28 @@ Refresh and selection both use `REFRESH.lock`; if a lock remains after a
 process stops, confirm no index operation is active before removing that lock.
 
 For a local tile-source release, set `FRACTO_TILE_SOURCE_MODE=local` and
-`FRACTO_TILE_SOURCE_GENERATION` before compiling the index. Refresh still gets
-short codes from the configured remote manifest; the local-source settings do
-not make it scan local tile files. A successful refresh is not proof of a
-match. Once the completed index generation is selected and local tile files
-are available, run `npm run tiles:source-release`. It compares the complete
-short-code set from the compiled packets with `.gz` filenames under every
-`LNN` directory and refuses to write the release manifest if either side has
-missing or extra tiles. This one-time comparison is streaming by level and
-uses memory proportional to the largest level directory. The schema-2
-`fracto-tile-release.json` records the dataset/index ID, compiled fingerprint,
-tile count, and exact-inventory attestation. Create it before making the source
-root read-only; never edit an existing manifest in place. Startup rejects an
-absent, old-schema, or mismatched binding.
+`FRACTO_TILE_SOURCE_GENERATION` before compiling the index. The twice-daily
+indexed manifest is trusted as generated from the authoritative file listing;
+the release preparation does not enumerate the local corpus. After selecting
+the completed index generation, `npm run tiles:source-release` checks and
+decodes one representative tile, then writes schema-3
+`fracto-tile-release.json` with the dataset/index ID, compiled fingerprint,
+tile count, and representative short code. Startup validates this binding and
+the representative tile. Other missing, unreadable, or malformed tiles fail
+when requested; local mode does not fall back to the network. Create the
+manifest before making the source root read-only, and never edit a published
+manifest in place. Existing schema-2 manifests with exact-inventory
+attestations remain supported.
 
 ### `create_tile_source_release_manifest.js`
 
 Creates the source-side pairing manifest for a local tile corpus. It
 uses `FRACTO_TILE_SOURCE_DIR`, `FRACTO_TILE_SOURCE_GENERATION`, and the
 compiled index selected by `FRACTO_TILE_INDEX_DIR` or
-`FRACTO_TILE_INDEX_GENERATION_DIR`. It verifies exact equality between indexed
-short codes and local tile filenames before writing. It refuses to overwrite
-an existing manifest, so each dataset/index pairing is certified once.
+`FRACTO_TILE_INDEX_GENERATION_DIR`. It decodes the compiled index's
+representative tile and records its short code with the source generation and
+index fingerprint. It does not scan the corpus; absent or invalid tiles are
+handled when requested. It refuses to overwrite an existing manifest.
 
 ### `cold_boot.bat`
 

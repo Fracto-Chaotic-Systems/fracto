@@ -109,6 +109,19 @@ secret manager or a protected file outside the repository; do not save it in
 Git or shell history. Existing sessions reload the updated user state on their
 next session or protected-route check; signing out and in also refreshes the UI.
 
+For example, on a Linux production host, save the JSON input in a protected
+file outside the checkout (for example, `/run/fracto-secrets/bootstrap-admin.json`)
+and pass it to the running application container through standard input:
+
+```sh
+docker compose -f compose.yaml exec -T fracto npm run auth:bootstrap-admin \
+  < /run/fracto-secrets/bootstrap-admin.json
+```
+
+The file should be readable only by the installer and removed securely after
+the operation. This command keeps the JSON values out of the command line and
+shell history; run it against the already-running deployment and its database.
+
 ### Qualified installer procedure
 
 Only an installer authorized to administer the deployment and its identity

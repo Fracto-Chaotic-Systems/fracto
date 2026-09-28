@@ -48,10 +48,10 @@ const result = FractoFastCalc.calc(point.re, point.im);
 - `FractoTileCache.js` retrieves and manages locally cached tile files.
 - `FractoTileSource.js` resolves and decodes authoritative tiles from a local
   `L<two-digit-level>/<short-code>.gz` source tree and validates the paired
-  schema-2 release manifest for local-source deployments.
-- `FractoTileSourceIndex.js` verifies exact equality between the compiled
-  index short-code set and the `.gz` filenames in the local tile corpus before
-  a release manifest can certify the pairing.
+  release manifest for local-source deployments. New schema-3 manifests bind
+  the configured source generation to the compiled index fingerprint and a
+  representative tile check; legacy schema-2 exact-inventory manifests remain
+  supported. Other missing or invalid tiles are handled when requested.
 - `FractoTileIndexCache.js` builds, validates, and loads the compiled tile-index cache used at startup. Local-source index metadata also records its paired source-generation identifier.
 - `utils/StreamJson.js` streams JSON data from disk.
 

@@ -54,16 +54,6 @@ export const validate_local_tile_source = async () => {
    } catch (error) {
       throw new Error(`Compiled tile index preflight failed: ${error.message}`)
    }
-   try {
-      validate_tile_source_release({
-         source_directory: TILE_SOURCE_DIRECTORY,
-         source_generation: TILE_SOURCE_GENERATION,
-         index_metadata: index.metadata,
-      })
-   } catch (error) {
-      throw new Error(`Tile source/index release preflight failed: ${error.message}`)
-   }
-
    const representative_path = tile_source_path(
       TILE_SOURCE_DIRECTORY,
       index.representative_short_code,
@@ -94,6 +84,17 @@ export const validate_local_tile_source = async () => {
       !Array.isArray(representative_tile[0]) || representative_tile[0].length !== 256 ||
       !Array.isArray(representative_tile[0][0]) || representative_tile[0][0].length !== 2) {
       throw new Error(`Indexed representative tile ${index.representative_short_code} has an invalid tile-data shape`)
+   }
+
+   try {
+      validate_tile_source_release({
+         source_directory: TILE_SOURCE_DIRECTORY,
+         source_generation: TILE_SOURCE_GENERATION,
+         index_metadata: index.metadata,
+         representative_short_code: index.representative_short_code,
+      })
+   } catch (error) {
+      throw new Error(`Tile source/index release preflight failed: ${error.message}`)
    }
 
    return {

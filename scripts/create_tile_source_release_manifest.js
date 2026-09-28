@@ -2,7 +2,6 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import {
-   TILE_SOURCE_INDEX_MATCH_METHOD,
    TILE_SOURCE_RELEASE_MANIFEST,
    TILE_SOURCE_RELEASE_SCHEMA,
    read_source_tile,
@@ -33,7 +32,6 @@ const create_release_manifest = async () => {
 
    const {TILE_SOURCE_DIRECTORY} = await import('../sdk/FractoTilePaths.js')
    const {validate_tile_index_cache} = await import('../sdk/FractoTileIndexCache.js')
-   const {verify_tile_source_index} = await import('../sdk/FractoTileSourceIndex.js')
 
    let source_stats
    try {
@@ -75,20 +73,14 @@ const create_release_manifest = async () => {
       )
    }
 
-   console.log('Comparing every indexed short code with the local tile-file inventory...')
-   const tile_inventory = verify_tile_source_index({
-      source_directory: TILE_SOURCE_DIRECTORY,
-      index_metadata: index.metadata,
-   })
-
    const manifest = {
       schema_version: TILE_SOURCE_RELEASE_SCHEMA,
       source_generation,
       index_fingerprint: index.metadata.fingerprint,
       index_tile_count: index.metadata.tile_count,
-      tile_inventory: {
-         method: TILE_SOURCE_INDEX_MATCH_METHOD,
-         verified_tile_count: tile_inventory.verified_tile_count,
+      tile_validation: {
+         method: 'representative-tile-shape-v1',
+         short_code: index.representative_short_code,
       },
       created_at: new Date().toISOString(),
    }
@@ -108,7 +100,8 @@ const create_release_manifest = async () => {
 create_release_manifest().then(manifest => {
    console.log(
       `Created ${TILE_SOURCE_RELEASE_MANIFEST} for source generation ${manifest.source_generation} ` +
-      `and index fingerprint ${manifest.index_fingerprint} (${manifest.tile_inventory.verified_tile_count} source/index tiles matched).`,
+      `and index fingerprint ${manifest.index_fingerprint}; representative tile ` +
+      `${manifest.tile_validation.short_code} decoded successfully.`,
    )
 }).catch(error => {
    console.error(`Tile source release preparation failed: ${error.message}`)

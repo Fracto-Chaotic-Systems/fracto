@@ -104,7 +104,7 @@ if [[ "$MODE" == "first-run" && ! -f "$SOURCE_DIRECTORY/fracto-tile-release.json
   echo "Building a candidate tile index from the configured indexed manifest..."
   "${COMPOSE[@]}" run --rm index-refresh
 
-  echo "Checking the complete local inventory and publishing its pairing manifest..."
+  echo "Checking a representative local tile and publishing its pairing manifest..."
   "${PREPARE_COMPOSE[@]}" run --rm --no-deps --entrypoint node fracto scripts/create_tile_source_release_manifest.js
 else
   echo "Preparing the database and applying pending migrations..."

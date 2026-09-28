@@ -107,12 +107,13 @@ workflow.
 On first install, the workflow builds the production image and runs the
 non-destructive database bootstrap/migration command. If the tile directory
 does not yet have `fracto-tile-release.json`, it refreshes a candidate index
-from the configured indexed manifest, then checks the complete tile filename
-inventory against the compiled index before creating that manifest. The exact
-inventory check can take a long time on a corpus of tens of millions of files.
-If a manifest already exists, first-run preserves it; the full-stack preflight
-checks that its source identifier, index fingerprint, and tile count still
-match.
+from the trusted indexed manifest, decodes one representative local tile, and
+records the source generation and compiled index fingerprint in that manifest.
+It does not enumerate the corpus, avoiding a disruptive scan of tens of
+millions of files. Other missing or malformed tiles are reported when
+requested; local mode has no network fallback. If a manifest already exists,
+first-run preserves it; the full-stack preflight checks its source identifier,
+index fingerprint, tile count, and representative tile.
 
 For subsequent releases, use:
 
@@ -130,9 +131,10 @@ preserved.
 
 If an install or update stops on validation, fix the reported configuration or
 deployment issue and rerun the same command. If the tile source/index pairing
-must change, use the documented release-preparation process to select a
-matching completed index and create a new exact-inventory attestation before
-deploying. Do not edit an existing release manifest by hand.
+must change, use the documented release-preparation process to select the
+intended completed index and create a new representative-tile attestation
+before deploying. The twice-daily indexed manifest is trusted as the available
+tile listing. Do not edit an existing release manifest by hand.
 
 ### Publish a tile release and rollback
 
@@ -194,9 +196,10 @@ docker compose --env-file .env --env-file "$CANDIDATE_ENV" \
   --entrypoint node fracto scripts/startup_preflight.js
 ```
 
-The manifest command checks every short code against the candidate `.gz` file
-inventory and refuses an existing manifest. Preflight validates its generation,
-fingerprint, tile count, and representative tile. The existing production
+The manifest command decodes the candidate index's representative `.gz` tile
+and refuses an existing manifest. It does not scan the full source tree.
+Preflight validates the generation, fingerprint, tile count, and representative
+tile. Other missing or invalid tiles fail at lookup. The existing production
 `CURRENT` and running application still use the previous index throughout this
 candidate preparation.
 

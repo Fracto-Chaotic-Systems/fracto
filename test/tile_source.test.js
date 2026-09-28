@@ -48,18 +48,22 @@ test('includes the source generation in local memory-cache identity', () => {
    )
 })
 
-test('binds a source generation to its exact compiled index fingerprint and tile count', () => {
+test('binds a source generation to its compiled index and representative tile validation', () => {
    const source_directory = path.join(temporary_root, 'paired-release')
    fs.mkdirSync(source_directory, {recursive: true})
-   const index_metadata = {fingerprint: 'a'.repeat(64), tile_count: 42}
+   const index_metadata = {
+      fingerprint: 'a'.repeat(64),
+      tile_count: 42,
+      representative_short_code: '12',
+   }
    const manifest = {
-      schema_version: 2,
+      schema_version: 3,
       source_generation: 'release-2026-09',
       index_fingerprint: index_metadata.fingerprint,
       index_tile_count: index_metadata.tile_count,
-      tile_inventory: {
-         method: 'exact-short-code-set-v1',
-         verified_tile_count: index_metadata.tile_count,
+      tile_validation: {
+         method: 'representative-tile-shape-v1',
+         short_code: '12',
       },
    }
    fs.writeFileSync(
@@ -71,12 +75,14 @@ test('binds a source generation to its exact compiled index fingerprint and tile
       source_directory,
       source_generation: 'release-2026-09',
       index_metadata,
+      representative_short_code: '12',
    }), manifest)
    assert.throws(
       () => validate_tile_source_release({
          source_directory,
          source_generation: 'release-2026-09',
          index_metadata: {...index_metadata, fingerprint: 'b'.repeat(64)},
+         representative_short_code: '12',
       }),
       /fingerprint does not match/,
    )
@@ -85,9 +91,35 @@ test('binds a source generation to its exact compiled index fingerprint and tile
          source_directory,
          source_generation: 'another-release',
          index_metadata,
+         representative_short_code: '12',
       }),
       /generation does not match/,
    )
+})
+
+test('continues to accept existing schema-2 exact-inventory release manifests', () => {
+   const source_directory = path.join(temporary_root, 'legacy-paired-release')
+   fs.mkdirSync(source_directory, {recursive: true})
+   const index_metadata = {fingerprint: 'c'.repeat(64), tile_count: 7}
+   const manifest = {
+      schema_version: 2,
+      source_generation: 'legacy-release',
+      index_fingerprint: index_metadata.fingerprint,
+      index_tile_count: index_metadata.tile_count,
+      tile_inventory: {
+         method: 'exact-short-code-set-v1',
+         verified_tile_count: index_metadata.tile_count,
+      },
+   }
+   fs.writeFileSync(
+      path.join(source_directory, 'fracto-tile-release.json'),
+      JSON.stringify(manifest),
+   )
+   assert.deepEqual(validate_tile_source_release({
+      source_directory,
+      source_generation: 'legacy-release',
+      index_metadata,
+   }), manifest)
 })
 
 test('requires a generation identifier in local-source mode', () => {
