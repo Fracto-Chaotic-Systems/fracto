@@ -26,3 +26,7 @@ services:
         read_only: true
         bind:
           create_host_path: false
+
+  database-init:
+    extra_hosts:
+      - host.docker.internal:host-gateway
