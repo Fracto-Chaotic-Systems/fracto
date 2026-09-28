@@ -5,6 +5,7 @@ import mysql from 'mysql2/promise'
 
 import config from '../config/mysql.json' with {type: 'json'}
 import {ROOT_DIR} from '../constants.js'
+import {normalize_backup_collations} from './database_collation_compatibility.js'
 
 const database = process.env.FRACTO_MYSQL_DATABASE || config.database
 const backup_directory = path.resolve(process.env.FRACTO_DB_BACKUP_DIR || path.join(ROOT_DIR, 'backup'))
@@ -117,6 +118,11 @@ const apply_migrations = async (connection, existing_database) => {
 }
 
 const admin_connection = await mysql.createConnection(admin_options)
+const [collation_rows] = await admin_connection.query(
+   `SELECT COLLATION_NAME FROM INFORMATION_SCHEMA.COLLATIONS
+    WHERE COLLATION_NAME IN ('utf8mb4_0900_ai_ci', 'utf8mb4_unicode_520_ci')`,
+)
+const supported_collations = new Set(collation_rows.map(row => row.COLLATION_NAME))
 await admin_connection.query(`CREATE DATABASE IF NOT EXISTS ${identifier(database)} CHARACTER SET utf8mb4`)
 await admin_connection.end()
 
@@ -127,7 +133,8 @@ try {
    if (!existing_database) {
       for (const filename of backup_files) {
          console.log(`Loading ${filename}...`)
-         await connection.query(fs.readFileSync(path.join(backup_directory, filename), 'utf8'))
+         const backup_sql = fs.readFileSync(path.join(backup_directory, filename), 'utf8')
+         await connection.query(normalize_backup_collations(backup_sql, supported_collations))
       }
       console.log(`Database ${database} bootstrapped from ${backup_files.length} SQL files.`)
    } else if (process.env.FRACTO_DB_INIT_CONFIRM === 'reset') {

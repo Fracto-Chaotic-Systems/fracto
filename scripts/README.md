@@ -335,6 +335,13 @@ are never dropped or replaced. The batch file runs the Docker maintenance form.
 The Docker maintenance form tees output to the persistent `logs` volume while
 leaving stdout/stderr unchanged for Compose output.
 
+During a fresh bootstrap, the initializer checks the server's available
+collations. If a backup uses MySQL 8's `utf8mb4_0900_ai_ci` but the server does
+not support it, only the imported SQL is adapted to
+`utf8mb4_unicode_520_ci`; the checked-in backup remains unchanged. This keeps
+the seed dumps usable on MariaDB while retaining the closest available Unicode
+collation there.
+
 ### `reset-database.bat`
 
 Despite its historical name, this now applies pending versioned migrations only.
