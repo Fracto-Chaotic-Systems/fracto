@@ -109,6 +109,11 @@ For the public EC2 deployment at
 routes to each private service. See the [nginx example, OIDC settings, and
 Linux first-run/update workflow](deploy/README.md).
 
+For shared browser access from Windows development labs, see the
+[lab-only Nginx proxy and authentication-bypass guide](deploy/WINDOWS_LAB.md).
+That HTTP profile is separate from public deployments and keeps Fracto's
+service ports loopback-only.
+
 Stop the root process with Ctrl+C to forward shutdown to every child service.
 
 ## Docker

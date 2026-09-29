@@ -4,6 +4,11 @@ This directory contains deployment-facing examples for the main Fracto
 repository. Keep real hostnames, certificates, secrets, and machine-specific
 paths in the deployment environment; do not commit them.
 
+For shared browser access from a Windows development lab, see the
+[Windows lab deployment guide](WINDOWS_LAB.md). It documents an HTTP Nginx
+proxy with lab-only authentication bypass while keeping Fracto service ports
+on loopback. Do not apply that profile to a public server.
+
 ## nginx for the public EC2 host
 
 The example in `nginx/fracto.conf.example` serves

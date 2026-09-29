@@ -1,0 +1,47 @@
+# HTTP reverse proxy for a trusted Windows development lab.
+# Keep this listener private to the lab network and use the lab-only bypass
+# settings documented in deploy/WINDOWS_LAB.md. Do not use this for EC2.
+server {
+    # Listens on all host interfaces; restrict inbound TCP 3000 with the
+    # Windows Firewall to the trusted lab subnet.
+    listen 3000;
+    server_name _;
+
+    client_max_body_size 2g;
+    proxy_connect_timeout 30s;
+    proxy_send_timeout 600s;
+    proxy_read_timeout 600s;
+
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-Host $host;
+
+    # The trailing slash strips /api/<service>/ before forwarding.
+    location ^~ /api/main/ {
+        proxy_pass http://127.0.0.1:3001/;
+    }
+    location ^~ /api/data/ {
+        proxy_pass http://127.0.0.1:3002/;
+    }
+    location ^~ /api/asset/ {
+        proxy_pass http://127.0.0.1:3003/;
+    }
+    location ^~ /api/tiles/ {
+        proxy_pass http://127.0.0.1:3004/;
+    }
+    location ^~ /api/admin/ {
+        proxy_pass http://127.0.0.1:3005/;
+    }
+
+    # Never send an unknown API path to the React UI fallback.
+    location ^~ /api/ {
+        return 404;
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:3006;
+    }
+}
