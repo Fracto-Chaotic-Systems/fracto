@@ -50,6 +50,38 @@ test("return destinations reject external origins, backslashes, and control char
   assert.equal(safe_return_to("/study?view=1#point"), "/study?view=1#point");
 });
 
+test("OIDC callback URLs support the documented nginx path prefix", () => {
+  const names = [
+    "NODE_ENV",
+    "FRACTO_AUTH_MODE",
+    "FRACTO_AUTH_REQUIRED",
+    "FRACTO_OIDC_ISSUER",
+    "FRACTO_OIDC_CLIENT_ID",
+    "FRACTO_OIDC_CLIENT_SECRET",
+    "FRACTO_OIDC_REDIRECT_URI",
+    "FRACTO_UI_ORIGIN",
+  ];
+  const previous = Object.fromEntries(names.map((name) => [name, process.env[name]]));
+  Object.assign(process.env, {
+    NODE_ENV: "production",
+    FRACTO_AUTH_MODE: "oidc",
+    FRACTO_AUTH_REQUIRED: "true",
+    FRACTO_OIDC_ISSUER: "https://accounts.google.com",
+    FRACTO_OIDC_CLIENT_ID: "test-client",
+    FRACTO_OIDC_CLIENT_SECRET: "test-secret",
+    FRACTO_OIDC_REDIRECT_URI: "https://example.test:3000/api/main/auth/callback",
+    FRACTO_UI_ORIGIN: "https://example.test:3000",
+  });
+  try {
+    assert.deepEqual(get_auth_config().errors, []);
+  } finally {
+    names.forEach((name) => {
+      if (previous[name] === undefined) delete process.env[name];
+      else process.env[name] = previous[name];
+    });
+  }
+});
+
 test("missing, expired, and mismatched state fail without consuming another browser's transaction", async () => {
   const { handle_auth_callback } = harness();
   const tx = transaction();

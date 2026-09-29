@@ -41,7 +41,7 @@ export const get_auth_config = () => {
     if (!client_id) errors.push("FRACTO_OIDC_CLIENT_ID is required");
     if (!client_secret) errors.push("FRACTO_OIDC_CLIENT_SECRET is required");
     if (!redirect_uri) errors.push("FRACTO_OIDC_REDIRECT_URI is required");
-    if (redirect_url && redirect_url.pathname !== "/auth/callback") {
+    if (redirect_url && !redirect_url.pathname.endsWith("/auth/callback")) {
       errors.push("FRACTO_OIDC_REDIRECT_URI must end with /auth/callback");
     }
   } else if (required) {
