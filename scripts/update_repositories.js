@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import {createInterface} from 'node:readline/promises'
 import {spawnSync} from 'node:child_process'
 
 import {ALL_SERVICES} from '../constants.js'
@@ -30,6 +31,29 @@ const run_git = (repository, args, allow_failure = false, show_output = false) =
 
 const git_output = (repository, args) => run_git(repository, args).stdout.trim()
 
+export const find_diverged_repositories = (ready, git_runner = run_git) =>
+   ready.filter(item => {
+      const head_is_ancestor = git_runner(
+         item.repository,
+         ['merge-base', '--is-ancestor', 'HEAD', item.upstream],
+         true,
+      ).status === 0
+      const upstream_is_ancestor = git_runner(
+         item.repository,
+         ['merge-base', '--is-ancestor', item.upstream, 'HEAD'],
+         true,
+      ).status === 0
+      return !head_is_ancestor && !upstream_is_ancestor
+   })
+
+export const reset_diverged_repositories = (diverged, confirmation, git_runner = run_git) => {
+   if (`${confirmation || ''}`.trim() !== 'RESET') return false
+   for (const item of diverged) {
+      git_runner(item.repository, ['reset', '--hard', item.upstream], false, true)
+   }
+   return true
+}
+
 const unstaged_changes = repository => git_output(repository, ['diff', '--name-only'])
    .split(/\r?\n/).filter(Boolean)
 
@@ -57,7 +81,7 @@ const assert_repository_ready = repository => {
    return {repository, branch, upstream, remote: upstream.slice(0, separator)}
 }
 
-const update_repositories = () => {
+const update_repositories = async () => {
    console.log(`Checking ${repositories.length} repositories before startup...`)
    const ready = repositories.map(assert_repository_ready)
 
@@ -66,19 +90,31 @@ const update_repositories = () => {
       run_git(item.repository, ['fetch', '--prune', item.remote], false, true)
    }
 
-   for (const item of ready) {
-      const head_is_ancestor = run_git(
-         item.repository,
-         ['merge-base', '--is-ancestor', 'HEAD', item.upstream],
-         true,
-      ).status === 0
-      const upstream_is_ancestor = run_git(
-         item.repository,
-         ['merge-base', '--is-ancestor', item.upstream, 'HEAD'],
-         true,
-      ).status === 0
-      if (!head_is_ancestor && !upstream_is_ancestor) {
-         throw new Error(`${item.repository.name}: ${item.branch} has diverged from ${item.upstream}`)
+   const diverged = find_diverged_repositories(ready)
+   if (diverged.length) {
+      if (!process.argv.includes('--confirm-reset-diverged')) {
+         const details = diverged.map(item => `${item.repository.name}: ${item.branch} has diverged from ${item.upstream}`).join('; ')
+         throw new Error(`${details}; cold_boot can reset these repositories after explicit confirmation`)
+      }
+      console.warn('The following local repository histories have diverged from their upstreams:')
+      for (const item of diverged) {
+         const local_revision = git_output(item.repository, ['rev-parse', '--short', 'HEAD'])
+         const remote_revision = git_output(item.repository, ['rev-parse', '--short', item.upstream])
+         console.warn(`  ${item.repository.name}: ${item.branch} ${local_revision} -> ${item.upstream} ${remote_revision}`)
+      }
+      console.warn('Resetting discards local-only commits and tracked changes in the listed repositories. Untracked files are preserved.')
+      if (!process.stdin.isTTY || !process.stdout.isTTY) {
+         throw new Error('Cannot confirm a divergence reset without an interactive terminal')
+      }
+      const readline = createInterface({input: process.stdin, output: process.stdout})
+      let answer
+      try {
+         answer = await readline.question('Type RESET to move the listed repositories to their upstream commits: ')
+      } finally {
+         readline.close()
+      }
+      if (!reset_diverged_repositories(diverged, answer)) {
+         throw new Error('Divergence reset was not confirmed; no repository branches were reset')
       }
    }
 
@@ -90,9 +126,11 @@ const update_repositories = () => {
    console.log('Repository update phase complete.')
 }
 
-try {
-   update_repositories()
-} catch (error) {
-   console.error(`Repository update aborted: ${error.message}`)
-   process.exitCode = 1
+if (process.argv[1] && path.resolve(process.argv[1]) === import.meta.filename) {
+   try {
+      await update_repositories()
+   } catch (error) {
+      console.error(`Repository update aborted: ${error.message}`)
+      process.exitCode = 1
+   }
 }

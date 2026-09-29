@@ -19,7 +19,7 @@
     "start:tiles-local-source": "node scripts/start_tiles_local_source.js",
     "check": "npm run check:syntax && npm run db:validate && npm test",
     "check:syntax": "node scripts/check_syntax.js",
-    "test": "node --test test/math.test.js test/tile_paths.test.js test/tile_source.test.js test/tile_local_source_startup.test.js test/tile_index_release.test.js test/ec2_deploy.test.js test/ec2_deployment_integration.test.js test/health.integration.test.js test/logs_endpoint.test.js test/auth_endpoint.test.js test/auth_security.test.js test/service_authorization.test.js test/oidc_identity.test.js test/admin_social_sync.test.js test/social_media_sync.test.js test/sdk_canvas_buffer.test.js test/sdk_package.test.js test/bootstrap_auth_admin.test.js test/database_collation_compatibility.test.js scripts/page_scaffold/preview.test.js",
+    "test": "node --test test/math.test.js test/tile_paths.test.js test/tile_source.test.js test/tile_local_source_startup.test.js test/tile_index_release.test.js test/ec2_deploy.test.js test/ec2_deployment_integration.test.js test/health.integration.test.js test/logs_endpoint.test.js test/auth_endpoint.test.js test/auth_security.test.js test/service_authorization.test.js test/oidc_identity.test.js test/admin_social_sync.test.js test/social_media_sync.test.js test/sdk_canvas_buffer.test.js test/sdk_package.test.js test/bootstrap_auth_admin.test.js test/database_collation_compatibility.test.js test/update_repositories.test.js scripts/page_scaffold/preview.test.js",
     "test:page-scaffold": "node --test scripts/page_scaffold/preview.test.js",
     "test:docker": "node scripts/docker_smoke_test.js",
     "start:check": "node scripts/startup_preflight.js",

@@ -13,7 +13,7 @@ exit /b 2
 :mode_valid
 
 echo [1/4] Refreshing the root and service repositories...
-call npm run update:repos
+call npm run update:repos -- --confirm-reset-diverged
 if errorlevel 1 goto failed
 
 echo [2/4] Rebuilding the production image (this may take several minutes)...

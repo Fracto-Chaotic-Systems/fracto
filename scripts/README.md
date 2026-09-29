@@ -233,6 +233,15 @@ The one permitted unstaged exception is the tracked IDE metadata file
 `.idea/fracto.iml`; this avoids blocking cold boot on local IntelliJ folder
 exclusions. All other tracked or staged changes still abort the update.
 
+The standalone `npm run update:repos` command remains fail-safe and never resets
+diverged history. `cold_boot.bat` opts into an interactive recovery prompt: when
+divergence is found, it lists each affected repository and its local/upstream
+revision, then requires the exact text `RESET`. Confirmation hard-resets only
+those diverged repositories to their configured upstream. Declining or running
+without an interactive terminal leaves branch refs unchanged and aborts. Tracked
+or staged changes normally abort before the prompt (the existing `.idea/fracto.iml`
+exception still applies); untracked files are preserved by the reset.
+
 ### `startup_preflight.js`
 
 Checks service package files, ports, entry points, dependencies, and the MySQL
@@ -456,7 +465,8 @@ Pass `dev` to launch the development Compose target instead:
 .\scripts\cold_boot.bat dev
 ```
 
-It runs `npm run update:repos`, `docker compose build fracto`,
+It runs the repository refresh with the divergence-reset confirmation described
+above, `docker compose build fracto`,
 optionally `docker compose run --rm index-refresh`, and finally
 `docker compose up -d fracto` (or the development `fracto-dev` target when
 `dev` is passed), in that order. It does not initialize/reset
