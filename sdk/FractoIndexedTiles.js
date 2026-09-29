@@ -40,6 +40,14 @@ const ALL_TILE_SETS = [
 ]
 
 async function streamCsvFromUrl(url, cb) {
+   let completed = false
+   const fail = error => {
+      if (completed) return
+      completed = true
+      console.error(`Fetch operation failed: ${error.message}`)
+      process.exitCode = 1
+      cb([])
+   }
    try {
       // 1. Fetch the remote resource and get a readable stream
       const response = await fetch(url);
@@ -50,7 +58,7 @@ async function streamCsvFromUrl(url, cb) {
       const results = []
 
       // 2. Pipe the response body stream to the csv-parser transform stream
-      response.body // This is a Node.js ReadableStream
+      const csv_stream = response.body // This is a Node.js ReadableStream
          .pipe(csv()) // Transform stream converts CSV chunks to JS objects
          .on('data', (data) => {
             // 3. Process each row of data as it comes in
@@ -61,19 +69,18 @@ async function streamCsvFromUrl(url, cb) {
             }
          })
          .on('end', () => {
+            if (completed) return
+            completed = true
             // 4. Handle the end of the stream
             console.log('Finished reading CSV file.');
             console.log(`Total rows processed: ${results.length}`);
             cb(results);
             // console.log('All results:', results);
          })
-         .on('error', (error) => {
-            // 5. Handle any errors during streaming or parsing
-            console.error('Error during CSV processing:', error);
-         });
+         .on('error', fail);
+      response.body.once('error', fail)
    } catch (error) {
-      console.error('Fetch operation failed:', error);
-      cb([])
+      fail(error)
    }
 }
 

@@ -53,7 +53,9 @@ const result = FractoFastCalc.calc(point.re, point.im);
 - `FractoIndexedTiles.js` loads tile short-code CSV listings. Local-source mode
   streams them from `FRACTO_TILE_SOURCE_DIR/manifest/` (including `indexed`,
   `interior`, and `blank` listings); remote-cache mode retains the configured
-  HTTP listing source.
+  HTTP listing source. Both paths currently materialize the parsed short codes
+  for the callback API. A remote fetch or CSV-stream error marks the process
+  unsuccessful so a tile-index refresh cannot publish an empty generation.
 - `FractoTileSource.js` resolves and decodes authoritative tiles from a local
   `L<two-digit-level>/<short-code>.gz` source tree and validates the paired
   release manifest for local-source deployments. New schema-3 manifests bind
