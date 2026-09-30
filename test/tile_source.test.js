@@ -318,22 +318,22 @@ test('local corrupt or unreadable tiles fail without network fallback or cache w
    assert.equal(fs.existsSync(demand_cache_directory), false)
 })
 
-test('memory trimming waits for the minimum population and evicts idle entries at its threshold', () => {
+test('local-source memory trimming uses a smaller working set and evicts idle entries sooner', () => {
    const source_directory = path.join(temporary_root, 'eviction-source')
    const level_directory = path.join(source_directory, 'L06')
    fs.mkdirSync(level_directory, {recursive: true})
    const tile_data = zlib.gzipSync(JSON.stringify([[ [1, 2] ]]))
-   for (let index = 0; index < 750; index++) {
+   for (let index = 0; index < 100; index++) {
       const short_code = String(100000 + index)
       fs.writeFileSync(path.join(level_directory, `${short_code}.gz`), tile_data)
    }
 
    const script = [
       "const {FractoTileCache} = await import('./sdk/FractoTileCache.js')",
-      "for (let index = 0; index < 749; index++) await FractoTileCache.get_tile(String(100000 + index))",
+      "for (let index = 0; index < 99; index++) await FractoTileCache.get_tile(String(100000 + index))",
       'FractoTileCache.trim_cache(180000)',
       'const below_threshold = FractoTileCache.get_stats()',
-      "await FractoTileCache.get_tile('100749')",
+      "await FractoTileCache.get_tile('100099')",
       'FractoTileCache.trim_cache(180000)',
       "console.log('RESULT:' + JSON.stringify({below_threshold, after_trim: FractoTileCache.get_stats()}))",
    ].join(';')
@@ -352,10 +352,43 @@ test('memory trimming waits for the minimum population and evicts idle entries a
    const output = result.stdout.split('\n').find(line => line.startsWith('RESULT:'))
    assert.ok(output, result.stdout)
    const {below_threshold, after_trim} = JSON.parse(output.slice('RESULT:'.length))
-   assert.equal(below_threshold.in_memory, 749)
+   assert.equal(below_threshold.in_memory, 99)
    assert.equal(below_threshold.evictions, 0)
+   assert.deepEqual(below_threshold.limits, {
+      min: 100,
+      max: 250,
+      idle_timeout_ms: 30000,
+      quick_idle_timeout_ms: 15000,
+   })
    assert.equal(after_trim.in_memory, 0)
-   assert.equal(after_trim.evictions, 750)
+   assert.equal(after_trim.evictions, 100)
+})
+
+test('remote-cache memory retention policy remains unchanged', () => {
+   const demand_cache_directory = path.join(temporary_root, 'remote-policy-cache')
+   const script = [
+      "const {FractoTileCache} = await import('./sdk/FractoTileCache.js')",
+      "console.log('RESULT:' + JSON.stringify(FractoTileCache.get_stats().limits))",
+   ].join(';')
+   const result = spawnSync(process.execPath, ['--input-type=module', '-e', script], {
+      cwd: path.resolve(import.meta.dirname, '..'),
+      encoding: 'utf8',
+      env: {
+         ...process.env,
+         FRACTO_TILE_SOURCE_MODE: 'remote-cache',
+         FRACTO_TILE_DATA_DIR: demand_cache_directory,
+      },
+   })
+
+   assert.equal(result.status, 0, result.stderr)
+   const output = result.stdout.split('\n').find(line => line.startsWith('RESULT:'))
+   assert.ok(output, result.stdout)
+   assert.deepEqual(JSON.parse(output.slice('RESULT:'.length)), {
+      min: 750,
+      max: 1250,
+      idle_timeout_ms: 120000,
+      quick_idle_timeout_ms: 60000,
+   })
 })
 
 test('restarting with a new source generation reads the new immutable dataset', () => {

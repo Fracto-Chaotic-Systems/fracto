@@ -28,13 +28,16 @@ example address with the lab host's stable LAN address:
 ```dotenv
 FRACTO_AUTH_MODE=none
 FRACTO_AUTH_REQUIRED=false
+FRACTO_ADMIN_READONLY_BYPASS=true
 FRACTO_UI_ORIGIN=http://10.0.0.98:3000
 ```
 
 `FRACTO_AUTH_MODE=none` selects bypass mode; no Google OIDC redirect is used.
 These settings are for an isolated development lab only. Do not copy them to a
-public deployment or commit the lab `.env` file. Bypass mode leaves explicit
-user-management and administrator-only operations protected by their existing
+public deployment or commit the lab `.env` file. The GET-view bypass makes the
+commits, logs, versions, social, and Reference pages available without sign-in.
+Some GET handlers refresh local snapshots or diagnostic files. User lists,
+login audit events, and all write operations remain protected by their
 enabled-admin checks.
 
 Recreate the application container with the same Compose files and overlays

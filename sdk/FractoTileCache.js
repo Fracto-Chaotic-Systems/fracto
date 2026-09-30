@@ -41,10 +41,11 @@ const cache_identity = short_code => tile_cache_identity(
    TILE_SOURCE_GENERATION,
    short_code,
 )
-const CACHE_TIMEOUT = 2 * 1000 * 60;
-const QUICK_CACHE_TIMEOUT = 1000 * 60;
-const MIN_CACHE = 750
-const MAX_CACHE = 1250
+// Local-source deployments can cheaply reread authoritative files, so keep
+// their decoded working set substantially smaller than the remote cache.
+const CACHE_POLICY = TILE_SOURCE_MODE === 'local'
+   ? {min: 100, max: 250, idle_timeout_ms: 30 * 1000, quick_idle_timeout_ms: 15 * 1000}
+   : {min: 750, max: 1250, idle_timeout_ms: 2 * 60 * 1000, quick_idle_timeout_ms: 60 * 1000}
 const MIN_FREE_BYTES = Number(process.env.FRACTO_TILE_MIN_FREE_BYTES || 1024 ** 3)
 const CACHE_READ_ONLY = process.env.FRACTO_TILE_CACHE_READ_ONLY === 'true'
 
@@ -288,12 +289,12 @@ export class FractoTileCache {
 
    static trim_cache(extra_ms = 0) {
       const short_codes = Object.keys(CACHED_TILES)
-      if (short_codes.length < MIN_CACHE) {
+      if (short_codes.length < CACHE_POLICY.min) {
          return;
       }
-      const timeout = short_codes.length > MAX_CACHE
-         ? QUICK_CACHE_TIMEOUT
-         : CACHE_TIMEOUT
+      const timeout = short_codes.length > CACHE_POLICY.max
+         ? CACHE_POLICY.quick_idle_timeout_ms
+         : CACHE_POLICY.idle_timeout_ms
       let delete_count = 0
       short_codes.forEach((short_code) => {
          if (CACHED_TILES[short_code].last_access < Date.now() - timeout + extra_ms) {
@@ -316,7 +317,12 @@ export class FractoTileCache {
       in_flight: IN_FLIGHT_DOWNLOADS.size,
       error_count: FractoTileCache.error_count,
       read_only: TILE_SOURCE_MODE === 'local' || CACHE_READ_ONLY,
-      limits: {min: MIN_CACHE, max: MAX_CACHE},
+      limits: {
+         min: CACHE_POLICY.min,
+         max: CACHE_POLICY.max,
+         idle_timeout_ms: CACHE_POLICY.idle_timeout_ms,
+         quick_idle_timeout_ms: CACHE_POLICY.quick_idle_timeout_ms,
+      },
    })
 }
 

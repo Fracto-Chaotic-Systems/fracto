@@ -334,6 +334,15 @@ for this second check. These admin checks remain active in bypass mode. Data
 query and backup clients send credentials, and data-service CORS permits them
 from the configured UI origin.
 
+An isolated lab may explicitly expose GET-only admin views for commits, logs,
+versions, social documents, and Reference documents while application
+authentication is disabled. Set `FRACTO_ADMIN_READONLY_BYPASS=true` together
+with `FRACTO_AUTH_MODE=none` and `FRACTO_AUTH_REQUIRED=false`. This exception
+does not permit `/users`, `/login_events`, or any write operation; the data
+server continues to require an enabled administrator for user-management and
+audit access. Some GET views may refresh local snapshots or diagnostic files.
+The option defaults to false and must not be enabled on a public deployment.
+
 ### Service API access controls
 
 When `FRACTO_AUTH_REQUIRED=true`, application APIs on the main, data, asset,
@@ -390,6 +399,11 @@ the UI selects `bypass` regardless of session identity. The main server's
 environment-aware application gate passes requests through. Admin user-management
 operations still require an enabled administrator session. The existing welcome
 entry action remains manual in bypass mode.
+
+To use the read-only admin pages in an isolated, auth-disabled lab, also set
+`FRACTO_ADMIN_READONLY_BYPASS=true` and `FRACTO_AUTH_MODE=none`. This allows
+read-only commits, logs, versions, social, and Reference requests. User lists,
+login audit events, and all mutations remain administrator-protected.
 
 The development mode is a convenience for local work, not a replacement for
 testing the real OIDC callback and session flow.

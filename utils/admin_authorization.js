@@ -1,5 +1,25 @@
 import { trusted_mutation_origin } from "./auth_request_origin.js";
 
+const LAB_READONLY_ADMIN_PATHS = new Set([
+  "/commits",
+  "/logs",
+  "/reference/document",
+  "/reference/tree",
+  "/social",
+  "/version",
+]);
+
+/**
+ * Opt in to GET-only admin views for an isolated lab with auth disabled.
+ * User management, audit events, and every non-GET route stay protected.
+ */
+export const is_lab_readonly_admin_bypass = (req, env = process.env) =>
+  env.FRACTO_ADMIN_READONLY_BYPASS === "true" &&
+  env.FRACTO_AUTH_MODE === "none" &&
+  env.FRACTO_AUTH_REQUIRED !== "true" &&
+  req.method === "GET" &&
+  LAB_READONLY_ADMIN_PATHS.has(req.path);
+
 /** Verify administrative access with the main server's current session state. */
 export const require_administrator = async (req, res, next) => {
   if (!trusted_mutation_origin(req, res)) return;

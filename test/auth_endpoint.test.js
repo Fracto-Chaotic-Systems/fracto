@@ -13,7 +13,10 @@ import {
   require_enabled_user,
 } from "../handlers/auth.js";
 import { AUTH_COOKIE_NAME, create_session as store_session, get_session } from "../utils/auth_sessions.js";
-import { require_administrator } from "../utils/admin_authorization.js";
+import {
+  is_lab_readonly_admin_bypass,
+  require_administrator,
+} from "../utils/admin_authorization.js";
 import {
   require_enabled_user_if_configured,
   require_internal_service,
@@ -100,6 +103,27 @@ after(async () => {
 });
 
 describe("authentication endpoint contract", () => {
+  test("lab admin bypass opens only read-only pages when explicitly configured", () => {
+    const lab = {
+      FRACTO_ADMIN_READONLY_BYPASS: "true",
+      FRACTO_AUTH_MODE: "none",
+      FRACTO_AUTH_REQUIRED: "false",
+    };
+    assert.equal(is_lab_readonly_admin_bypass({ method: "GET", path: "/commits" }, lab), true);
+    assert.equal(is_lab_readonly_admin_bypass({ method: "GET", path: "/reference/tree" }, lab), true);
+    assert.equal(is_lab_readonly_admin_bypass({ method: "PUT", path: "/users/1" }, lab), false);
+    assert.equal(is_lab_readonly_admin_bypass({ method: "GET", path: "/users" }, lab), false);
+    assert.equal(is_lab_readonly_admin_bypass({ method: "GET", path: "/login_events" }, lab), false);
+    assert.equal(is_lab_readonly_admin_bypass({ method: "GET", path: "/commits" }, {
+      ...lab,
+      FRACTO_AUTH_REQUIRED: "true",
+    }), false);
+    assert.equal(is_lab_readonly_admin_bypass({ method: "GET", path: "/commits" }, {
+      ...lab,
+      FRACTO_AUTH_MODE: "oidc",
+    }), false);
+  });
+
   test("reports an anonymous session without exposing credentials", async () => {
     const response = await fetch(`${base_url}/auth/session`);
     const body = await response.json();
