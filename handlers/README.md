@@ -13,7 +13,9 @@ checks.
   renews server-side sessions, reports the current session, and handles
   logout. Its middleware distinguishes a valid session from a user enabled by
   the deployment's access policy. It also records non-secret login lifecycle
-  events and enforces trusted request origins for mutations.
+  events and enforces trusted request origins for mutations. For load
+  measurement, it records aggregated duration and outcome counts for the
+  internal user-record lookup without logging session or identity values.
 - `health.js` builds the `/healthz` and `/readyz` response handler. It reports
   contract version, the configured `FRACTO_SERVER_NAME`, uptime, service
   states, and optional build information. Callers use `GET /healthz` for status

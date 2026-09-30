@@ -1,5 +1,6 @@
 import { get_auth_config } from "../utils/auth_config.js";
 import { trusted_mutation_origin } from "../utils/auth_request_origin.js";
+import { record_runtime_metric } from "../utils/windowed_metrics.js";
 import * as oidc from "openid-client";
 
 import { discover_oidc_provider } from "../utils/oidc_provider.js";
@@ -34,27 +35,46 @@ const session_from_request = async (req) => {
   const session = get_session(token);
   if (!session) return null;
   const data_port = Number(process.env.FRACTO_DATA_PORT || 3002);
-  const response = await fetch(
-    `http://127.0.0.1:${data_port}/user/session/${encodeURIComponent(session.user.id)}`,
-    { signal: AbortSignal.timeout(5000) },
-  );
-  if (response.status === 404) {
-    destroy_session(token);
-    return null;
+  const lookup_started_at = performance.now();
+  let lookup_outcome = "error";
+  try {
+    const response = await fetch(
+      `http://127.0.0.1:${data_port}/user/session/${encodeURIComponent(session.user.id)}`,
+      { signal: AbortSignal.timeout(5000) },
+    );
+    if (response.status === 404) {
+      lookup_outcome = "not_found";
+      destroy_session(token);
+      return null;
+    }
+    if (!response.ok) throw new Error("User authorization lookup failed");
+    const { user } = await response.json();
+    if (!user || `${user.id}` !== `${session.user.id}` ||
+        user.provider !== session.user.provider ||
+        user.provider_subject !== session.user.provider_subject) {
+      lookup_outcome = "identity_mismatch";
+      destroy_session(token);
+      return null;
+    }
+    // Logout or expiry may have invalidated the token while the lookup was pending.
+    if (get_session(token) !== session) {
+      lookup_outcome = "session_ended";
+      return null;
+    }
+    session.user = public_user(user);
+    renew_session(token);
+    lookup_outcome = "success";
+    return { token, session };
+  } catch (error) {
+    if (error?.name === "TimeoutError") lookup_outcome = "timeout";
+    throw error;
+  } finally {
+    record_runtime_metric(
+      "auth_user_record_lookup",
+      performance.now() - lookup_started_at,
+      lookup_outcome,
+    );
   }
-  if (!response.ok) throw new Error("User authorization lookup failed");
-  const { user } = await response.json();
-  if (!user || `${user.id}` !== `${session.user.id}` ||
-      user.provider !== session.user.provider ||
-      user.provider_subject !== session.user.provider_subject) {
-    destroy_session(token);
-    return null;
-  }
-  // Logout or expiry may have invalidated the token while the lookup was pending.
-  if (get_session(token) !== session) return null;
-  session.user = public_user(user);
-  renew_session(token);
-  return { token, session };
 };
 
 const oidc_is_configured = () =>

@@ -40,6 +40,10 @@ and terminal output formatting.
   required. It accepts the private internal-service token for supervisor-owned
   calls, otherwise checks the main server's session for enabled-user access;
   it also creates internal-service request headers.
+- `windowed_metrics.js` aggregates low-cardinality request and duration
+  samples into periodic JSON log records. Callers must use static metric names
+  and outcome labels; do not pass request parameters, cookies, user IDs, or
+  provider identity data.
 
 Authentication secrets and session tokens are runtime data. Do not add them to
 this documentation or commit them to Git.
