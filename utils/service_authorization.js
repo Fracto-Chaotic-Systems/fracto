@@ -26,13 +26,21 @@ export const require_enabled_user_if_configured = async (req, res, next) => {
     return next();
   }
   if (!trusted_mutation_origin(req, res)) return;
+  let verification_stage = "request";
   try {
     const port = Number(process.env.FRACTO_SERVER_PORT || 3001);
     const response = await fetch(`http://127.0.0.1:${port}/auth/session`, {
       headers: { cookie: req.headers.cookie || "" },
       signal: AbortSignal.timeout(5000),
     });
-    if (!response.ok) throw new Error("Session lookup failed");
+    if (!response.ok) {
+      console.error(
+        `Service authentication session check returned HTTP ${response.status}`,
+      );
+      res.status(503).json({ error: "Unable to verify authentication" });
+      return;
+    }
+    verification_stage = "response parsing";
     const session = await response.json();
     if (!session.authenticated) {
       res.status(401).json({ error: "Authentication required" });
@@ -44,7 +52,11 @@ export const require_enabled_user_if_configured = async (req, res, next) => {
       return;
     }
     return next();
-  } catch {
+  } catch (error) {
+    const failure_type = error?.cause?.code || error?.name || "unknown error";
+    console.error(
+      `Service authentication session check failed during ${verification_stage} (${failure_type})`,
+    );
     res.status(503).json({ error: "Unable to verify authentication" });
   }
 };
