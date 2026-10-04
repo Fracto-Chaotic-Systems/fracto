@@ -454,22 +454,17 @@ for configuration and generation-update instructions.
 ### Download the latest tiles
 
 The `tiles:backup` action compares the current compiled tile index with the local
-production cache and downloads any indexed tiles that are not already present from
+tile files and downloads any indexed tiles that are not already present from
 `https://fracto.mikehallstudio.com`. It is safe to run while production is serving
 requests; downloads are written atomically so the server never reads a partial tile.
-Run it inside the running production container:
+Run this one maintenance operation on the host, from the root repository, so it
+can access the tile files directly:
 
-```powershell
-docker compose exec fracto npm run tiles:backup
+```sh
+npm run tiles:backup
 ```
 
-It can also run as a separate maintenance container sharing the production volumes:
-
-```powershell
-docker compose run --rm --no-deps fracto npm run tiles:backup
-```
-
-The same standalone operation is available from any working directory on Windows:
+On Windows, the standalone wrapper is also available:
 
 ```powershell
 .\scripts\backup-tiles.bat

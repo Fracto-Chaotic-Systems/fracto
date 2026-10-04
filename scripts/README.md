@@ -500,7 +500,9 @@ The scan happens only when invoked and may be slow for millions of files.
 
 ### Tile backup and migration
 
-- `backup-tiles.bat` runs the standalone tile backup operation in Docker.
+- `backup-tiles.bat` runs the standalone tile backup operation on the host so
+  it can access tile files directly. It invokes the root `tiles:backup` npm
+  script.
 - `migrate_tile_cache_index.js` migrates indexed tiles with bounded concurrency
   and promotes whole legacy directories when an atomic rename is possible.
 - `migrate_tile_cache.sh` is the POSIX migration implementation.
@@ -521,9 +523,9 @@ is retained as a fallback when an index generation is not available.
 
 Runs a command while preserving its stdout/stderr and writing a second,
 ANSI-free structured copy to `logs/<label>-log-YYYY-MM-DD.txt`. Each record includes
-the workflow label and source script filename. It is used only by
-maintenance wrappers (`database-init`, index refresh, tile migration, and tile
-backup), which are not already captured by the root supervisor:
+the workflow label and source script filename. It is used by maintenance
+wrappers (`database-init`, index refresh, and tile migration), which are not
+already captured by the root supervisor:
 
 ```powershell
 node scripts/run_logged.js example npm run db:validate
