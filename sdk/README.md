@@ -29,7 +29,13 @@ const result = FractoFastCalc.calc(point.re, point.im);
 - `FractoHyperCalc.js` and `FractoHyperComplexCalc.js` provide higher-iteration calculation strategies.
 - `FractoBigNumber.js` supports high-precision numeric calculations.
 - `FractoProjection.js` calculates projections for complex-plane points.
-- `FractoUtil.js` contains shared fractal and coordinate helpers.
+- `FractoUtil.js` contains shared fractal and coordinate helpers, including
+  validated conversions between upper main-cardioid points and multiplier
+  polar coordinates `(r, theta)`. The inverse conversion rejects points
+  outside the closed cardioid or below the real axis; `theta` is a real turn
+  fraction in `[0, 1/2]`, not necessarily rational. `r_theta_to_P()` validates
+  the coordinate range, while the older `P_from_r_theta()` remains available
+  for compatibility.
 - `math/Complex.js`, `math/BigComplex.js`, and `math/HyperComplex.js` implement the numeric types used by the calculators.
 - `math/utils.js` contains supporting math utilities, including Farey sequence generation.
 

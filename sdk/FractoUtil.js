@@ -314,6 +314,73 @@ export class FractoUtil {
       return {x, y}
    }
 
+   /**
+    * Check whether a finite complex point is in the closed main cardioid.
+    * The cardioid boundary satisfies q(q + x - 1/4) = y^2/4, where
+    * q = (x - 1/4)^2 + y^2.
+    *
+    * @param {{x: number, y: number}} point Complex-plane point.
+    * @returns {boolean} Whether the point lies in the closed main cardioid.
+    */
+   static point_in_main_cardioid = (point) => {
+      if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) {
+         return false
+      }
+      const shifted_x = point.x - 0.25
+      const q = shifted_x * shifted_x + point.y * point.y
+      const difference = q * (q + shifted_x) - 0.25 * point.y * point.y
+      const tolerance = 1e-14 * Math.max(1, q * q, point.y * point.y)
+      return difference <= tolerance
+   }
+
+   /**
+    * Convert an upper-half main-cardioid point P to its multiplier polar
+    * coordinates P = (r/2)e^(2 pi i theta) - (r^2/4)e^(4 pi i theta).
+    * Theta is a real number in [0, 1/2], not necessarily rational. The
+    * origin has the canonical representation (r=0, theta=0).
+    *
+    * @param {{x: number, y: number}} point Complex-plane point P.
+    * @returns {{r: number, theta: number}} Multiplier polar coordinates.
+    * @throws {RangeError} If P is invalid, below the real axis, or outside
+    * the main cardioid.
+    */
+   static P_to_r_theta = (point) => {
+      if (!FractoUtil.point_in_main_cardioid(point) || point.y < 0) {
+         throw new RangeError("Point must be in the upper main cardioid")
+      }
+
+      // The attracting fixed-point multiplier is lambda = 1 - sqrt(1 - 4P).
+      const radicand_re = 1 - 4 * point.x
+      const radicand_im = -4 * point.y
+      const radicand_magnitude = Math.hypot(radicand_re, radicand_im)
+      const root_re = Math.sqrt(Math.max(0, (radicand_magnitude + radicand_re) / 2))
+      const root_im_magnitude = Math.sqrt(Math.max(0, (radicand_magnitude - radicand_re) / 2))
+      const root_im = radicand_im < 0 ? -root_im_magnitude : root_im_magnitude
+      const lambda_re = 1 - root_re
+      const lambda_im = -root_im
+      const r = Math.hypot(lambda_re, lambda_im)
+      const theta = r === 0 ? 0 : Math.atan2(lambda_im, lambda_re) / (2 * Math.PI)
+      return { r, theta }
+   }
+
+   /**
+    * Convert valid upper-cardioid multiplier polar coordinates to P.
+    *
+    * @param {number} r Multiplier magnitude in [0, 1].
+    * @param {number} theta Turn fraction in [0, 1/2].
+    * @returns {{x: number, y: number}} Complex-plane point P.
+    * @throws {RangeError} If r or theta is outside the supported domain.
+    */
+   static r_theta_to_P = (r, theta) => {
+      if (!Number.isFinite(r) || r < 0 || r > 1) {
+         throw new RangeError("r must be a finite number in [0, 1]")
+      }
+      if (!Number.isFinite(theta) || theta < 0 || theta > 0.5) {
+         throw new RangeError("theta must be a finite number in [0, 1/2]")
+      }
+      return FractoUtil.P_from_r_theta(r, theta)
+   }
+
 }
 
 export default FractoUtil;

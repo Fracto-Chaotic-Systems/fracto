@@ -5,6 +5,30 @@ import BigComplex from "../sdk/math/BigComplex.js";
 import Complex from "../sdk/math/Complex.js";
 import HyperComplex from "../sdk/math/HyperComplex.js";
 import { farey_sequence } from "../sdk/math/utils.js";
+import FractoUtil from "../sdk/FractoUtil.js";
+
+describe("main-cardioid multiplier coordinates", () => {
+  it("round trips representative upper-cardioid points", () => {
+    for (const [r, theta] of [[0, 0], [0.4, 0.17], [0.9, 0.5], [1, 0.25]]) {
+      const point = FractoUtil.r_theta_to_P(r, theta);
+      const converted = FractoUtil.P_to_r_theta(point);
+      assert.ok(Math.abs(converted.r - r) < 1e-12);
+      if (r > 0) assert.ok(Math.abs(converted.theta - theta) < 1e-12);
+      assert.ok(point.y >= 0);
+    }
+  });
+
+  it("rejects points outside the cardioid and below the real axis", () => {
+    assert.throws(() => FractoUtil.P_to_r_theta({ x: 0.5, y: 0 }), RangeError);
+    assert.throws(() => FractoUtil.P_to_r_theta({ x: 0, y: -0.1 }), RangeError);
+    assert.throws(() => FractoUtil.P_to_r_theta({ x: Number.NaN, y: 0 }), RangeError);
+  });
+
+  it("rejects multiplier coordinates outside the supported domain", () => {
+    assert.throws(() => FractoUtil.r_theta_to_P(1.01, 0.2), RangeError);
+    assert.throws(() => FractoUtil.r_theta_to_P(0.5, 0.6), RangeError);
+  });
+});
 
 describe("Complex", () => {
   it("calculates magnitude and immutable arithmetic", () => {
