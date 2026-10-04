@@ -22,7 +22,13 @@ const TARGETS = [
     extensions: new Set([".js"]),
   },
 ];
-const IGNORED_DIRECTORIES = new Set([".git", "dist", "node_modules"]);
+const IGNORED_DIRECTORIES = new Set([
+  ".archive",
+  ".git",
+  "archive",
+  "dist",
+  "node_modules",
+]);
 
 const collect_files = async (directory, extensions, files = []) => {
   const entries = await fs.readdir(directory, { withFileTypes: true });

@@ -2,6 +2,8 @@
 **/.git
 **/node_modules
 **/dist
+**/archive
+**/.archive
 /.idea
 /backup
 /config

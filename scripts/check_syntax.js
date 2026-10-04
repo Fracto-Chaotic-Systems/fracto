@@ -4,13 +4,14 @@ import {spawnSync} from 'node:child_process'
 
 const ROOT_FILES = ['constants.js', 'index.js', 'utils.js']
 const SOURCE_DIRECTORIES = ['handlers', 'scripts', 'sdk']
+const IGNORED_DIRECTORIES = new Set(['.archive', 'archive'])
 
 const collect_javascript = (directory) => readdirSync(directory, {withFileTypes: true})
    .flatMap(entry => {
       const entry_path = join(directory, entry.name)
-      return entry.isDirectory()
+      return entry.isDirectory() && !IGNORED_DIRECTORIES.has(entry.name)
          ? collect_javascript(entry_path)
-         : extname(entry.name) === '.js' ? [entry_path] : []
+         : !entry.isDirectory() && extname(entry.name) === '.js' ? [entry_path] : []
    })
 
 const files = [
