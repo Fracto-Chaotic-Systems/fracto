@@ -7,6 +7,7 @@ export {
   GREY_RANGE,
 } from "./FractoColors.js";
 export { default as FractoFastCalc } from "./FractoFastCalc.js";
+export { default as FractoCardinality } from "./FractoCardinality.js";
 export { default as FractoHyperCalc } from "./FractoHyperCalc.js";
 export { default as FractoHyperComplexCalc } from "./FractoHyperComplexCalc.js";
 export { default as FractoUtil } from "./FractoUtil.js";

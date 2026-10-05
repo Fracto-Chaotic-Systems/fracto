@@ -26,6 +26,15 @@ const result = FractoFastCalc.calc(point.re, point.im);
 ### Calculation and math
 
 - `FractoFastCalc.js` performs fast Mandelbrot-set and orbit calculations.
+- `FractoCardinality.js` is the single production entry point for best-known
+  critical-orbit return-cardinality detection inside the main cardioid. It
+  returns the candidate, evidence, bounded adaptive horizons, and an explicit
+  non-proof status. Consumers import `@fracto/sdk/FractoCardinality.js` or the
+  named `FractoCardinality` barrel export.
+- `orbitals/FractoOrbitSampling.js` and
+  `orbitals/FractoReturnDetection.js` contain the sampler and return detector
+  used internally by `FractoCardinality`; data-server compatibility modules
+  re-export these same implementations.
 - `FractoHyperCalc.js` and `FractoHyperComplexCalc.js` provide higher-iteration calculation strategies.
 - `FractoBigNumber.js` supports high-precision numeric calculations.
 - `FractoProjection.js` calculates projections for complex-plane points.
@@ -90,7 +99,9 @@ boundaries to normalize legacy `{ x, y }` values; internal stages should use
 
 The modules under `math/`, along with the core calculation and color utilities, are mostly self-contained. Tile and data modules depend on repository configuration, files under `tiles/`, Node.js filesystem APIs, or network access. They should be used from the Fracto repository root with project dependencies installed.
 
-Some modules provide both named and default exports. Follow the exports in the individual source file; there is no SDK barrel module.
+Some modules provide both named and default exports. Follow the exports in the
+individual source file. `index.js` is the browser-safe root barrel; Node
+consumers can also import explicit `.js` subpaths.
 
 ## Validation
 
