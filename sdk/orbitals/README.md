@@ -6,6 +6,12 @@ kept separate so sampling, candidate scoring, and Newton refinement can be
 tested independently. Application code should use the public SDK interfaces
 instead of combining these internal stages itself.
 
+Both public SDK entry points are scoped to the main cardioid. When a valid
+parameter is outside that domain, `FractoCardinality` and
+`FractoOrbitalPoints` return `FractoFastCalc.calc(re, im)` directly. The
+cardinality detector and Newton solvers are skipped; the calculator's result
+shape is preserved as-is.
+
 - `FractoOrbitSampling.js` iterates the critical orbit for a bounded horizon
   and retains the samples used by return detection.
 - `FractoReturnDetection.js` identifies repeated near-origin return gaps and

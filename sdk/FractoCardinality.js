@@ -1,4 +1,5 @@
 import FractoUtil from "./FractoUtil.js";
+import FractoFastCalc from "./FractoFastCalc.js";
 import { sample_critical_orbit } from "./orbitals/FractoOrbitSampling.js";
 import { detect_return_cardinality } from "./orbitals/FractoReturnDetection.js";
 import { has_sufficient_cardinality_evidence } from "./orbitals/FractoCardinalityQuality.js";
@@ -54,6 +55,9 @@ export default function FractoCardinality(point, options = {}) {
   const domain = FractoUtil.point_in_main_cardioid({ x: re, y: im })
     ? "main_cardioid"
     : "outside_main_cardioid";
+  if (domain === "outside_main_cardioid") {
+    return FractoFastCalc.calc(re, im);
+  }
 
   const base_iterations = normalize_iterations(
     options.iterations,

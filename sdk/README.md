@@ -29,15 +29,18 @@ const result = FractoFastCalc.calc(point.re, point.im);
 - `FractoCardinality.js` is the single production entry point for best-known
   critical-orbit return-cardinality detection inside the main cardioid. It
   returns the candidate, evidence, bounded adaptive horizons, and an explicit
-  non-proof status. Consumers import `@fracto/sdk/FractoCardinality.js` or the
-  named `FractoCardinality` barrel export.
+  non-proof status. Outside the main cardioid it returns `FractoFastCalc.calc()`
+  directly without running the critical-orbit detector. Consumers import
+  `@fracto/sdk/FractoCardinality.js` or the named `FractoCardinality` barrel
+  export.
 - `FractoOrbitalPoints.js` provides the common detector-to-Newton interface.
   It uses `FractoCardinality` by default or accepts an explicitly sourced
   cardinality candidate, recording that source in its result. Newton outputs
   are numerical candidates, not closure or stability proofs. Native and
   BigComplex modes remain selectable for comparison; the BigComplex mode
   preserves decimal input coordinates and performs the Newton quotient with
-  decimal arithmetic.
+  decimal arithmetic. Outside the main cardioid it returns
+  `FractoFastCalc.calc()` directly, even if a caller supplied a cardinality.
 - `orbitals/FractoNewtonDerived.js` and
   `orbitals/FractoNewtonBigComplex.js` contain the SDK's Newton solver
   implementations. The data server's corresponding modules are compatibility
@@ -59,6 +62,71 @@ const result = FractoFastCalc.calc(point.re, point.im);
   for compatibility.
 - `math/Complex.js`, `math/BigComplex.js`, and `math/HyperComplex.js` implement the numeric types used by the calculators.
 - `math/utils.js` contains supporting math utilities, including Farey sequence generation.
+
+### Orbital detection and refinement
+
+`FractoCardinality` and `FractoOrbitalPoints` are the public, main-cardioid
+entry points. Use them in order when both a candidate and refined points are
+needed; use `FractoCardinality` alone when only candidate detection is needed.
+The low-level Newton solvers accept a supplied period and do not search for
+cardinality.
+
+```js
+import FractoCardinality from "@fracto/sdk/FractoCardinality.js";
+import FractoOrbitalPoints from "@fracto/sdk/FractoOrbitalPoints.js";
+
+const focal_point = {
+  re: "0.22068356910785347",
+  im: "0.24323356211767094",
+};
+
+const detected = FractoCardinality(focal_point);
+if (detected.status === "cardinality_detected") {
+  const refined = FractoOrbitalPoints(focal_point, {
+    cardinality: detected.detection.candidate_cardinality,
+    cardinality_source: "sdk_critical_orbit_return_detector",
+    newton_mode: "big_complex",
+    precision_digits: 128,
+  });
+  // Inspect refined.newton_big_complex.point_list and validate the cycle.
+}
+```
+
+For a valid point outside the main cardioid, either entry point returns
+`FractoFastCalc.calc(re, im)` directly. It does not return the normal orbital
+envelope in that branch; the calculator's `{ pattern, iteration, ... }` result
+shape is preserved, and Newton is skipped even if a period was supplied.
+Invalid coordinates return an `invalid_input` envelope.
+
+Within the cardioid, `FractoCardinality` samples the critical orbit from zero
+and detects repeated gaps between local minima. The default horizon begins at
+4,096 iterations and adaptively doubles up to 262,144 until the heuristic
+evidence gate passes or the cap is reached. `iterations`,
+`maximum_detection_iterations`, `minimum_return_repetitions`, and
+`adaptive_detection` can bound or control this work. A successful result means
+`cardinality_detected`; `detection.candidate_cardinality` is still a numerical
+candidate, and `detection.ambiguous` can remain true even when a candidate is
+returned. Recurrence gaps can be distorted by finite-precision stagnation,
+particularly when a critical orbit approaches an attracting fixed point.
+Neither the candidate nor a zero recurrence error proves a primitive period.
+
+`FractoOrbitalPoints` detects a candidate by default or accepts a positive
+integer `cardinality` supplied by its caller. `cardinality_source` records that
+provenance. Its `newton_mode` is `native`, `big_complex` (default), or `both`;
+`precision_digits` controls BigComplex arithmetic up to 512 digits, while
+`newton_limit` bounds Newton cycles. Decimal coordinate strings are preserved
+in the BigComplex solver. Both Newton solvers start their root guess at zero,
+so they can converge to a lower-period root such as the attracting fixed point
+even when a larger period was supplied. Repeated points and zero Newton step
+must not be treated as confirmation of the requested period. Check the number
+of distinct points, closure, and primitive period independently. More
+arithmetic precision can reduce rounding but cannot change a Newton basin or
+restore coordinate digits that were already lost before string input.
+
+Direct SDK results retain detailed samples and diagnostics for analysis. The
+data-server `/orbital_newton` HTTP response is deliberately smaller and omits
+large detector arrays and detailed solver evidence; it is not a serialization
+of the complete SDK result.
 
 ### Color and tile data
 

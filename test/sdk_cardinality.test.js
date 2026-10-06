@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import FractoFastCalc from "../sdk/FractoFastCalc.js";
 import FractoCardinality from "../sdk/FractoCardinality.js";
 import { detect_return_cardinality } from "../sdk/orbitals/FractoReturnDetection.js";
 import * as sdk from "../sdk/index.js";
@@ -32,11 +33,54 @@ test("adaptive cardinality detection resolves the weak short-window candidate", 
   );
 });
 
-test("cardinality detector reports when a request lies outside the main cardioid", () => {
-  const result = FractoCardinality({ re: 2, im: 0 });
-  assert.equal(result.domain, "outside_main_cardioid");
-  assert.equal(result.diagnostics.domain, "outside_main_cardioid");
-  assert.equal(result.escaped, true);
+test("exact fixed-point-basin input returns an ambiguous 16-gap candidate", () => {
+  const result = FractoCardinality({
+    re: "0.22700118863600927",
+    im: "0.24308664073329525",
+  });
+
+  assert.equal(result.status, "cardinality_detected");
+  assert.equal(result.detection.candidate_cardinality, 16);
+  assert.equal(result.detection.ambiguous, true);
+  assert.equal(result.detection.matching_gaps, 15);
+  assert.equal(result.detection.gap_gcd, 16);
+  assert.deepEqual(result.diagnostics.checked_horizons, [
+    4096,
+    8192,
+    16384,
+    32768,
+    65536,
+    131072,
+    262144,
+  ]);
+  const alternative_cardinalities = result.detection.alternatives.map(
+    ({ cardinality }) => cardinality,
+  );
+  assert.ok([5, 21, 37].every((candidate) =>
+    alternative_cardinalities.includes(candidate),
+  ));
+  assert.ok(
+    result.detection.alternatives.every(({ recurrence_error }) =>
+      recurrence_error === 0,
+    ),
+  );
+});
+
+test("cardinality returns FractoFastCalc directly outside the main cardioid", () => {
+  const expected = { pattern: 7, iteration: 12345, orbital_points: [] };
+  const original_calc = FractoFastCalc.calc;
+  const calls = [];
+  FractoFastCalc.calc = (...args) => {
+    calls.push(args);
+    return expected;
+  };
+  try {
+    const result = FractoCardinality({ re: "0.5", im: "0.5" });
+    assert.equal(result, expected);
+    assert.deepEqual(calls, [[0.5, 0.5]]);
+  } finally {
+    FractoFastCalc.calc = original_calc;
+  }
 });
 
 test("fixed-horizon mode preserves the raw candidate and records its horizon", () => {
@@ -65,14 +109,20 @@ test("magnitude-weighted coherence discounts small reversals and stops adaptive 
 });
 
 test("magnitude-weighted coherence treats an exact stable cycle with zero swings as coherent", () => {
-  const result = FractoCardinality({ re: "-1", im: "0" });
+  const result = detect_return_cardinality(
+    Array.from({ length: 128 }, (_, iteration) => ({
+      iteration,
+      re: iteration % 2 === 0 ? 0 : -1,
+      im: 0,
+      radius: iteration % 2 === 0 ? 0 : 1,
+    })),
+  );
 
-  assert.equal(result.detection.candidate_cardinality, 2);
-  assert.equal(result.detection.pyramid_coherence, 0);
-  assert.equal(result.detection.pyramid_magnitude_coherence, 1);
-  assert.equal(result.detection.legacy_ambiguous, true);
-  assert.equal(result.detection.ambiguous, false);
-  assert.deepEqual(result.diagnostics.checked_horizons, [4096]);
+  assert.equal(result.candidate_cardinality, 2);
+  assert.equal(result.pyramid_coherence, 0);
+  assert.equal(result.pyramid_magnitude_coherence, 1);
+  assert.equal(result.legacy_ambiguous, true);
+  assert.equal(result.ambiguous, false);
 });
 
 test("return detection summarizes very large matching-minima sets without argument spreading", () => {

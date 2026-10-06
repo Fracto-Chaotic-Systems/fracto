@@ -1,3 +1,5 @@
+import FractoFastCalc from "./FractoFastCalc.js";
+import FractoUtil from "./FractoUtil.js";
 import FractoCardinality from "./FractoCardinality.js";
 import { newton_derived } from "./orbitals/FractoNewtonDerived.js";
 import { newton_big_complex } from "./orbitals/FractoNewtonBigComplex.js";
@@ -52,6 +54,17 @@ export default function FractoOrbitalPoints(point, options = {}) {
       newton: null,
       diagnostics: { reason: "coordinates_must_be_finite_numbers" },
     };
+  }
+  if (
+    !FractoUtil.point_in_main_cardioid({
+      x: Number(normalized_point.re),
+      y: Number(normalized_point.im),
+    })
+  ) {
+    return FractoFastCalc.calc(
+      Number(normalized_point.re),
+      Number(normalized_point.im),
+    );
   }
 
   const has_supplied_cardinality = options.cardinality !== undefined &&
