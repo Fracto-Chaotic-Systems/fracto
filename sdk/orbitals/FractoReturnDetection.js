@@ -133,10 +133,7 @@ const score_pyramid_contender = (contender, minimum_cycles, max_layers) => {
   const sign_stability = contender.sign_changes === 0 ? 1 : 0;
   const near_zero = contender.near_zero_events > 0 ? 0.5 : 1;
   const score =
-    0.35 * repetition +
-    0.4 * layers +
-    0.2 * sign_stability +
-    0.05 * near_zero;
+    0.35 * repetition + 0.4 * layers + 0.2 * sign_stability + 0.05 * near_zero;
   return {
     score,
     repetition,
@@ -183,7 +180,9 @@ const validate_candidate_period = (
       ),
     );
   }
-  const max_residual = residuals.length ? Math.max(...residuals) : Infinity;
+  const max_residual = residuals.length
+    ? residuals.reduce((maximum, value) => Math.max(maximum, value), 0)
+    : Infinity;
   const mean_residual = residuals.length
     ? residuals.reduce((sum, value) => sum + value, 0) / residuals.length
     : Infinity;
@@ -254,7 +253,15 @@ const derivative_pyramid = (samples, gap, sample_by_iteration) => {
   const values = [];
   const first_iteration = samples[0]?.iteration;
   if (!Number.isFinite(first_iteration)) {
-    return { coherence: 0, layers: 0, sign_changes: 0, sample_count: 0 };
+    return {
+      coherence: 0,
+      magnitude_coherence: 0,
+      minimum_layer_magnitude_coherence: 0,
+      layers: 0,
+      sign_changes: 0,
+      sample_count: 0,
+      layer_diagnostics: [],
+    };
   }
   for (let cycle = 0; cycle <= DERIVATIVE_PYRAMID_CYCLES; cycle += 1) {
     const sample = sample_by_iteration.get(first_iteration + cycle * gap);
@@ -262,15 +269,87 @@ const derivative_pyramid = (samples, gap, sample_by_iteration) => {
     values.push(sample.radius);
   }
   if (values.length < 3) {
-    return { coherence: 0, layers: 0, sign_changes: 0, sample_count: values.length };
+    return {
+      coherence: 0,
+      magnitude_coherence: 0,
+      minimum_layer_magnitude_coherence: 0,
+      layers: 0,
+      sign_changes: 0,
+      sample_count: values.length,
+      layer_diagnostics: [],
+    };
   }
   let layer = values;
   let coherent_layers = 0;
   let sign_changes = 0;
+  const layer_diagnostics = [];
   while (layer.length > 1) {
-    const differences = layer.slice(1).map((value, index) => value - layer[index]);
-    const scale = Math.max(...differences.map((value) => Math.abs(value)), 0);
+    const differences = layer
+      .slice(1)
+      .map((value, index) => value - layer[index]);
+    const scale = differences.reduce(
+      (maximum, value) => Math.max(maximum, Math.abs(value)),
+      0,
+    );
     const epsilon = Math.max(scale * 1e-12, 1e-30);
+    let minimum_absolute_change = Infinity;
+    let maximum_absolute_change = 0;
+    let absolute_change_total = 0;
+    let positive_change_count = 0;
+    let negative_change_count = 0;
+    let ignored_change_count = 0;
+    let positive_change_magnitude = 0;
+    let negative_change_magnitude = 0;
+    differences.forEach((value) => {
+      const absolute_change = Math.abs(value);
+      minimum_absolute_change = Math.min(
+        minimum_absolute_change,
+        absolute_change,
+      );
+      maximum_absolute_change = Math.max(
+        maximum_absolute_change,
+        absolute_change,
+      );
+      absolute_change_total += absolute_change;
+      if (value > epsilon) {
+        positive_change_count += 1;
+        positive_change_magnitude += value;
+      } else if (value < -epsilon) {
+        negative_change_count += 1;
+        negative_change_magnitude += Math.abs(value);
+      } else {
+        ignored_change_count += 1;
+      }
+    });
+    const absolute_change_spread =
+      maximum_absolute_change - minimum_absolute_change;
+    const total_directional_magnitude =
+      positive_change_magnitude + negative_change_magnitude;
+    const directional_magnitude_coherence =
+      total_directional_magnitude > 0
+        ? Math.abs(positive_change_magnitude - negative_change_magnitude) /
+          total_directional_magnitude
+        : 1;
+    layer_diagnostics.push({
+      finite_difference_order: layer_diagnostics.length + 1,
+      sample_count: differences.length,
+      noise_threshold: epsilon,
+      scale,
+      minimum_absolute_change: Number.isFinite(minimum_absolute_change)
+        ? minimum_absolute_change
+        : 0,
+      maximum_absolute_change,
+      mean_absolute_change: absolute_change_total / differences.length,
+      absolute_change_spread,
+      normalized_absolute_change_spread:
+        scale > 0 ? absolute_change_spread / scale : 0,
+      positive_change_count,
+      negative_change_count,
+      ignored_change_count,
+      positive_change_magnitude,
+      negative_change_magnitude,
+      directional_magnitude_coherence,
+    });
     const signs = differences
       .filter((value) => Math.abs(value) > epsilon)
       .map((value) => Math.sign(value));
@@ -283,11 +362,24 @@ const derivative_pyramid = (samples, gap, sample_by_iteration) => {
     layer = differences;
   }
   const layers = values.length - 1;
+  const magnitude_coherence =
+    layer_diagnostics.reduce(
+      (sum, diagnostic) => sum + diagnostic.directional_magnitude_coherence,
+      0,
+    ) / Math.max(1, layer_diagnostics.length);
+  const minimum_layer_magnitude_coherence = layer_diagnostics.reduce(
+    (minimum, diagnostic) =>
+      Math.min(minimum, diagnostic.directional_magnitude_coherence),
+    1,
+  );
   return {
     coherence: coherent_layers / Math.max(1, layers),
+    magnitude_coherence,
+    minimum_layer_magnitude_coherence,
     layers,
     sign_changes,
     sample_count: values.length,
+    layer_diagnostics,
   };
 };
 
@@ -307,7 +399,10 @@ const derivative_pyramid = (samples, gap, sample_by_iteration) => {
  */
 export const detect_pyramid_contenders = (samples, options = {}) => {
   const started = performance.now();
-  const minimum_cycles = Math.max(2, Math.floor(Number(options.minimum_cycles) || 10));
+  const minimum_cycles = Math.max(
+    2,
+    Math.floor(Number(options.minimum_cycles) || 10),
+  );
   const max_cardinality = Math.min(
     Math.floor((samples.length - 1) / minimum_cycles),
     Math.max(1, Math.floor(Number(options.max_cardinality) || 4096)),
@@ -466,10 +561,7 @@ export const detect_pyramid_contenders = (samples, options = {}) => {
       contender.sample_values.length = 0;
       eliminated += 1;
       record_elimination(contender);
-      max_layer_reached = Math.max(
-        max_layer_reached,
-        contender.pyramid_layers,
-      );
+      max_layer_reached = Math.max(max_layer_reached, contender.pyramid_layers);
       return;
     }
     if (contender.near_zero_events > 0) {
@@ -493,8 +585,13 @@ export const detect_pyramid_contenders = (samples, options = {}) => {
     let sign_changes = 0;
     let rejected = false;
     while (layer.length > 1 && !rejected && coherent_layers < max_layers) {
-      const differences = layer.slice(1).map((value, index) => value - layer[index]);
-      const scale = Math.max(...differences.map((value) => Math.abs(value)), 0);
+      const differences = layer
+        .slice(1)
+        .map((value, index) => value - layer[index]);
+      const scale = differences.reduce(
+        (maximum, value) => Math.max(maximum, Math.abs(value)),
+        0,
+      );
       const epsilon = Math.max(
         Number.EPSILON * noise_factor * Math.max(1, scale),
         near_zero_tolerance,
@@ -570,7 +667,9 @@ export const detect_pyramid_contenders = (samples, options = {}) => {
     survivor.rank = index + 1;
   });
   return {
-    status: survivors.length ? "pyramid_contenders_found" : "pyramid_inconclusive",
+    status: survivors.length
+      ? "pyramid_contenders_found"
+      : "pyramid_inconclusive",
     minimum_cycles,
     max_cardinality,
     max_layers,
@@ -634,12 +733,16 @@ export const detect_return_cardinality = (samples, options = {}) => {
       sample.radius <= samples[index - 1].radius &&
       sample.radius < samples[index + 1].radius,
   );
-  const radius_sorted = [...minima].sort((left, right) => left.radius - right.radius);
+  const radius_sorted = [...minima].sort(
+    (left, right) => left.radius - right.radius,
+  );
   let return_minima = minima;
   let largest_radius_gap = 0;
   let radius_gap_index = -1;
   for (let index = 1; index < radius_sorted.length; index += 1) {
-    const ratio = radius_sorted[index].radius / Math.max(radius_sorted[index - 1].radius, 1e-30);
+    const ratio =
+      radius_sorted[index].radius /
+      Math.max(radius_sorted[index - 1].radius, 1e-30);
     if (ratio > largest_radius_gap) {
       largest_radius_gap = ratio;
       radius_gap_index = index;
@@ -751,13 +854,15 @@ export const detect_return_cardinality = (samples, options = {}) => {
         ),
       )
     : 1;
-  const matching_minima = [
-    return_minima[best.indexes[0][0]],
-    ...best.indexes.map((pair) => return_minima[pair[1]]),
-  ];
-  const radii = matching_minima.map((sample) => sample.radius);
-  const minimum_radius = Math.min(...radii);
-  const maximum_radius = Math.max(...radii);
+  const matching_minima = [return_minima[best.indexes[0][0]]];
+  let minimum_radius = matching_minima[0].radius;
+  let maximum_radius = minimum_radius;
+  for (const pair of best.indexes) {
+    const sample = return_minima[pair[1]];
+    matching_minima.push(sample);
+    minimum_radius = Math.min(minimum_radius, sample.radius);
+    maximum_radius = Math.max(maximum_radius, sample.radius);
+  }
   const radius_stability =
     1 -
     Math.min(
@@ -765,6 +870,10 @@ export const detect_return_cardinality = (samples, options = {}) => {
       (maximum_radius - minimum_radius) / Math.max(maximum_radius, 1e-30),
     );
   const recurrence = Math.min(1, best.indexes.length / minimum_repetitions);
+  const legacy_ambiguous =
+    recurrence_quality < 0.5 ||
+    confidence_margin < 0.1 ||
+    best.pyramid.coherence < 0.5;
   return {
     status: "return_pattern_detected",
     minimum_return_repetitions: minimum_repetitions,
@@ -774,21 +883,31 @@ export const detect_return_cardinality = (samples, options = {}) => {
     recurrence_baseline_error: baseline_error,
     recurrence_quality,
     pyramid_coherence: best.pyramid.coherence,
+    pyramid_magnitude_coherence: best.pyramid.magnitude_coherence,
+    pyramid_minimum_layer_magnitude_coherence:
+      best.pyramid.minimum_layer_magnitude_coherence,
     pyramid_layers: best.pyramid.layers,
     pyramid_sign_changes: best.pyramid.sign_changes,
+    pyramid_layer_diagnostics: best.pyramid.layer_diagnostics,
+    legacy_ambiguous,
     confidence_margin,
     ambiguous:
       recurrence_quality < 0.5 ||
       confidence_margin < 0.1 ||
-      best.pyramid.coherence < 0.5,
+      best.pyramid.magnitude_coherence < 0.5 ||
+      best.pyramid.minimum_layer_magnitude_coherence < 0.5,
     alternatives: ranked.slice(1, 6).map((candidate) => ({
       cardinality: candidate.gap,
       matching_gaps: candidate.indexes.length,
       recurrence_error: candidate.recurrence_error,
       harmonic: candidate.gap % cardinality === 0,
       pyramid_coherence: candidate.pyramid.coherence,
+      pyramid_magnitude_coherence: candidate.pyramid.magnitude_coherence,
+      pyramid_minimum_layer_magnitude_coherence:
+        candidate.pyramid.minimum_layer_magnitude_coherence,
       pyramid_layers: candidate.pyramid.layers,
       pyramid_sign_changes: candidate.pyramid.sign_changes,
+      pyramid_layer_diagnostics: candidate.pyramid.layer_diagnostics,
     })),
     gap_gcd: best.indexes.reduce(
       (result, index) =>

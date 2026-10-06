@@ -31,6 +31,18 @@ const result = FractoFastCalc.calc(point.re, point.im);
   returns the candidate, evidence, bounded adaptive horizons, and an explicit
   non-proof status. Consumers import `@fracto/sdk/FractoCardinality.js` or the
   named `FractoCardinality` barrel export.
+- `FractoOrbitalPoints.js` provides the common detector-to-Newton interface.
+  It uses `FractoCardinality` by default or accepts an explicitly sourced
+  cardinality candidate, recording that source in its result. Newton outputs
+  are numerical candidates, not closure or stability proofs. Native and
+  BigComplex modes remain selectable for comparison; the BigComplex mode
+  preserves decimal input coordinates and performs the Newton quotient with
+  decimal arithmetic.
+- `orbitals/FractoNewtonDerived.js` and
+  `orbitals/FractoNewtonBigComplex.js` contain the SDK's Newton solver
+  implementations. The data server's corresponding modules are compatibility
+  re-exports; callers should use `FractoOrbitalPoints` for unified provenance
+  and result structure.
 - `orbitals/FractoOrbitSampling.js` and
   `orbitals/FractoReturnDetection.js` contain the sampler and return detector
   used internally by `FractoCardinality`; data-server compatibility modules
