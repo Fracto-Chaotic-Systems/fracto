@@ -12,7 +12,7 @@ const MAX_ITERATIONS = 1_000_000;
  *   vector magnitude `|z|` from the origin; it is not distance from Q.
  */
 export const sample_orbit = (point, options = {}) => {
-  const iterations = Math.min(
+  const iteration_horizon = Math.min(
     MAX_ITERATIONS,
     Math.max(1, Math.floor(Number(options.iterations) || DEFAULT_ITERATIONS)),
   );
@@ -21,24 +21,40 @@ export const sample_orbit = (point, options = {}) => {
   let z_re = Number(options.seed?.re ?? options.seed?.x ?? 0);
   let z_im = Number(options.seed?.im ?? options.seed?.y ?? 0);
   let escaped = false;
+  let completed_iterations = 0;
+  const can_use_radius_bailout = Math.hypot(c_re, c_im) <= 2;
   const samples = [];
-  for (let iteration = 0; iteration <= iterations; iteration += 1) {
+  for (let iteration = 0; iteration <= iteration_horizon; iteration += 1) {
+    completed_iterations = iteration;
     samples.push({
       iteration,
       re: z_re,
       im: z_im,
       radius: Math.hypot(z_re, z_im),
     });
-    if (iteration === iterations) break;
+    if (
+      !Number.isFinite(z_re) ||
+      !Number.isFinite(z_im) ||
+      (can_use_radius_bailout && samples[samples.length - 1].radius > 2)
+    ) {
+      escaped = true;
+      break;
+    }
+    if (iteration === iteration_horizon) break;
     const next_re = z_re * z_re - z_im * z_im + c_re;
     z_im = 2 * z_re * z_im + c_im;
     z_re = next_re;
     if (!Number.isFinite(z_re) || !Number.isFinite(z_im)) {
       escaped = true;
+      completed_iterations = iteration + 1;
       break;
     }
   }
-  return { samples, escaped, iterations };
+  return {
+    samples,
+    escaped,
+    iterations: escaped ? completed_iterations : iteration_horizon,
+  };
 };
 
 /** Sample the critical Mandelbrot orbit beginning at z=0. */

@@ -16,6 +16,8 @@ explicit seed is provided.
 
 - `FractoOrbitSampling.js` iterates an orbit from a configurable complex seed
   for a bounded horizon and retains the samples used by return detection.
+  Escaping samples stop at the radius-2 bailout when valid for the parameter,
+  and report the actual iteration count rather than the configured horizon.
   `sample_critical_orbit()` remains a zero-seed wrapper for compatibility.
 - `FractoReturnDetection.js` identifies repeated near-origin return gaps and
   provides the separate derivative-pyramid candidate sieve. The latter is

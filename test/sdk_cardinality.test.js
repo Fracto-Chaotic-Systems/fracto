@@ -5,6 +5,25 @@ import FractoFastCalc from "../sdk/FractoFastCalc.js";
 import FractoCardinality from "../sdk/FractoCardinality.js";
 import { sample_orbit } from "../sdk/orbitals/FractoOrbitSampling.js";
 import { detect_return_cardinality } from "../sdk/orbitals/FractoReturnDetection.js";
+
+test("orbit sampler reports the actual escape iteration instead of its horizon", () => {
+  const escaped = sample_orbit(
+    { re: 0, im: 0 },
+    { seed: { re: 2.1, im: 0 }, iterations: 4096 },
+  );
+
+  assert.equal(escaped.escaped, true);
+  assert.equal(escaped.iterations, 0);
+  assert.equal(escaped.samples.at(-1).iteration, 0);
+
+  const bailout = sample_orbit(
+    { re: 0, im: 0 },
+    { seed: { re: 1.5, im: 0 }, iterations: 4096 },
+  );
+  assert.equal(bailout.escaped, true);
+  assert.equal(bailout.iterations, 1);
+  assert.equal(bailout.samples.at(-1).iteration, 1);
+});
 import * as sdk from "../sdk/index.js";
 
 test("SDK exposes one adaptive main-cardioid cardinality function", () => {
