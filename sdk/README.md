@@ -26,11 +26,29 @@ const result = FractoFastCalc.calc(point.re, point.im);
 ### Calculation and math
 
 - `FractoFastCalc.js` performs fast Mandelbrot-set and orbit calculations.
+  Its established `calc(re, im, level)` continues to iterate from `z=0`.
+  The separate experimental `calc_from_seed(re, im, seed_re, seed_im, level)`
+  uses the supplied initial orbit point without changing `calc()`.
+  `calc_big_complex_from_seed(re, im, seed_re, seed_im, options)` is another
+  isolated experimental path for high-precision seed surveys. It keeps the
+  coordinates in BigComplex/Decimal arithmetic, reports candidate cycles,
+  escapes, unresolved runs, or numerical failures, and returns decimal-string
+  orbit points. Its precision, iteration cap, transient, and recurrence
+  tolerance are explicit settings. It recognizes slow one-point convergence
+  from successive-step and fixed-point residuals, although the survey
+  intentionally omits singleton results from its dots. A repeated state
+  within tolerance is a finite-precision candidate, not proof of an exact
+  cycle. Neither seeded method changes the behavior of `calc()`.
 - `FractoCardinality.js` is the single production entry point for best-known
-  critical-orbit return-cardinality detection inside the main cardioid. It
+  orbit return-cardinality detection inside the main cardioid. By default it
+  uses the critical orbit from `z=0`; callers may pass `options.seed` as a
+  complex `{re, im}` (or `{x, y}`) value to detect from another initial point.
+  Results record the selected seed and detector method. It
   returns the candidate, evidence, bounded adaptive horizons, and an explicit
   non-proof status. Outside the main cardioid it returns `FractoFastCalc.calc()`
-  directly without running the critical-orbit detector. Consumers import
+  directly without running the detector, unless `options.seed` is supplied;
+  with a seed it returns `FractoFastCalc.calc_from_seed()` instead. Set
+  `options.seed_level` to bound that fallback calculator's work. Consumers import
   `@fracto/sdk/FractoCardinality.js` or the named `FractoCardinality` barrel
   export.
 - `FractoOrbitalPoints.js` provides the common detector-to-Newton interface.
@@ -99,7 +117,12 @@ shape is preserved, and Newton is skipped even if a period was supplied.
 Invalid coordinates return an `invalid_input` envelope.
 
 Within the cardioid, `FractoCardinality` samples the critical orbit from zero
-and detects repeated gaps between local minima. The default horizon begins at
+unless `options.seed` supplies another initial complex value, then detects
+repeated gaps between local minima. Pass a seed as
+`{ seed: { re: "0.25", im: "-0.125" } }` or `{ seed: { x: 0.25, y: -0.125 } }`.
+The result includes the actual starting seed and marks the detector as
+`seeded_orbit_return` or `critical_orbit_return`. Omitting `seed` preserves
+the existing zero-start behavior. The default horizon begins at
 4,096 iterations and adaptively doubles up to 262,144 until the heuristic
 evidence gate passes or the cap is reached. `iterations`,
 `maximum_detection_iterations`, `minimum_return_repetitions`, and

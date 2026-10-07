@@ -10,13 +10,20 @@ Both public SDK entry points are scoped to the main cardioid. When a valid
 parameter is outside that domain, `FractoCardinality` and
 `FractoOrbitalPoints` return `FractoFastCalc.calc(re, im)` directly. The
 cardinality detector and Newton solvers are skipped; the calculator's result
-shape is preserved as-is.
+shape is preserved as-is. `FractoCardinality` also returns that result by
+default outside the cardioid, but uses `calc_from_seed()` there when an
+explicit seed is provided.
 
-- `FractoOrbitSampling.js` iterates the critical orbit for a bounded horizon
-  and retains the samples used by return detection.
+- `FractoOrbitSampling.js` iterates an orbit from a configurable complex seed
+  for a bounded horizon and retains the samples used by return detection.
+  `sample_critical_orbit()` remains a zero-seed wrapper for compatibility.
 - `FractoReturnDetection.js` identifies repeated near-origin return gaps and
   provides the separate derivative-pyramid candidate sieve. The latter is
   experimental; neither method proves a mathematical period.
+  Cardinality passes contiguous iteration metadata from its sampler so the
+  detector can index samples directly and select recurrence medians without
+  sorting; standalone detector calls retain support for arbitrary iteration
+  labels.
 - `FractoCardinalityQuality.js` evaluates whether a return candidate has
   enough repeated-gap evidence to stop adaptive horizon growth.
 - `FractoNewtonDerived.js` refines a supplied cardinality with JavaScript

@@ -142,6 +142,306 @@ export class FractoFastCalc {
       };
    }
 
+   /**
+    * Experimental variant of calc() with an explicit initial orbit point.
+    * The Mandelbrot parameter remains (x0, y0); seed_x/seed_y only replace
+    * the initial Q value. The default calculator continues to use (0, 0).
+    */
+   static calc_from_seed = (x0, y0, seed_x = 0.5, seed_y = 0, level = 10) => {
+      const P_x = x0
+      const P_y = y0
+      let Q_x_squared = seed_x * seed_x
+      let Q_y_squared = seed_y * seed_y
+      let Q_x = seed_x
+      let Q_y = seed_y
+      let first_pos = {}
+      let orbital = 0
+      let least_magnitude = 1
+      let best_orbital = 0
+      let iteration = 1
+      let estimated = false
+      const iteration_factor = (MIN_ITERATION * level / 10) + MAX_ORBITAL_SIZE
+      const max_iteration = Math.round(iteration_factor / MAX_ORBITAL_SIZE) * MAX_ORBITAL_SIZE
+      for (; iteration < max_iteration; iteration++) {
+         if (iteration % 1000000000 === 0) {
+            console.log('iteration', iteration)
+            console.log('Q_x,Q_y,P_x,P_y', Q_x, Q_y, P_x, P_y)
+         }
+         Q_y = 2 * Q_x * Q_y + P_y;
+         Q_x = Q_x_squared - Q_y_squared + P_x;
+         Q_x_squared = Q_x * Q_x
+         Q_y_squared = Q_y * Q_y
+         if (Q_x_squared + Q_y_squared > 100) {
+            return {
+               pattern: 0,
+               iteration: iteration,
+            };
+         }
+         if (iteration % MAX_ORBITAL_SIZE === 0) {
+            first_pos = {x: Q_x, y: Q_y}
+            orbital = 0
+         } else if (iteration > MAX_ORBITAL_SIZE) {
+            orbital++
+            if (Q_x === first_pos.x && Q_y === first_pos.y) {
+               const orbital_points = []
+               for (let i = 0; i < orbital + 1; i++) {
+                  Q_y = 2 * Q_x * Q_y + P_y;
+                  Q_x = Q_x_squared - Q_y_squared + P_x;
+                  Q_x_squared = Q_x * Q_x
+                  Q_y_squared = Q_y * Q_y
+                  orbital_points.push({
+                     x: Q_x,
+                     y: Q_y
+                  })
+               }
+               if (iteration < 60000) {
+                  iteration = seed_x === 0 && seed_y === 0
+                     ? FractoFastCalc.best_iteration(orbital, x0, y0)
+                     : FractoFastCalc.best_iteration_from_seed(
+                          orbital, x0, y0, seed_x, seed_y)
+               }
+               return {
+                  pattern: orbital,
+                  iteration: iteration,
+                  orbital_points: orbital_points
+               };
+            }
+         }
+
+         if (iteration > max_iteration - MAX_ORBITAL_SIZE) {
+            estimated = true
+            const difference = new Complex(Q_x - first_pos.x, Q_y - first_pos.y)
+            const mag_difference = difference.magnitude()
+            if (mag_difference < least_magnitude) {
+               least_magnitude = mag_difference
+               best_orbital = orbital
+            }
+         }
+      }
+      const orbital_points = []
+      for (let i = 0; i < best_orbital + 1; i++) {
+         Q_y = 2 * Q_x * Q_y + P_y;
+         Q_x = Q_x_squared - Q_y_squared + P_x;
+         Q_x_squared = Q_x * Q_x
+         Q_y_squared = Q_y * Q_y
+         orbital_points.push({
+            x: Q_x,
+            y: Q_y
+         })
+      }
+      return {
+         pattern: best_orbital,
+         iteration: iteration,
+         orbital_points: orbital_points,
+         estimated,
+      };
+   }
+
+   /**
+    * High-precision seeded iteration for the experimental seed survey.
+    * This path is separate from both calc() and calc_from_seed(); it retains
+    * Decimal coordinates through iteration and detects a return within an
+    * explicit tolerance after a configurable transient.
+    */
+   static calc_big_complex_from_seed = (
+      x0,
+      y0,
+      seed_x,
+      seed_y,
+      options = {},
+   ) => {
+      const configured_precision = Number(options.precision_digits)
+      const configured_iteration_cap = Number(options.iteration_cap)
+      const configured_transient_limit = Number(options.transient_limit)
+      const precision_digits = Math.max(
+         32,
+         Math.floor(Number.isFinite(configured_precision) ? configured_precision : 64),
+      )
+      const iteration_cap = Math.max(
+         1,
+         Math.floor(Number.isFinite(configured_iteration_cap) ? configured_iteration_cap : 10000),
+      )
+      const transient_limit = Math.min(
+         iteration_cap - 1,
+         Math.max(
+            0,
+            Math.floor(Number.isFinite(configured_transient_limit) ? configured_transient_limit : 5000),
+         ),
+      )
+      const tolerance = `${options.tolerance || "1e-40"}`
+      try {
+         const seed = new BigComplex(seed_x, seed_y, precision_digits)
+         const parameter = new BigComplex(x0, y0, precision_digits)
+         if (!seed.is_valid() || !parameter.is_valid()) {
+            return {
+               pattern: 0,
+               iteration: 0,
+               orbital_points: [],
+               estimated: true,
+               status: "invalid_input",
+               precision_digits,
+               iteration_cap,
+               transient_limit,
+               tolerance,
+            }
+         }
+
+         const Decimal = seed.Decimal
+         const parameter_re = new Decimal(parameter.re)
+         const parameter_im = new Decimal(parameter.im)
+         const tolerance_decimal = new Decimal(tolerance)
+         if (!tolerance_decimal.isFinite() || !tolerance_decimal.gt(0)) {
+            throw new Error("tolerance must be a positive finite decimal");
+         }
+         const tolerance_squared = tolerance_decimal.mul(tolerance_decimal)
+         const advance = (re, im) => [
+            re.mul(re).minus(im.mul(im)).plus(parameter_re),
+            re.mul(im).mul(2).plus(parameter_im),
+         ];
+         const escaped = (re, im) =>
+            re.mul(re).plus(im.mul(im)).gt(100);
+
+         let current_re = new Decimal(seed.re)
+         let current_im = new Decimal(seed.im)
+         for (let iteration = 1; iteration <= iteration_cap; iteration++) {
+            [current_re, current_im] = advance(current_re, current_im)
+            if (escaped(current_re, current_im)) {
+               return {
+                  pattern: 0,
+                  iteration,
+                  orbital_points: [],
+                  estimated: false,
+                  status: "escaped",
+                  precision_digits,
+                  iteration_cap,
+                  transient_limit,
+                  tolerance,
+               }
+            }
+            if (iteration <= transient_limit) {
+               continue
+            }
+
+            const checkpoint_re = current_re
+            const checkpoint_im = current_im
+            let probe_re = current_re
+            let probe_im = current_im
+            let prior_probe_re = probe_re
+            let prior_probe_im = probe_im
+            const first_return_iteration = iteration + 1
+            for (
+               let return_iteration = first_return_iteration;
+               return_iteration <= iteration_cap;
+               return_iteration++
+            ) {
+               [probe_re, probe_im] = advance(probe_re, probe_im)
+               if (escaped(probe_re, probe_im)) {
+                  return {
+                     pattern: 0,
+                     iteration: return_iteration,
+                     orbital_points: [],
+                     estimated: false,
+                     status: "escaped",
+                     precision_digits,
+                     iteration_cap,
+                     transient_limit,
+                     tolerance,
+                  }
+               }
+               if (return_iteration % 16 === 0) {
+                  const step_re = probe_re.minus(prior_probe_re);
+                  const step_im = probe_im.minus(prior_probe_im);
+                  const step_residual_squared = step_re
+                     .mul(step_re)
+                     .plus(step_im.mul(step_im));
+                  if (step_residual_squared.lte(tolerance_squared)) {
+                     const [next_re, next_im] = advance(probe_re, probe_im);
+                     const fixed_residual_re = next_re.minus(probe_re);
+                     const fixed_residual_im = next_im.minus(probe_im);
+                     const fixed_residual_squared = fixed_residual_re
+                        .mul(fixed_residual_re)
+                        .plus(fixed_residual_im.mul(fixed_residual_im));
+                     if (fixed_residual_squared.lte(tolerance_squared)) {
+                        const point = { x: probe_re.toString(), y: probe_im.toString() };
+                        return {
+                           pattern: 1,
+                           iteration: return_iteration,
+                           orbital_points: [point, { ...point }],
+                           estimated: false,
+                           status: "cycle_candidate",
+                           recurrence_residual: fixed_residual_squared.sqrt().toString(),
+                           precision_digits,
+                           iteration_cap,
+                           transient_limit,
+                           tolerance,
+                        };
+                     }
+                  }
+               }
+               prior_probe_re = probe_re;
+               prior_probe_im = probe_im;
+               const difference_re = probe_re.minus(checkpoint_re)
+               const difference_im = probe_im.minus(checkpoint_im)
+               const residual_squared = difference_re
+                  .mul(difference_re)
+                  .plus(difference_im.mul(difference_im))
+               if (residual_squared.lte(tolerance_squared)) {
+                  const period = return_iteration - iteration
+                  const orbital_points = []
+                  let orbit_re = checkpoint_re
+                  let orbit_im = checkpoint_im
+                  for (let point_index = 0; point_index < period; point_index++) {
+                     [orbit_re, orbit_im] = advance(orbit_re, orbit_im)
+                     orbital_points.push({
+                        x: orbit_re.toString(),
+                        y: orbit_im.toString(),
+                     })
+                  }
+                  if (orbital_points.length > 0) {
+                     orbital_points.push({ ...orbital_points[0] })
+                  }
+                  return {
+                     pattern: period,
+                     iteration: return_iteration,
+                     orbital_points,
+                     estimated: false,
+                     status: "cycle_candidate",
+                     recurrence_residual: residual_squared.sqrt().toString(),
+                     precision_digits,
+                     iteration_cap,
+                     transient_limit,
+                     tolerance,
+                  }
+               }
+            }
+            return {
+               pattern: 0,
+               iteration: iteration_cap,
+               orbital_points: [],
+               estimated: true,
+               status: "unresolved",
+               precision_digits,
+               iteration_cap,
+               transient_limit,
+               tolerance,
+            }
+         }
+      } catch (error) {
+         return {
+            pattern: 0,
+            iteration: 0,
+            orbital_points: [],
+            estimated: true,
+            status: "numerical_failure",
+            reason: error.message,
+            precision_digits,
+            iteration_cap,
+            transient_limit,
+            tolerance,
+         }
+      }
+   }
+
    static best_iteration = (pattern, x, y) => {
       const P_x = x
       const P_y = y
@@ -151,6 +451,31 @@ export class FractoFastCalc {
       let Q_y = 0
       let first_pos_x = x
       let first_pos_y = y
+      for (let iteration = 0; iteration < 100000000; iteration++) {
+         Q_y = 2 * Q_x * Q_y + P_y;
+         Q_x = Q_x_squared - Q_y_squared + P_x;
+         Q_x_squared = Q_x * Q_x
+         Q_y_squared = Q_y * Q_y
+         if (iteration % pattern === 0 && iteration) {
+            if (Q_x === first_pos_x && Q_y === first_pos_y) {
+               return iteration
+            }
+            first_pos_x = Q_x
+            first_pos_y = Q_y
+         }
+      }
+      return -1
+   }
+
+   static best_iteration_from_seed = (pattern, x, y, seed_x, seed_y) => {
+      const P_x = x
+      const P_y = y
+      let Q_x_squared = seed_x * seed_x
+      let Q_y_squared = seed_y * seed_y
+      let Q_x = seed_x
+      let Q_y = seed_y
+      let first_pos_x = seed_x
+      let first_pos_y = seed_y
       for (let iteration = 0; iteration < 100000000; iteration++) {
          Q_y = 2 * Q_x * Q_y + P_y;
          Q_x = Q_x_squared - Q_y_squared + P_x;

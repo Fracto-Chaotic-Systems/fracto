@@ -9,6 +9,33 @@ const DEFAULT_PRECISION_ESCALATION_FACTOR = 2;
 const DEFAULT_HARMONIC_SCORE_TOLERANCE = 0.1;
 const DEFAULT_PERIOD_VALIDATION_TOLERANCE = 1e-9;
 
+const select_kth = (values, target_index) => {
+  let left = 0;
+  let right = values.length - 1;
+  while (left <= right) {
+    const pivot = values[Math.floor((left + right) / 2)];
+    let lower = left;
+    let current = left;
+    let upper = right;
+    while (current <= upper) {
+      if (values[current] < pivot) {
+        [values[lower], values[current]] = [values[current], values[lower]];
+        lower += 1;
+        current += 1;
+      } else if (values[current] > pivot) {
+        [values[current], values[upper]] = [values[upper], values[current]];
+        upper -= 1;
+      } else {
+        current += 1;
+      }
+    }
+    if (target_index < lower) right = lower - 1;
+    else if (target_index > upper) left = upper + 1;
+    else return values[target_index];
+  }
+  return undefined;
+};
+
 /** Public selector for the derivative-pyramid-only detector. */
 export const DETECTION_MODE_PYRAMID_ONLY = "pyramid_only";
 
@@ -246,10 +273,10 @@ const greatest_common_divisor = (left, right) => {
  *
  * @param {Array<object>} samples Critical-orbit samples.
  * @param {number} gap Candidate cardinality.
- * @param {Map<number, object>} sample_by_iteration Samples indexed by iteration.
+ * @param {(iteration:number)=>object|undefined} sample_at_iteration Sample lookup.
  * @returns {{coherence:number,layers:number,sign_changes:number,sample_count:number}} Pyramid diagnostics.
  */
-const derivative_pyramid = (samples, gap, sample_by_iteration) => {
+const derivative_pyramid = (samples, gap, sample_at_iteration) => {
   const values = [];
   const first_iteration = samples[0]?.iteration;
   if (!Number.isFinite(first_iteration)) {
@@ -264,7 +291,7 @@ const derivative_pyramid = (samples, gap, sample_by_iteration) => {
     };
   }
   for (let cycle = 0; cycle <= DERIVATIVE_PYRAMID_CYCLES; cycle += 1) {
-    const sample = sample_by_iteration.get(first_iteration + cycle * gap);
+    const sample = sample_at_iteration(first_iteration + cycle * gap);
     if (!sample) break;
     values.push(sample.radius);
   }
@@ -710,11 +737,13 @@ export const detect_pyramid_contenders = (samples, options = {}) => {
 };
 
 /**
- * Detect a cardinality from repeated near-zero returns of a critical orbit.
+ * Detect a cardinality from repeated near-zero returns of a sampled orbit.
  *
  * @param {Array<{iteration:number,radius:number}>} samples Critical-orbit samples;
  *   `radius` is the origin-based magnitude `|z|`.
- * @param {{minimum_return_repetitions?:number}} [options] Detection controls.
+ * @param {{minimum_return_repetitions?:number,contiguous_iterations?:boolean}}
+ *   [options] Detection controls. Cardinality's internal sampler may enable
+ *   the contiguous mode to avoid building an iteration-index Map.
  * @returns {object} Candidate cardinality, supporting minima, and confidence.
  */
 export const detect_return_cardinality = (samples, options = {}) => {
@@ -779,20 +808,21 @@ export const detect_return_cardinality = (samples, options = {}) => {
       }
     }
   }
-  const sample_by_iteration = new Map(
-    samples.map((sample) => [sample.iteration, sample]),
-  );
+  const sample_by_iteration = options.contiguous_iterations
+    ? null
+    : new Map(samples.map((sample) => [sample.iteration, sample]));
+  const sample_at_iteration = options.contiguous_iterations
+    ? (iteration) => samples[iteration]
+    : (iteration) => sample_by_iteration.get(iteration);
   const recurrence_start = Math.floor(samples.length * 0.5);
-  const tail_samples = samples.slice(recurrence_start);
-  const tail_step_errors = tail_samples
-    .slice(1)
-    .map((sample, index) => {
-      const previous = tail_samples[index];
-      return Math.hypot(sample.re - previous.re, sample.im - previous.im);
-    })
-    .sort((left, right) => left - right);
+  const tail_step_errors = [];
+  for (let index = recurrence_start + 1; index < samples.length; index += 1) {
+    const sample = samples[index];
+    const previous = samples[index - 1];
+    tail_step_errors.push(Math.hypot(sample.re - previous.re, sample.im - previous.im));
+  }
   const baseline_error =
-    tail_step_errors[Math.floor(tail_step_errors.length / 2)] || 1;
+    select_kth(tail_step_errors, Math.floor(tail_step_errors.length / 2)) || 1;
   const ranked = [...gap_groups.entries()]
     // Do not spend a tail-wide recurrence pass on gaps that cannot satisfy
     // the repetition requirement in the first place.
@@ -801,20 +831,19 @@ export const detect_return_cardinality = (samples, options = {}) => {
       // Minima identify plausible periods, but their locations can be
       // transient. Validate each gap against every available tail sample so
       // a true return (such as 28 here) outranks a coincidental minima gap.
-      const errors = tail_samples
-        .map((current) => {
-          const previous = sample_by_iteration.get(current.iteration - gap);
-          return previous
-            ? Math.hypot(current.re - previous.re, current.im - previous.im)
-            : null;
-        })
-        .filter((error) => error !== null)
-        .sort((left, right) => left - right);
+      const errors = [];
+      for (let index = recurrence_start; index < samples.length; index += 1) {
+        const current = samples[index];
+        const previous = sample_at_iteration(current.iteration - gap);
+        if (previous) {
+          errors.push(Math.hypot(current.re - previous.re, current.im - previous.im));
+        }
+      }
       return {
         gap,
         indexes,
-        recurrence_error: errors[Math.floor(errors.length / 2)] ?? Infinity,
-        pyramid: derivative_pyramid(samples, gap, sample_by_iteration),
+        recurrence_error: select_kth(errors, Math.floor(errors.length / 2)) ?? Infinity,
+        pyramid: derivative_pyramid(samples, gap, sample_at_iteration),
       };
     })
     .sort(

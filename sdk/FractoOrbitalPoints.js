@@ -11,6 +11,11 @@ const normalize_point = (point) => {
   return { re: String(re), im: String(im) };
 };
 
+const detected_cardinality_source = (detector_result) =>
+  detector_result?.diagnostics?.detector === "seeded_orbit_return"
+    ? "sdk_seeded_orbit_return_detector"
+    : "sdk_critical_orbit_return_detector";
+
 const with_diagnostics = (result, mode, cardinality, source, precision_digits) => ({
   ...result,
   diagnostics: {
@@ -35,7 +40,8 @@ const with_diagnostics = (result, mode, cardinality, source, precision_digits) =
  *
  * @param {{re:number|string,im:number|string}|{x:number|string,y:number|string}} point
  *   Mandelbrot parameter. Decimal strings are preserved in big-complex mode.
- * @param {{cardinality?:number,cardinality_source?:string,iterations?:number,
+ * @param {{cardinality?:number,cardinality_source?:string,seed?:{re:number|string,
+ *   im:number|string}|{x:number|string,y:number|string},iterations?:number,
  *   maximum_detection_iterations?:number,minimum_return_repetitions?:number,
  *   adaptive_detection?:boolean,newton_limit?:number,
  *   newton_mode?:"native"|"big_complex"|"both",precision_digits?:number}} [options]
@@ -98,14 +104,14 @@ export default function FractoOrbitalPoints(point, options = {}) {
         status: detector_result.status,
         detection,
         cardinality: null,
-        cardinality_source: "sdk_critical_orbit_return_detector",
+        cardinality_source: detected_cardinality_source(detector_result),
         newton_native: null,
         newton_big_complex: null,
         newton: null,
       };
     }
     cardinality = detection.candidate_cardinality;
-    cardinality_source = "sdk_critical_orbit_return_detector";
+    cardinality_source = detected_cardinality_source(detector_result);
   }
 
   const newton_limit = Math.max(1, Math.floor(Number(options.newton_limit) || 10));

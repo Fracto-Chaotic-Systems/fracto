@@ -3,6 +3,7 @@ import test from "node:test";
 
 import FractoFastCalc from "../sdk/FractoFastCalc.js";
 import FractoCardinality from "../sdk/FractoCardinality.js";
+import { sample_orbit } from "../sdk/orbitals/FractoOrbitSampling.js";
 import { detect_return_cardinality } from "../sdk/orbitals/FractoReturnDetection.js";
 import * as sdk from "../sdk/index.js";
 
@@ -21,6 +22,13 @@ test("adaptive cardinality detection resolves the weak short-window candidate", 
   assert.deepEqual(result.diagnostics.checked_horizons, [4096, 8192, 16384]);
   assert.equal(result.diagnostics.evidence_gate_passed, true);
   assert.equal(result.diagnostics.mathematical_proof, false);
+  assert.deepEqual(result.samples[0], {
+    iteration: 0,
+    re: 0,
+    im: 0,
+    radius: 0,
+  });
+  assert.equal(result.diagnostics.detector, "critical_orbit_return");
   assert.equal(result.detection.pyramid_coherence, 1);
   assert.equal(result.detection.pyramid_layer_diagnostics.length, 10);
   assert.equal(
@@ -30,6 +38,44 @@ test("adaptive cardinality detection resolves the weak short-window candidate", 
   assert.ok(
     result.detection.pyramid_layer_diagnostics[0].positive_change_magnitude >=
       0,
+  );
+});
+
+test("cardinality detection can sample from a supplied complex seed", () => {
+  const seed = { re: "0.25", im: "-0.125" };
+  const result = FractoCardinality(
+    { re: "-0.5", im: "0.1" },
+    { seed, iterations: 32, adaptive_detection: false },
+  );
+
+  assert.deepEqual(result.seed, seed);
+  assert.deepEqual(result.samples[0], {
+    iteration: 0,
+    re: 0.25,
+    im: -0.125,
+    radius: Math.hypot(0.25, -0.125),
+  });
+  assert.equal(result.diagnostics.detector, "seeded_orbit_return");
+  assert.equal(result.diagnostics.seed_strategy, "caller_supplied");
+});
+
+test("cardinality rejects malformed supplied seeds", () => {
+  const result = FractoCardinality(
+    { re: "-0.5", im: "0.1" },
+    { seed: { re: "bad", im: "0" } },
+  );
+  assert.equal(result.status, "invalid_input");
+  assert.equal(result.diagnostics.reason, "seed_coordinates_must_be_finite_numbers");
+});
+
+test("contiguous iteration lookup preserves the normal return-detector result", () => {
+  const orbit = sample_orbit(
+    { re: "-0.5", im: "0.1" },
+    { iterations: 4096, seed: { re: "0.25", im: "-0.125" } },
+  );
+  assert.deepEqual(
+    detect_return_cardinality(orbit.samples, { contiguous_iterations: true }),
+    detect_return_cardinality(orbit.samples),
   );
 });
 
@@ -80,6 +126,26 @@ test("cardinality returns FractoFastCalc directly outside the main cardioid", ()
     assert.deepEqual(calls, [[0.5, 0.5]]);
   } finally {
     FractoFastCalc.calc = original_calc;
+  }
+});
+
+test("cardinality uses the seeded calculator outside the main cardioid when requested", () => {
+  const expected = { pattern: 3, iteration: 123 };
+  const original_calc_from_seed = FractoFastCalc.calc_from_seed;
+  const calls = [];
+  FractoFastCalc.calc_from_seed = (...args) => {
+    calls.push(args);
+    return expected;
+  };
+  try {
+    const result = FractoCardinality(
+      { re: "0.5", im: "0.5" },
+      { seed: { re: "0.2", im: "-0.1" }, seed_level: 0.125 },
+    );
+    assert.equal(result, expected);
+    assert.deepEqual(calls, [[0.5, 0.5, 0.2, -0.1, 0.125]]);
+  } finally {
+    FractoFastCalc.calc_from_seed = original_calc_from_seed;
   }
 });
 
