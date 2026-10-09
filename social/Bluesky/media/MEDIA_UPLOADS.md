@@ -5,13 +5,13 @@
 <p class="subtitle">This ledger records images and other media uploaded for the Fracto Bluesky
 account. Entries are listed newest first, with one entry per media asset. This
 listing is generated from Bluesky directly, do not edit!</p>
-<p class="ledger-generated"><strong>Ledger generated:</strong> September 28, 2026</p>
+<p class="ledger-generated"><strong>Ledger generated:</strong> October 8, 2026</p>
 
 
 <div class="media-ledger-index">
 <strong>Media index</strong>
 <ul>
-  <li><a href="#media-bafyreie2e3jcy5zcjxqvhzga64tm5xuaiuei6ctbdqlr2a22wgu2mcht64-0">2026-09-27 — In this roller-coaster representation depicting the distances from…</a></li>
+  <li><a href="#media-bafyreigitjo7tzlsux5d3kwbvk4ddfpqwvvgpyn4wjmptllim53bdbwmia-0">2026-09-30 — video…</a></li>
   <li><a href="#media-bafyreic567zzvovdr22d7yycy67bqnwnshn22xdclghrkrzpiy5iie6s4m-0">2026-09-04 — When different areas of the interior collide, they…</a></li>
   <li><a href="#media-bafyreif57qkdsfdyiihi6zk67vxmika7he7rufgqgfdsdpqwld5brponcm-0">2026-09-04 — Lined up like bars on a xylophone, these…</a></li>
   <li><a href="#media-bafyreicfseangnmdqsfc4wevh3uqiv457qkzu2uwy4fm56ozcyvbl5vhmy-0">2026-09-04 — A kaleidoscope of colors is found inside of…</a></li>
@@ -30,6 +30,34 @@ listing is generated from Bluesky directly, do not edit!</p>
 <a id="media-bafyreid4pqy34sjfnqfu6h2wm254bi4d7ooayovuh4fz43kf4hwh6rxanq-0"></a>
 
 <a id="media-bafyreie2e3jcy5zcjxqvhzga64tm5xuaiuei6ctbdqlr2a22wgu2mcht64-0"></a>
+
+<a id="media-bafyreigitjo7tzlsux5d3kwbvk4ddfpqwvvgpyn4wjmptllim53bdbwmia-0"></a>
+
+## 2026-09-30 — video…
+
+<div class="media-entry">
+<div class="media-entry-visual"><a href="https://video.bsky.app/watch/did%3Aplc%3Af4r4ysvnudlmotcxt3t36dhd/bafkreidpc2xpshv7i3v4j4vwpj5snumujvj5za3jximx2iphxp6ybnm4ry/playlist.m3u8"><img src="https://video.bsky.app/watch/did%3Aplc%3Af4r4ysvnudlmotcxt3t36dhd/bafkreidpc2xpshv7i3v4j4vwpj5snumujvj5za3jximx2iphxp6ybnm4ry/thumbnail.jpg" alt="Thumbnail" /></a></div>
+
+<div class="media-entry-properties">
+<p><strong>Full-size media:</strong> <a href="https://video.bsky.app/watch/did%3Aplc%3Af4r4ysvnudlmotcxt3t36dhd/bafkreidpc2xpshv7i3v4j4vwpj5snumujvj5za3jximx2iphxp6ybnm4ry/playlist.m3u8">open original</a></p>
+<p><strong>Source post:</strong> <a href="https://bsky.app/profile/fracto-studio.bsky.social/post/3mwrguoewas2n">view post</a></p>
+<p><strong>Alt text:</strong> <button type="button" class="media-copy-alt" data-copy-alt-text="(none provided)" title="copy alt text to clipboard" aria-label="copy alt text to clipboard"><svg height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V5.5C8 4.67 8.67 4 9.5 4h9C19.33 4 20 4.67 20 5.5v9c0 .83-.67 1.5-1.5 1.5H16v2.5c0 .83-.67 1.5-1.5 1.5h-9C4.67 20 4 19.33 4 18.5v-9C4 8.67 4.67 8 5.5 8H8Zm-2.5 2c-.28 0-.5.22-.5.5v8c0 .28.22.5.5.5h9c.28 0 .5-.22.5-.5V10.5c0-.28-.22-.5-.5-.5h-9ZM10 6v2h4.5c.83 0 1.5.67 1.5 1.5V14h2V6.5c0-.28-.22-.5-.5-.5h-7.5Z"/></svg></button></p>
+<blockquote>(none provided)</blockquote>
+<details>
+<summary>technical details</summary>
+<ul>
+  <li><strong>Uploaded:</strong> <code>2026-09-30T22:56:22.647Z</code></li>
+  <li><strong>Media key:</strong> <code>bafyreigitjo7tzlsux5d3kwbvk4ddfpqwvvgpyn4wjmptllim53bdbwmia/0</code></li>
+  <li><strong>Post URI:</strong> <code>at://did:plc:f4r4ysvnudlmotcxt3t36dhd/app.bsky.feed.post/3mwrguoewas2n</code></li>
+  <li><strong>Post CID:</strong> <code>bafyreigitjo7tzlsux5d3kwbvk4ddfpqwvvgpyn4wjmptllim53bdbwmia</code></li>
+  <li><strong>Blob CID:</strong> <code>unknown</code></li>
+  <li><strong>Media type:</strong> <code>video</code></li>
+  <li><strong>Aspect ratio:</strong> <code>{&quot;height&quot;:1080,&quot;width&quot;:1920}</code></li>
+  <li><strong>Notes:</strong> <code>(none provided)</code></li>
+</ul>
+</details>
+</div>
+</div>
 
 ## 2026-09-27 — In this roller-coaster representation depicting the distances from…
 
