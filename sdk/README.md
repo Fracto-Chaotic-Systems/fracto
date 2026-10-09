@@ -30,7 +30,9 @@ const result = FractoFastCalc.calc(point.re, point.im);
   The separate experimental `calc_from_seed(re, im, seed_re, seed_im, level)`
   uses the supplied initial orbit point without changing `calc()`.
   `calc_big_complex_from_seed(re, im, seed_re, seed_im, options)` is another
-  isolated experimental path for high-precision seed surveys. It keeps the
+  isolated experimental high-precision seeded calculator. It is separate
+  from the Assets seed-survey page, which currently uses `FractoCardinality`.
+  This method keeps the
   coordinates in BigComplex/Decimal arithmetic, reports candidate cycles,
   escapes, unresolved runs, or numerical failures, and returns decimal-string
   orbit points. Its precision, iteration cap, transient, and recurrence
@@ -50,7 +52,9 @@ const result = FractoFastCalc.calc(point.re, point.im);
   with a seed it returns `FractoFastCalc.calc_from_seed()` instead. Set
   `options.seed_level` to bound that fallback calculator's work. Consumers import
   `@fracto/sdk/FractoCardinality.js` or the named `FractoCardinality` barrel
-  export.
+  export. See [`FractoCardinality.md`](./FractoCardinality.md) for input
+  behavior, detector settings and result states, and the detailed explanation
+  of how the Assets seed-survey image uses it.
 - `FractoOrbitalPoints.js` provides the common detector-to-Newton interface.
   It uses `FractoCardinality` by default or accepts an explicitly sourced
   cardinality candidate, recording that source in its result. Newton outputs

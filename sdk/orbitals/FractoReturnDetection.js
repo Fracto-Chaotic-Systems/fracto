@@ -9,9 +9,9 @@ const DEFAULT_PRECISION_ESCALATION_FACTOR = 2;
 const DEFAULT_HARMONIC_SCORE_TOLERANCE = 0.1;
 const DEFAULT_PERIOD_VALIDATION_TOLERANCE = 1e-9;
 
-const select_kth = (values, target_index) => {
+const select_kth = (values, target_index, active_length = values.length) => {
   let left = 0;
-  let right = values.length - 1;
+  let right = active_length - 1;
   while (left <= right) {
     const pivot = values[Math.floor((left + right) / 2)];
     let lower = left;
@@ -35,6 +35,21 @@ const select_kth = (values, target_index) => {
   }
   return undefined;
 };
+
+/**
+ * Allocate scratch buffers owned by one return-detection invocation. The
+ * caller never shares these across requests or detector calls.
+ * @param {number} sample_count Number of orbit samples to inspect.
+ * @returns {object} Reusable numeric work buffers and active-length limits.
+ */
+const create_return_detection_scratch = (sample_count) => ({
+  recurrence_errors: new Float64Array(
+    Math.max(0, sample_count - Math.floor(sample_count * 0.5)),
+  ),
+  pyramid_values: new Float64Array(DERIVATIVE_PYRAMID_CYCLES + 1),
+  pyramid_differences_a: new Float64Array(DERIVATIVE_PYRAMID_CYCLES + 1),
+  pyramid_differences_b: new Float64Array(DERIVATIVE_PYRAMID_CYCLES + 1),
+});
 
 /** Public selector for the derivative-pyramid-only detector. */
 export const DETECTION_MODE_PYRAMID_ONLY = "pyramid_only";
@@ -276,8 +291,9 @@ const greatest_common_divisor = (left, right) => {
  * @param {(iteration:number)=>object|undefined} sample_at_iteration Sample lookup.
  * @returns {{coherence:number,layers:number,sign_changes:number,sample_count:number}} Pyramid diagnostics.
  */
-const derivative_pyramid = (samples, gap, sample_at_iteration) => {
-  const values = [];
+const derivative_pyramid = (samples, gap, sample_at_iteration, scratch) => {
+  const values = scratch.pyramid_values;
+  let values_length = 0;
   const first_iteration = samples[0]?.iteration;
   if (!Number.isFinite(first_iteration)) {
     return {
@@ -293,31 +309,35 @@ const derivative_pyramid = (samples, gap, sample_at_iteration) => {
   for (let cycle = 0; cycle <= DERIVATIVE_PYRAMID_CYCLES; cycle += 1) {
     const sample = sample_at_iteration(first_iteration + cycle * gap);
     if (!sample) break;
-    values.push(sample.radius);
+    values[values_length] = sample.radius;
+    values_length += 1;
   }
-  if (values.length < 3) {
+  if (values_length < 3) {
     return {
       coherence: 0,
       magnitude_coherence: 0,
       minimum_layer_magnitude_coherence: 0,
       layers: 0,
       sign_changes: 0,
-      sample_count: values.length,
+      sample_count: values_length,
       layer_diagnostics: [],
     };
   }
   let layer = values;
+  let layer_length = values_length;
+  let differences = scratch.pyramid_differences_a;
+  let next_differences = scratch.pyramid_differences_b;
   let coherent_layers = 0;
   let sign_changes = 0;
   const layer_diagnostics = [];
-  while (layer.length > 1) {
-    const differences = layer
-      .slice(1)
-      .map((value, index) => value - layer[index]);
-    const scale = differences.reduce(
-      (maximum, value) => Math.max(maximum, Math.abs(value)),
-      0,
-    );
+  while (layer_length > 1) {
+    const differences_length = layer_length - 1;
+    let scale = 0;
+    for (let index = 0; index < differences_length; index += 1) {
+      const difference = layer[index + 1] - layer[index];
+      differences[index] = difference;
+      scale = Math.max(scale, Math.abs(difference));
+    }
     const epsilon = Math.max(scale * 1e-12, 1e-30);
     let minimum_absolute_change = Infinity;
     let maximum_absolute_change = 0;
@@ -327,7 +347,8 @@ const derivative_pyramid = (samples, gap, sample_at_iteration) => {
     let ignored_change_count = 0;
     let positive_change_magnitude = 0;
     let negative_change_magnitude = 0;
-    differences.forEach((value) => {
+    for (let index = 0; index < differences_length; index += 1) {
+      const value = differences[index];
       const absolute_change = Math.abs(value);
       minimum_absolute_change = Math.min(
         minimum_absolute_change,
@@ -347,7 +368,7 @@ const derivative_pyramid = (samples, gap, sample_at_iteration) => {
       } else {
         ignored_change_count += 1;
       }
-    });
+    }
     const absolute_change_spread =
       maximum_absolute_change - minimum_absolute_change;
     const total_directional_magnitude =
@@ -359,14 +380,14 @@ const derivative_pyramid = (samples, gap, sample_at_iteration) => {
         : 1;
     layer_diagnostics.push({
       finite_difference_order: layer_diagnostics.length + 1,
-      sample_count: differences.length,
+      sample_count: differences_length,
       noise_threshold: epsilon,
       scale,
       minimum_absolute_change: Number.isFinite(minimum_absolute_change)
         ? minimum_absolute_change
         : 0,
       maximum_absolute_change,
-      mean_absolute_change: absolute_change_total / differences.length,
+      mean_absolute_change: absolute_change_total / differences_length,
       absolute_change_spread,
       normalized_absolute_change_spread:
         scale > 0 ? absolute_change_spread / scale : 0,
@@ -377,18 +398,19 @@ const derivative_pyramid = (samples, gap, sample_at_iteration) => {
       negative_change_magnitude,
       directional_magnitude_coherence,
     });
-    const signs = differences
-      .filter((value) => Math.abs(value) > epsilon)
-      .map((value) => Math.sign(value));
-    if (signs.length > 0) {
-      const positive = signs.filter((sign) => sign > 0).length;
-      const negative = signs.length - positive;
+    if (positive_change_count + negative_change_count > 0) {
+      const positive = positive_change_count;
+      const negative = negative_change_count;
       if (positive === 0 || negative === 0) coherent_layers += 1;
       sign_changes += Math.min(positive, negative);
     }
     layer = differences;
+    layer_length = differences_length;
+    const previous_differences = differences;
+    differences = next_differences;
+    next_differences = previous_differences;
   }
-  const layers = values.length - 1;
+  const layers = values_length - 1;
   const magnitude_coherence =
     layer_diagnostics.reduce(
       (sum, diagnostic) => sum + diagnostic.directional_magnitude_coherence,
@@ -405,7 +427,7 @@ const derivative_pyramid = (samples, gap, sample_at_iteration) => {
     minimum_layer_magnitude_coherence,
     layers,
     sign_changes,
-    sample_count: values.length,
+    sample_count: values_length,
     layer_diagnostics,
   };
 };
@@ -815,14 +837,24 @@ export const detect_return_cardinality = (samples, options = {}) => {
     ? (iteration) => samples[iteration]
     : (iteration) => sample_by_iteration.get(iteration);
   const recurrence_start = Math.floor(samples.length * 0.5);
-  const tail_step_errors = [];
+  const scratch = create_return_detection_scratch(samples.length);
+  const recurrence_errors = scratch.recurrence_errors;
+  let recurrence_error_count = 0;
   for (let index = recurrence_start + 1; index < samples.length; index += 1) {
     const sample = samples[index];
     const previous = samples[index - 1];
-    tail_step_errors.push(Math.hypot(sample.re - previous.re, sample.im - previous.im));
+    recurrence_errors[recurrence_error_count] = Math.hypot(
+      sample.re - previous.re,
+      sample.im - previous.im,
+    );
+    recurrence_error_count += 1;
   }
   const baseline_error =
-    select_kth(tail_step_errors, Math.floor(tail_step_errors.length / 2)) || 1;
+    select_kth(
+      recurrence_errors,
+      Math.floor(recurrence_error_count / 2),
+      recurrence_error_count,
+    ) || 1;
   const ranked = [...gap_groups.entries()]
     // Do not spend a tail-wide recurrence pass on gaps that cannot satisfy
     // the repetition requirement in the first place.
@@ -831,19 +863,28 @@ export const detect_return_cardinality = (samples, options = {}) => {
       // Minima identify plausible periods, but their locations can be
       // transient. Validate each gap against every available tail sample so
       // a true return (such as 28 here) outranks a coincidental minima gap.
-      const errors = [];
+      let error_count = 0;
       for (let index = recurrence_start; index < samples.length; index += 1) {
         const current = samples[index];
         const previous = sample_at_iteration(current.iteration - gap);
         if (previous) {
-          errors.push(Math.hypot(current.re - previous.re, current.im - previous.im));
+          recurrence_errors[error_count] = Math.hypot(
+            current.re - previous.re,
+            current.im - previous.im,
+          );
+          error_count += 1;
         }
       }
       return {
         gap,
         indexes,
-        recurrence_error: select_kth(errors, Math.floor(errors.length / 2)) ?? Infinity,
-        pyramid: derivative_pyramid(samples, gap, sample_at_iteration),
+        recurrence_error:
+          select_kth(
+            recurrence_errors,
+            Math.floor(error_count / 2),
+            error_count,
+          ) ?? Infinity,
+        pyramid: derivative_pyramid(samples, gap, sample_at_iteration, scratch),
       };
     })
     .sort(

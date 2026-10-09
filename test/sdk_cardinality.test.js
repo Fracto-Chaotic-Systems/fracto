@@ -78,13 +78,67 @@ test("cardinality detection can sample from a supplied complex seed", () => {
   assert.equal(result.diagnostics.seed_strategy, "caller_supplied");
 });
 
+test("seeded stable and ambiguous candidates preserve their ranked diagnostics", () => {
+  const point = { re: "-0.4768822552", im: "0.3421852811" };
+  const settings = {
+    iterations: 4096,
+    maximum_detection_iterations: 4096,
+    adaptive_detection: false,
+    seed_level: 0.00625,
+  };
+  const stable = FractoCardinality(point, {
+    ...settings,
+    seed: { re: "0.075", im: "-0.925" },
+  });
+  const ambiguous = FractoCardinality(point, {
+    ...settings,
+    seed: { re: "0.075", im: "-0.950" },
+  });
+
+  assert.equal(stable.status, "cardinality_detected");
+  assert.equal(stable.detection.candidate_cardinality, 5);
+  assert.equal(stable.detection.ambiguous, false);
+  assert.equal(stable.detection.matching_gaps, 839);
+  assert.equal(stable.detection.pyramid_magnitude_coherence, 0.93516384599163);
+  assert.deepEqual(
+    stable.detection.alternatives.map(({ cardinality }) => cardinality),
+    [40, 45, 10, 35, 50],
+  );
+  assert.ok(
+    stable.detection.alternatives.every((candidate) =>
+      Number.isFinite(candidate.pyramid_magnitude_coherence),
+    ),
+  );
+
+  assert.equal(ambiguous.status, "cardinality_detected");
+  assert.equal(ambiguous.detection.candidate_cardinality, 5);
+  assert.equal(ambiguous.detection.ambiguous, true);
+  assert.equal(ambiguous.detection.matching_gaps, 840);
+  assert.equal(
+    ambiguous.detection.pyramid_magnitude_coherence,
+    0.598345945696007,
+  );
+  assert.deepEqual(
+    ambiguous.detection.alternatives.map(({ cardinality }) => cardinality),
+    [40, 45, 35, 10, 50],
+  );
+  assert.ok(
+    ambiguous.detection.alternatives.every((candidate) =>
+      Number.isFinite(candidate.pyramid_magnitude_coherence),
+    ),
+  );
+});
+
 test("cardinality rejects malformed supplied seeds", () => {
   const result = FractoCardinality(
     { re: "-0.5", im: "0.1" },
     { seed: { re: "bad", im: "0" } },
   );
   assert.equal(result.status, "invalid_input");
-  assert.equal(result.diagnostics.reason, "seed_coordinates_must_be_finite_numbers");
+  assert.equal(
+    result.diagnostics.reason,
+    "seed_coordinates_must_be_finite_numbers",
+  );
 });
 
 test("contiguous iteration lookup preserves the normal return-detector result", () => {
@@ -109,24 +163,21 @@ test("exact fixed-point-basin input returns an ambiguous 16-gap candidate", () =
   assert.equal(result.detection.ambiguous, true);
   assert.equal(result.detection.matching_gaps, 15);
   assert.equal(result.detection.gap_gcd, 16);
-  assert.deepEqual(result.diagnostics.checked_horizons, [
-    4096,
-    8192,
-    16384,
-    32768,
-    65536,
-    131072,
-    262144,
-  ]);
+  assert.deepEqual(
+    result.diagnostics.checked_horizons,
+    [4096, 8192, 16384, 32768, 65536, 131072, 262144],
+  );
   const alternative_cardinalities = result.detection.alternatives.map(
     ({ cardinality }) => cardinality,
   );
-  assert.ok([5, 21, 37].every((candidate) =>
-    alternative_cardinalities.includes(candidate),
-  ));
   assert.ok(
-    result.detection.alternatives.every(({ recurrence_error }) =>
-      recurrence_error === 0,
+    [5, 21, 37].every((candidate) =>
+      alternative_cardinalities.includes(candidate),
+    ),
+  );
+  assert.ok(
+    result.detection.alternatives.every(
+      ({ recurrence_error }) => recurrence_error === 0,
     ),
   );
 });

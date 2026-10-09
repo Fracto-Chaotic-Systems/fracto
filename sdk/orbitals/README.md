@@ -25,13 +25,56 @@ explicit seed is provided.
   Cardinality passes contiguous iteration metadata from its sampler so the
   detector can index samples directly and select recurrence medians without
   sorting; standalone detector calls retain support for arbitrary iteration
-  labels.
+  labels. The return detector keeps numeric scratch buffers local to each
+  invocation and reuses them across recurrence-median selections and all
+  candidate derivative pyramids. Candidate ranking, diagnostic calculations,
+  and returned detail remain unchanged. No mutable scratch state is shared
+  between concurrent detector calls.
 - `FractoCardinalityQuality.js` evaluates whether a return candidate has
   enough repeated-gap evidence to stop adaptive horizon growth.
 - `FractoNewtonDerived.js` refines a supplied cardinality with JavaScript
   `Number` arithmetic.
 - `FractoNewtonBigComplex.js` refines a supplied cardinality with `BigComplex`
   arithmetic and configurable significant-digit precision.
+
+## Return-detector scratch memory and performance
+
+`detect_return_cardinality()` allocates its mutable numeric workspace at the
+start of each detector call. The recurrence-error `Float64Array` is sized for
+the largest tail window needed by that call; its active length is reset for
+the baseline median and each candidate median. Three fixed-capacity arrays
+hold the radius samples and alternating finite-difference layers for the
+derivative pyramids. They are reused candidate by candidate, while each
+candidate's returned diagnostic objects are newly created and retained.
+
+The workspace is local to one synchronous detector invocation. It is not a
+module-level singleton, is not shared across worker threads or concurrent
+requests, and is discarded when the call returns. Adaptive horizon passes
+and separate survey seeds each make their own detector call and workspace.
+The output orbit samples, minima, matching-minima references, and diagnostic
+records remain allocated because they are part of the returned result. The
+change reduces temporary-array churn; it does not remove calculations, alter
+candidate ranking, or reduce an iteration horizon.
+
+A single-run comparison against the committed detector before this change was
+measured on Windows with Node.js 22.19.0. Each implementation ran in a fresh
+process; peak RSS was sampled before result hashing and includes Node's
+runtime baseline. The survey payload and complete single-point result hashes
+were identical between versions.
+
+| Case                                     | Baseline | Scratch-buffer version | Peak RSS, baseline → version |
+| ---------------------------------------- | -------: | ---------------------: | ---------------------------: |
+| Stable survey seed, 4,096 iterations     |  31.1 ms |                27.4 ms |              52.7 → 52.1 MiB |
+| Ambiguous survey seed, 4,096 iterations  |  34.7 ms |                28.9 ms |              52.9 → 52.7 MiB |
+| Near-cusp case, adaptive through 262,144 | 139.4 ms |               128.4 ms |            120.4 → 114.1 MiB |
+| 121×121 survey, 14,641 seeds             |   32.2 s |                 26.7 s |            134.1 → 131.4 MiB |
+
+These are single-run observations, not statistically stable benchmarks. The
+near-cusp case remained inconclusive at the same 262,144-iteration cap. The
+survey retained the same 3,927 non-singleton candidates, 10,684 escaped seeds,
+30 unresolved seeds, and confidence range. Repeat measurements under a
+controlled system load before treating the observed speed or memory changes
+as a general performance guarantee.
 
 The Newton solvers require a positive integer candidate and never search
 cardinalities themselves. `FractoOrbitalPoints.js` obtains the default
