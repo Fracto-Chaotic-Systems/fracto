@@ -147,7 +147,14 @@ export class FractoFastCalc {
     * The Mandelbrot parameter remains (x0, y0); seed_x/seed_y only replace
     * the initial Q value. The default calculator continues to use (0, 0).
     */
-   static calc_from_seed = (x0, y0, seed_x = 0.5, seed_y = 0, level = 10) => {
+   static calc_from_seed = (
+      x0,
+      y0,
+      seed_x = 0.5,
+      seed_y = 0,
+      level = 10,
+      iteration_limit = null,
+   ) => {
       const P_x = x0
       const P_y = y0
       let Q_x_squared = seed_x * seed_x
@@ -161,7 +168,11 @@ export class FractoFastCalc {
       let iteration = 1
       let estimated = false
       const iteration_factor = (MIN_ITERATION * level / 10) + MAX_ORBITAL_SIZE
-      const max_iteration = Math.round(iteration_factor / MAX_ORBITAL_SIZE) * MAX_ORBITAL_SIZE
+      const requested_iteration_limit = Number(iteration_limit)
+      const has_iteration_limit = Number.isFinite(requested_iteration_limit) && requested_iteration_limit > 0
+      const max_iteration = has_iteration_limit
+         ? Math.max(MAX_ORBITAL_SIZE, Math.floor(requested_iteration_limit))
+         : Math.round(iteration_factor / MAX_ORBITAL_SIZE) * MAX_ORBITAL_SIZE
       for (; iteration < max_iteration; iteration++) {
          if (iteration % 1000000000 === 0) {
             console.log('iteration', iteration)
@@ -194,11 +205,15 @@ export class FractoFastCalc {
                      y: Q_y
                   })
                }
-               if (iteration < 60000) {
-                  iteration = seed_x === 0 && seed_y === 0
-                     ? FractoFastCalc.best_iteration(orbital, x0, y0)
+               const refinement_limit = has_iteration_limit
+                  ? Math.max(0, max_iteration - iteration)
+                  : undefined
+               if (iteration < 60000 && (refinement_limit === undefined || refinement_limit > 0)) {
+                  const refined_iteration = seed_x === 0 && seed_y === 0
+                     ? FractoFastCalc.best_iteration(orbital, x0, y0, refinement_limit)
                      : FractoFastCalc.best_iteration_from_seed(
-                          orbital, x0, y0, seed_x, seed_y)
+                          orbital, x0, y0, seed_x, seed_y, refinement_limit)
+                  if (refined_iteration > 0) iteration = refined_iteration
                }
                return {
                   pattern: orbital,
@@ -442,7 +457,7 @@ export class FractoFastCalc {
       }
    }
 
-   static best_iteration = (pattern, x, y) => {
+   static best_iteration = (pattern, x, y, iteration_limit = 100000000) => {
       const P_x = x
       const P_y = y
       let Q_x_squared = 0
@@ -467,7 +482,14 @@ export class FractoFastCalc {
       return -1
    }
 
-   static best_iteration_from_seed = (pattern, x, y, seed_x, seed_y) => {
+   static best_iteration_from_seed = (
+      pattern,
+      x,
+      y,
+      seed_x,
+      seed_y,
+      iteration_limit = 100000000,
+   ) => {
       const P_x = x
       const P_y = y
       let Q_x_squared = seed_x * seed_x
@@ -476,7 +498,8 @@ export class FractoFastCalc {
       let Q_y = seed_y
       let first_pos_x = seed_x
       let first_pos_y = seed_y
-      for (let iteration = 0; iteration < 100000000; iteration++) {
+      const max_iterations = Math.min(100000000, Math.max(0, Math.floor(Number(iteration_limit) || 0)));
+      for (let iteration = 0; iteration < max_iterations; iteration++) {
          Q_y = 2 * Q_x * Q_y + P_y;
          Q_x = Q_x_squared - Q_y_squared + P_x;
          Q_x_squared = Q_x * Q_x
@@ -498,7 +521,8 @@ export class FractoFastCalc {
       let Q_squared = new BigComplex(0, 0)
       let first_pos = new BigComplex(0, 0)
       const all_points = new Array(pattern)
-      for (let iteration = 0; iteration < 100000000; iteration++) {
+      const max_iterations = Math.min(100000000, Math.max(0, Math.floor(Number(iteration_limit) || 0)));
+      for (let iteration = 0; iteration < max_iterations; iteration++) {
          Q_squared = Q.mul(Q)
          Q = Q_squared.add(P)
          all_points[iteration % pattern] = Q

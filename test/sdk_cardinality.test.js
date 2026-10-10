@@ -78,6 +78,24 @@ test("cardinality detection can sample from a supplied complex seed", () => {
   assert.equal(result.diagnostics.seed_strategy, "caller_supplied");
 });
 
+test("escaped seeded orbit skips return-cardinality detection", () => {
+  const result = FractoCardinality(
+    { re: "-0.5", im: "0.1" },
+    {
+      seed: { re: "2.1", im: "0" },
+      iterations: 4096,
+      adaptive_detection: true,
+    },
+  );
+
+  assert.equal(result.escaped, true);
+  assert.equal(result.status, "cardinality_inconclusive");
+  assert.equal(result.detection.status, "orbit_escaped");
+  assert.equal(result.detection.candidate_cardinality, null);
+  assert.deepEqual(result.diagnostics.checked_horizons, [4096]);
+  assert.equal(result.diagnostics.evidence_gate_passed, false);
+});
+
 test("seeded stable and ambiguous candidates preserve their ranked diagnostics", () => {
   const point = { re: "-0.4768822552", im: "0.3421852811" };
   const settings = {
@@ -214,6 +232,29 @@ test("cardinality uses the seeded calculator outside the main cardioid when requ
     );
     assert.equal(result, expected);
     assert.deepEqual(calls, [[0.5, 0.5, 0.2, -0.1, 0.125]]);
+  } finally {
+    FractoFastCalc.calc_from_seed = original_calc_from_seed;
+  }
+});
+
+test("cardinality forwards an explicit seeded iteration limit outside the cardioid", () => {
+  const expected = { pattern: 60, iteration: 100000 };
+  const original_calc_from_seed = FractoFastCalc.calc_from_seed;
+  const calls = [];
+  FractoFastCalc.calc_from_seed = (...args) => {
+    calls.push(args);
+    return expected;
+  };
+  try {
+    const result = FractoCardinality(
+      { re: "-1.162", im: "0.27" },
+      {
+        seed: { re: "0.01", im: "-0.02" },
+        seed_iteration_limit: 100000,
+      },
+    );
+    assert.equal(result, expected);
+    assert.deepEqual(calls, [[-1.162, 0.27, 0.01, -0.02, undefined, 100000]]);
   } finally {
     FractoFastCalc.calc_from_seed = original_calc_from_seed;
   }

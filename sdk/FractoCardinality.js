@@ -29,7 +29,7 @@ const normalize_iterations = (value, fallback) =>
  * @param {{re:number|string,im:number|string}|{x:number|string,y:number|string}} point
  *   Mandelbrot parameter.
  * @param {{seed?:{re:number|string,im:number|string}|{x:number|string,y:number|string},
- *   seed_level?:number,
+ *   seed_level?:number,seed_iteration_limit?:number,
  *   iterations?:number,maximum_detection_iterations?:number,
  *   minimum_return_repetitions?:number,adaptive_detection?:boolean}} [options]
  *   Bounded detector controls. Adaptive detection is enabled by default.
@@ -79,6 +79,16 @@ export default function FractoCardinality(point, options = {}) {
     : "outside_main_cardioid";
   if (domain === "outside_main_cardioid") {
     if (!has_seed) return FractoFastCalc.calc(re, im);
+    if (options.seed_iteration_limit !== undefined) {
+      return FractoFastCalc.calc_from_seed(
+        re,
+        im,
+        seed_re,
+        seed_im,
+        options.seed_level,
+        options.seed_iteration_limit,
+      );
+    }
     return options.seed_level === undefined
       ? FractoFastCalc.calc_from_seed(re, im, seed_re, seed_im)
       : FractoFastCalc.calc_from_seed(re, im, seed_re, seed_im, options.seed_level);
@@ -106,14 +116,22 @@ export default function FractoCardinality(point, options = {}) {
       iterations: horizon,
       seed: { re: seed_re, im: seed_im },
     });
+    checked_horizons.push(horizon);
+    if (orbit.escaped) {
+      detection = {
+        status: "orbit_escaped",
+        candidate_cardinality: null,
+        alternatives: [],
+        ambiguous: false,
+      };
+      break;
+    }
     detection = detect_return_cardinality(orbit.samples, {
       minimum_return_repetitions: options.minimum_return_repetitions,
       contiguous_iterations: true,
     });
-    checked_horizons.push(horizon);
     if (
       !adaptive_detection ||
-      orbit.escaped ||
       has_sufficient_cardinality_evidence(
         { detection },
         horizon,

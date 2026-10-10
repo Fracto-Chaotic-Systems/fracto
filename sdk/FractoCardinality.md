@@ -27,7 +27,10 @@ result directly: `calc()` without an explicit seed, or `calc_from_seed()` when
 a seed is supplied. That legacy result shape is passed through; callers must
 not assume it has the in-cardioid `status`, `detection`, or `diagnostics`
 fields. `seed_level`, when supplied, is used only by the outside-cardioid
-`calc_from_seed()` path.
+`calc_from_seed()` path. The optional `seed_iteration_limit` also applies only
+to that outside-cardioid seeded path and takes precedence over its
+level-derived horizon; it bounds the main iteration and any follow-up
+recurrence-refinement pass.
 
 Malformed parameter or seed coordinates return `status: "invalid_input"`,
 `iterations: 0`, `escaped: false`, empty `samples`, and a `detection` object
@@ -101,8 +104,10 @@ The worker calls `FractoCardinality(c, options)` once per seed. Its settings
 are `iterations: 4096`, `maximum_detection_iterations: 4096`,
 `adaptive_detection: false`, and `seed_level: 0.00625`. Since the parameter is
 inside the cardioid for the return-detection path, each in-domain seed gets one
-ordinary-precision, 4,096-step horizon. The setting `seed_level` affects only
-the outside-cardioid `calc_from_seed()` compatibility path. A seed itself may
+ordinary-precision, 4,096-step horizon. `seed_level` and the optional
+`seed_iteration_limit` affect only the outside-cardioid `calc_from_seed()`
+compatibility path. The Assets page sets that limit between 100,000 and
+10,000,000,000 iterations, defaulting to 100,000. A seed itself may
 lie outside the cardioid; it is the focal parameter \(c\) that selects the
 domain behavior.
 

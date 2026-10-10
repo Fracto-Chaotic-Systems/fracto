@@ -23,6 +23,22 @@ test("seeded calculator starts at the requested point and reports its own orbit"
   assert.deepEqual(result, { pattern: 0, iteration: 4 });
 });
 
+test("seeded calculator budgets its recurrence refinement within an explicit limit", () => {
+  const original_refinement = FractoFastCalc.best_iteration_from_seed;
+  let refinement_limit;
+  FractoFastCalc.best_iteration_from_seed = (...args) => {
+    refinement_limit = args[5];
+    return 12;
+  };
+  try {
+    const result = FractoFastCalc.calc_from_seed(0, 0, 0.5, 0, 10, 100000);
+    assert.equal(result.iteration, 12);
+    assert.equal(refinement_limit, 94999);
+  } finally {
+    FractoFastCalc.best_iteration_from_seed = original_refinement;
+  }
+});
+
 test("zero-seed experimental call agrees with calc for an escaping input", () => {
   assert.deepEqual(
     FractoFastCalc.calc_from_seed(-2.75, 0, 0, 0, 0.04),
