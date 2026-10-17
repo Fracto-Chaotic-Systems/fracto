@@ -2,7 +2,7 @@
 
 This directory contains the five independently versioned services coordinated by the root Fracto repository. Each subdirectory is its own Git repository with its own dependencies, history, upstream branch, and release lifecycle.
 
-The root repository intentionally ignores `servers/`. Changes inside a service must be committed from that service directory; this overview file is therefore local documentation unless the root ignore policy is changed.
+The root repository ignores service directories under `servers/`, but explicitly tracks this overview README. Commit service changes from their own repository directories and overview changes from the root repository.
 
 ## Service map
 
@@ -64,9 +64,11 @@ The startup sequence is deliberately ordered:
 
 1. Update the root and all service repositories using fast-forward-only Git operations.
 2. Validate service checkouts, dependency directories, ports, and entry points.
-3. Start the tile service and load the compiled binary tile cache before opening port 3004.
-4. Start the root server on port 3001.
-5. Start the data, asset, admin, and UI services sequentially, waiting for each health endpoint.
+3. Open the root server on its bootstrap port (3001 by default).
+4. Start admin on its bootstrap port (3005 by default), discover `/ports`, and propagate the validated runtime port map.
+5. Start tiles, loading the compiled index before opening its discovered port.
+6. Start data, asset, and UI sequentially, waiting for each health endpoint.
+7. Trigger coverage preloading after all services are healthy.
 
 Service output is appended to dated files in the root `logs/` directory. The root process forwards shutdown to every child and terminates the tracked process tree on Windows.
 
@@ -114,7 +116,7 @@ npm run tiles:index
 
 The command writes a fingerprinted binary cache beneath `tiles/cache/indexed/`. Tile startup validates the source fingerprint and fails when the cache is missing or stale. The cache is large, generated, and not committed.
 
-After port 3004 opens, coverage initialization downloads category CSV files from the configured production endpoint. Coverage data is separate from the compiled local tile index and may represent a newer dataset.
+After all services are healthy, the supervisor triggers classification preloading. Coverage uses artifacts from the selected index generation when available, with source-mode-specific manifest loading as a fallback. Remote listings may represent a newer dataset than the compiled index.
 
 Tile selection, source-of-truth downloads, the persistent tile-file cache, and
 the decoded in-memory cache form separate stages. The [tile service guide](fracto-tiles-server/README.md#tile-data-access-and-cache-lifecycle)
@@ -222,7 +224,7 @@ npm run lint --prefix servers/fracto-ui
 npm run build --prefix servers/fracto-ui
 ```
 
-The backend service `test` scripts are currently placeholders. Shared numerical behavior is covered by the root Node test suite; HTTP integration coverage remains future work.
+Data and admin run Node test suites with `npm test`; asset and tile test scripts remain failing placeholders. The root suite covers shared numerical behavior and selected HTTP, authentication, deployment, and startup contracts. These tests do not replace live database, provider, rendering, or browser checks.
 
 ## Common problems
 

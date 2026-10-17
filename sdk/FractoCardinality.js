@@ -77,7 +77,7 @@ export default function FractoCardinality(point, options = {}) {
   const domain = FractoUtil.point_in_main_cardioid({ x: re, y: im })
     ? "main_cardioid"
     : "outside_main_cardioid";
-  if (domain === "outside_main_cardioid") {
+  if (domain === "outside_main_cardioid" || domain === "main_cardioid") {
     if (!has_seed) return FractoFastCalc.calc(re, im);
     if (options.seed_iteration_limit !== undefined) {
       return FractoFastCalc.calc_from_seed(

@@ -18,7 +18,7 @@ The services under `servers/` are independent repositories. Check out each servi
 
 The admin service is the fixed bootstrap authority for service ports (`3005`
 in production and `3105` in development). It exposes `GET /ports`, returning a
-versioned map for all Fracto services. The supervisor starts admin first,
+versioned map for all Fracto services. The supervisor opens the main server first, then starts admin,
 discovers and validates that map, then passes the resolved values to the other
 services. The browser UI performs the same discovery using the current browser
 hostname, so remote clients do not fall back to `localhost`.
@@ -83,7 +83,7 @@ npm start
 
 `npm run start:check` verifies all five service checkouts, entry points, ports, start scripts, dependency directories, and the MySQL connection without launching processes. Database failures identify the configured endpoint and suggest the relevant Docker, firewall, credential, or initialization fix.
 
-`npm run tiles:index` compiles the source JSON tile packets into a fingerprinted binary cache under `tiles/cache/indexed/`. Run it whenever the source manifest or packets change. `npm start` first updates the root and all five service repositories, then validates and loads that compiled cache while no HTTP server is listening. A missing or stale cache aborts startup with instructions to rebuild it. Use `npm run update:repos` to run only the repository-update phase. After the tile service becomes healthy, it starts the root server and remaining services sequentially, waiting for each health endpoint before continuing. Tile-index progress is shown in the console. The default health timeout is 300 seconds and can be changed with `FRACTO_STARTUP_TIMEOUT_MS`. Service output is appended to dated files under `logs/`.
+`npm run tiles:index` compiles the source JSON tile packets into a fingerprinted binary cache under `tiles/cache/indexed/`. Run it whenever the source manifest or packets change. `npm start` first updates the root and all five service repositories and runs startup validation. It opens the main server, starts admin to discover runtime ports, then starts the tile service, which validates and loads its compiled cache before opening its own HTTP port. A missing or stale cache aborts startup with instructions to rebuild it. Use `npm run update:repos` to run only the repository-update phase. After the tile service becomes healthy, the supervisor starts data, asset, and UI sequentially, waiting for each health endpoint. Coverage preloading begins after those services are healthy. Tile-index progress is shown in the console. The default health timeout is 300 seconds and can be changed with `FRACTO_STARTUP_TIMEOUT_MS`. Service output is appended to dated files under `logs/`.
 
 ### Tile source modes
 
@@ -93,7 +93,7 @@ tiles from the configured source, stores them in the persistent tile-file cache
 (except in read-only development mode), and keeps decoded tiles in memory.
 
 Use `local` mode only when the tile server runs on the system that stores the
-authoritative tile files and can read that dataset directly. It requires an
+authoritative tile files and can read that dataset directly. It requires a
 permanent source directory paired to its compiled tile index by
 `fracto-tile-release.json` and the index's dataset/index ID metadata. That ID
 is logical and does not require versioned tile directories. Requests never

@@ -223,4 +223,4 @@ From the repository root, run:
 npm run check
 ```
 
-This checks JavaScript syntax across the SDK and runs the math test suite.
+This checks repository JavaScript syntax, validates migrations, and runs the root Node test suite, including SDK math and selected service, authentication, deployment, and startup regressions. See the root `package.json` for the current test list.

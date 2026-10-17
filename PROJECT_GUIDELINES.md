@@ -80,6 +80,7 @@ in the README for that feature or service.
 
 ## Documentation and code structure
 
+- Always call out stale or inaccurate documentation encountered during work. Verify conflicting claims against the current implementation and correct confirmed problems in the relevant documentation as part of the task. Clearly identify any unresolved uncertainty.
 - Treat documentation as part of completing a functional change. Whenever
   functionality is added or modified, update the relevant README or other
   nearby project documentation to explain the behavior and any affected
