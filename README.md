@@ -572,3 +572,12 @@ docker compose -f compose.yaml -f compose.dev.yaml up --build --renew-anon-volum
 ```powershell
 npm run check
 ```
+
+### Survey dimension capacity
+
+The data service accepts independent square `grid_size` and `canvas_size`
+requests. `FRACTO_SURVEY_MAX_GRID_SIZE` (default 1024) and
+`FRACTO_SURVEY_MAX_CANVAS_SIZE` (default 16384) set installation capacity and
+are forwarded by both Compose application targets. See the
+[data-service contract](servers/fracto-data-server/README.md#independent-survey-grid-and-canvas-dimensions)
+for request options and compatibility behavior.
