@@ -28,7 +28,7 @@ const result = FractoFastCalc.calc(point.re, point.im);
 - `FractoFastCalc.js` performs fast Mandelbrot-set and orbit calculations.
   Its established `calc(re, im, level)` continues to iterate from `z=0`.
   The separate seeded `calc_from_seed(re, im, seed_re, seed_im, level,
-  iteration_limit)` uses the supplied initial orbit point without changing
+iteration_limit)` uses the supplied initial orbit point without changing
   `calc()`. An explicit iteration limit overrides the legacy level-derived
   horizon and also bounds its recurrence-refinement pass.
   `calc_big_complex_from_seed(re, im, seed_re, seed_im, options)` is another
@@ -147,8 +147,9 @@ integer `cardinality` supplied by its caller. `cardinality_source` records that
 provenance. Its `newton_mode` is `native`, `big_complex` (default), or `both`;
 `precision_digits` controls BigComplex arithmetic up to 512 digits, while
 `newton_limit` bounds Newton cycles. Decimal coordinate strings are preserved
-in the BigComplex solver. Both Newton solvers start their root guess at zero,
-so they can converge to a lower-period root such as the attracting fixed point
+in the BigComplex solver. Both Newton solvers default their root guess to zero. The low-level
+BigComplex solver accepts `options.seed` (`{x,y}` or `{re,im}`) to use another
+initial guess; this does not change detector inputs or pipeline defaults. They can converge to a lower-period root such as the attracting fixed point
 even when a larger period was supplied. Repeated points and zero Newton step
 must not be treated as confirmation of the requested period. Check the number
 of distinct points, closure, and primitive period independently. More

@@ -6,6 +6,7 @@ import BigComplex from "../math/BigComplex.js";
  * @param {{x:number|string,y:number|string}} point Mandelbrot parameter.
  * @param {number} limit Maximum Newton iterations.
  * @param {number} [known_cardinality] Evaluate only this cardinality when supplied.
+ * @param {object} [options] Precision and optional initial root guess `seed` ({x,y} or {re,im}).
  * @returns {object} Newton result and convergence metadata.
  */
 export const newton_big_complex = (
@@ -41,9 +42,24 @@ export const newton_big_complex = (
       cardinality_supplied: false,
     };
   }
+  const seed = options.seed ?? { x: 0, y: 0 };
+  const seed_re = seed.re ?? seed.x;
+  const seed_im = seed.im ?? seed.y;
+  if (!Number.isFinite(Number(seed_re)) || !Number.isFinite(Number(seed_im))) {
+    return {
+      status: "invalid_seed",
+      point_list: [],
+      cardinality: 0,
+      cycles: 0,
+      time: "0ms",
+      least_magnitude: null,
+      least_magnitude_N: 0,
+      cardinality_supplied,
+    };
+  }
   const cardinalities = [requested_cardinality];
   for (const N of cardinalities) {
-    let z0 = new BigComplex(0, 0, precision_digits);
+    let z0 = new BigComplex(seed_re, seed_im, precision_digits);
     for (let i = 1; i <= limit; i++) {
       let current = new BigComplex(z0.re, z0.im, precision_digits);
       let derivative = new BigComplex(1, 0, precision_digits);
@@ -98,11 +114,7 @@ export const newton_big_complex = (
           const next_current_squared = next_current.mul(next_current);
           next_current = next_current_squared.add(P);
           least_magnitude_point_list.push(
-            new BigComplex(
-              next_current.re,
-              next_current.im,
-              precision_digits,
-            ),
+            new BigComplex(next_current.re, next_current.im, precision_digits),
           );
         }
       }

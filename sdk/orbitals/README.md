@@ -79,8 +79,12 @@ as a general performance guarantee.
 The Newton solvers require a positive integer candidate and never search
 cardinalities themselves. `FractoOrbitalPoints.js` obtains the default
 candidate from `FractoCardinality` or records the source when a caller passes
-an explicit candidate. Both Newton methods initialize their Newton root guess
-at zero; this is a starting guess for solving the supplied-period equation,
+an explicit candidate. Both Newton methods default their root guess to zero. The low-level
+`newton_big_complex(point, limit, cardinality, options)` also accepts
+`options.seed` as `{x, y}` or `{re, im}`, preserving decimal strings. This
+selects the initial Newton root guess; existing callers still start at zero.
+The detect tab supplies its hovered seed here and uses the cardinality from
+`calc_from_seed()` at that same seed. This is a starting guess for solving the supplied-period equation,
 not a cardinality detector or a claim that ordinary zero-based orbit
 iteration reveals the sought orbital. The returned points and least Newton
 step are numerical evidence, not proof of closure, primitive period, or
