@@ -72,7 +72,7 @@ export class Complex {
    sqrt = () => {
       const mag = this.magnitude()
       const first_part = Math.sqrt((mag + this.re) / 2)
-      const sign = this.im / Math.abs(this.im)
+      const sign = this.im < 0 ? -1 : 1
       const second_part = sign * Math.sqrt((mag - this.re) / 2)
       return new Complex(first_part, second_part)
    }

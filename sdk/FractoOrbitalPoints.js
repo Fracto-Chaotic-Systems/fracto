@@ -183,6 +183,13 @@ export default function FractoOrbitalPoints(point, options = {}) {
     : newton_mode === "big_complex"
       ? response.newton_big_complex
       : null;
+  const refinements = [response.newton_native, response.newton_big_complex].filter(Boolean);
+  response.closure_reached = refinements.every(result => result.closure_reached === true);
+  if (!response.closure_reached) {
+    response.status = "closure_not_reached";
+    response.candidate_cardinality = response.cardinality;
+    response.cardinality = 0;
+  }
   return response;
 }
 

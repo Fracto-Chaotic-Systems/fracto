@@ -225,3 +225,33 @@ npm run check
 ```
 
 This checks repository JavaScript syntax, validates migrations, and runs the root Node test suite, including SDK math and selected service, authentication, deployment, and startup regressions. See the root `package.json` for the current test list.
+
+Newton results now explicitly report `closure_reached`, `closure_error`, and
+`closure_tolerance` (1e-7). Closure checks every transition, including wraparound;
+BigComplex checks use its decimal precision. Failure has status
+`closure_not_reached`, an empty `point_list`, and accepted `cardinality: 0`.
+The supplied estimate remains `candidate_cardinality` for diagnostics only.
+Callers must require `closure_reached === true`; an iteration-limit approximation
+must never be rendered or counted as an orbital. Closure does not prove the
+supplied primitive period or dynamical stability.
+
+Best-iterate selection in BigComplex uses Decimal comparisons, not JavaScript
+object comparisons, and saves the updated root estimate. This corrects stale
+approximations caused by exponent-form comparisons and avoids constructing the
+saved cycle from the pre-update iterated point. The formerly reported six-point
+99.74% example now closes within tolerance after this correction; an insufficient
+iteration budget remains explicitly rejected.
+
+## Dynamic rays for selected periodic orbitals
+
+`orbitals/FractoDynamicRays.js` exports `find_dynamic_rays(c, {points}, options)`
+for bounded numerical dynamic-plane ray searches. It checks orbital closure,
+repulsion, and connected-Julia evidence before searching periodic angles and
+tracing their inverse Böttcher curves. Results include exact fraction angles,
+complex-coordinate polylines, landing/precision diagnostics, and explicit
+unsupported/no-result statuses. It does not claim to find every access or
+produce parameter-plane wakes.
+
+See [the algorithm and limitations](orbitals/RAYS.md). The published theoretical
+basis is [Milnor, Astérisque 261 (2000)](https://numdam.org/item/AST_2000__261__277_0/)
+and [Benini–Lyubich, AIF 64 (2014), polynomial case in §2](https://doi.org/10.5802/aif.2888).

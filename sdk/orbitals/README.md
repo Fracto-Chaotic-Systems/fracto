@@ -3,8 +3,9 @@
 This folder contains the numerical building blocks used by the public
 `FractoCardinality` and `FractoOrbitalPoints` interfaces. These helpers are
 kept separate so sampling, candidate scoring, and Newton refinement can be
-tested independently. Application code should use the public SDK interfaces
-instead of combining these internal stages itself.
+tested independently. Application code should normally use the public SDK interfaces. The seeded
+survey and dynamic-ray tools also use the low-level Newton helper explicitly
+to retain their chosen starting seed and refinement budget.
 
 Both public SDK entry points are scoped to the main cardioid. When a valid
 parameter is outside that domain, `FractoCardinality` and
@@ -106,3 +107,35 @@ now inform the ambiguity and adaptive stopping rules. The prior
 remain available for comparison; the existing `confidence` composite also
 continues to use the raw sign-only coherence. The `0.5` and `0.9` cutoffs
 remain heuristic, and a passing gate is not proof of a mathematical orbit.
+
+Newton results now explicitly report `closure_reached`, `closure_error`, and
+`closure_tolerance` (1e-7). Closure checks every transition, including wraparound;
+BigComplex checks use its decimal precision. Failure has status
+`closure_not_reached`, an empty `point_list`, and accepted `cardinality: 0`.
+The supplied estimate remains `candidate_cardinality` for diagnostics only.
+Callers must require `closure_reached === true`; an iteration-limit approximation
+must never be rendered or counted as an orbital. Closure does not prove the
+supplied primitive period or dynamical stability.
+
+Best-iterate selection in BigComplex uses Decimal comparisons, not JavaScript
+object comparisons, and saves the updated root estimate. This corrects stale
+approximations caused by exponent-form comparisons and avoids constructing the
+saved cycle from the pre-update iterated point. The formerly reported six-point
+99.74% example now closes within tolerance after this correction; an insufficient
+iteration budget remains explicitly rejected.
+
+## Dynamic rays
+
+The dynamic-ray modules classify selected cycles, discover bounded candidate
+angles, and trace validated numerical polylines for connected Julia sets.
+See [RAYS.md](RAYS.md) for contracts, limits, validation, and the published
+basis: [Milnor, Astérisque 261 (2000)](https://numdam.org/item/AST_2000__261__277_0/)
+and [Benini–Lyubich, AIF 64 (2014), §2](https://doi.org/10.5802/aif.2888).
+These rays live in the seed plane, not the Mandelbrot parameter plane.
+
+`FractoRayFamilies.js` enumerates nonduplicate exact-period doubling cycles
+modulo `2^n-1` and validates their landing against the selected orbital.
+All supported periods use this general path, without a fixed seven-angle
+registry or broad angular discovery. See [RAYS.md](RAYS.md) for budgets and
+multiple-access cases, and the published
+[Milnor (2000), §2](https://numdam.org/item/AST_2000__261__277_0/) basis.

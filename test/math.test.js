@@ -114,3 +114,13 @@ describe("farey_sequence", () => {
     ]);
   });
 });
+
+describe("complex square root on the real axis", () => {
+  it("keeps real and negative-real roots finite", () => {
+    for (const [value, re, im] of [[4, 2, 0], [-4, 0, 2], [0, 0, 0]]) {
+      const root = new Complex(value, 0).sqrt();
+      assert.equal(root.re, re);
+      assert.equal(root.im, im);
+    }
+  });
+});

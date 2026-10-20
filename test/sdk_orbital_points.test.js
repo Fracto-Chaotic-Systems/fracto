@@ -10,17 +10,19 @@ test("SDK exports one detector-to-orbital-points interface", () => {
   assert.equal(sdk.FractoOrbitalPoints, FractoOrbitalPoints);
 });
 
-test("default path carries SDK cardinality evidence into Newton", () => {
+test("default path preserves detector evidence but rejects an unclosed Newton estimate", () => {
   const result = FractoOrbitalPoints(
     { re: "0.3237686467", im: "0.0535461409" },
     { newton_limit: 1 },
   );
-  assert.equal(result.status, "cardinality_passed_to_newton");
+  assert.equal(result.status, "closure_not_reached");
   assert.equal(result.detection.candidate_cardinality, 92);
-  assert.equal(result.cardinality, 92);
+  assert.equal(result.cardinality, 0);
+  assert.equal(result.candidate_cardinality, 92);
+  assert.equal(result.closure_reached, false);
   assert.equal(result.cardinality_source, "sdk_critical_orbit_return_detector");
-  assert.equal(result.newton_big_complex.cardinality, 92);
-  assert.equal(result.newton_big_complex.point_list.length, 92);
+  assert.equal(result.newton_big_complex.cardinality, 0);
+  assert.equal(result.newton_big_complex.point_list.length, 0);
 });
 
 test("known five-point candidate records the current repeated-fixed-point Newton result", () => {
@@ -98,7 +100,7 @@ test("BigComplex refinement preserves coordinate digits beyond Number precision"
     {
       cardinality: 1,
       newton_mode: "big_complex",
-      newton_limit: 10,
+      newton_limit: 40,
       precision_digits: 100,
     },
   );

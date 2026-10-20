@@ -1,3 +1,4 @@
+import { validate_newton_closure } from "./FractoNewtonClosure.js";
 import BigComplex from "../math/BigComplex.js";
 
 /**
@@ -9,7 +10,7 @@ import BigComplex from "../math/BigComplex.js";
  * @param {object} [options] Precision and optional initial root guess `seed` ({x,y} or {re,im}).
  * @returns {object} Newton result and convergence metadata.
  */
-export const newton_big_complex = (
+const newton_big_complex_candidate = (
   point,
   limit,
   known_cardinality = null,
@@ -101,13 +102,13 @@ export const newton_big_complex = (
           cardinality_supplied,
         };
       }
-      if (step_magnitude > 0 && step_magnitude < least_magnitude) {
+      if (step_magnitude.gt(0) && step_magnitude.lt(least_magnitude)) {
         least_magnitude = step_magnitude;
         least_magnitude_N = N;
         least_magnitude_point_list = [];
         let next_current = new BigComplex(
-          current.re,
-          current.im,
+          z0.re,
+          z0.im,
           precision_digits,
         );
         for (let k = 0; k < N; k++) {
@@ -131,6 +132,9 @@ export const newton_big_complex = (
     cardinality_supplied,
   };
 };
+
+export const newton_big_complex = (point, limit, known_cardinality = null, options = {}) =>
+  validate_newton_closure(newton_big_complex_candidate(point, limit, known_cardinality, options), point);
 
 // TEST
 // const point = {x: -0.7498264222691475, y: 0.015174810956388776}

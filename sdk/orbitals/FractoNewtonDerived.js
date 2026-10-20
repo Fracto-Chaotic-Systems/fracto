@@ -1,3 +1,4 @@
+import { validate_newton_closure } from "./FractoNewtonClosure.js";
 import Complex from "../math/Complex.js";
 
 /**
@@ -8,13 +9,14 @@ import Complex from "../math/Complex.js";
  * @param {number} [known_cardinality] Evaluate only this cardinality when supplied.
  * @returns {object} Newton result and convergence metadata.
  */
-export const newton_derived = (point, limit, known_cardinality = null) => {
+const newton_derived_candidate = (point, limit, known_cardinality = null) => {
   let least_magnitude = 1000;
   let least_magnitude_N = 0;
   let least_magnitude_point_list = [];
   const start = performance.now();
   // A tolerance below roughly 1e-16 cannot be reached reliably with a
-  // JavaScript Number, so 1e-12 is a practical Newton convergence target.
+  // JavaScript Number; the step-size target here is 1e-8, with an
+  // independent closure check applied before any result can be accepted.
   const tolerance_squared = 1e-16;
   const requested_cardinality = Number(known_cardinality);
   const cardinality_supplied =
@@ -36,7 +38,7 @@ export const newton_derived = (point, limit, known_cardinality = null) => {
   }
   const cardinalities = [requested_cardinality];
   for (const N of cardinalities) {
-    // Start at zero, to find the orbital point closest to the origin
+    // Preserve the established zero initial root guess.
     let z0_re = 0;
     let z0_im = 0;
     for (let i = 1; i <= limit; i++) {
@@ -188,6 +190,9 @@ export const newton_derived = (point, limit, known_cardinality = null) => {
     cardinality_supplied,
   };
 };
+
+export const newton_derived = (point, limit, known_cardinality = null) =>
+  validate_newton_closure(newton_derived_candidate(point, limit, known_cardinality), point);
 
 // TEST
 // const point = {x: -0.7436128502235405, y: 0.09298817483611424}
