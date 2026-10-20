@@ -139,3 +139,50 @@ All supported periods use this general path, without a fixed seven-angle
 registry or broad angular discovery. See [RAYS.md](RAYS.md) for budgets and
 multiple-access cases, and the published
 [Milnor (2000), §2](https://numdam.org/item/AST_2000__261__277_0/) basis.
+
+The [ray guide](RAYS.md) includes a step-by-step account of the current
+selected-orbital pipeline, a [proposed c,n-only discovery flowchart](RAYS.md#flowchart-1-proposed-discovery-from-c-and-n),
+and the [implemented single-ray tracer flowchart](RAYS.md#flowchart-2-implemented-single-ray-tracer).
+The discovery chart is explicitly a design; the tracer chart describes
+existing code. Both use the published Milnor and Benini–Lyubich references
+listed in the guide.
+
+## Minibrot parameter rays
+
+`FractoMinibrotRays.js` coordinates root access, doubling and optional thirds
+(`include_thirds`) and principal tip (`include_tip`). The study worker enables
+both flags. UI rows appear as tip, 1/2, 1/3, 2/3, 0/1, with the tip selected
+initially. The default SDK call remains root/doubling. All labels are global
+external fractions, even when table rows identify local rotations.
+
+- `FractoParameterAttachment.js` refines the center and continues real/complex
+  multipliers to parabolic attachments.
+- `FractoParameterAngles.js` discovers root angles and fallback doubling angles.
+- `FractoParameterTuning.js` performs exact BigInt binary-block substitution
+  for the three satellite pairs and the preperiodic tip angles.
+- `FractoParameterRays.js` owns doubling and independent partner collection;
+  `FractoSatelliteRays.js` owns local 1/3 and 2/3 groups.
+- `FractoAntennaRays.js` locates and checks the tuned analogue of c=-2 using a
+  preperiodic critical-orbit relation, distinct from parabolic continuation.
+- `FractoParameterRayTrace.js` follows inward paths;
+  `FractoParameterRaySolver.js` uses a 64-digit reference with native
+  perturbations to retain small corrections. The reference cache is bounded.
+
+Every requested group retains its status and accepted partial paths. Landing
+is unconfirmed for incomplete paths and no final connector is synthesized.
+Only completed root access supplies exact tuning. Without it, doubling keeps
+its independent probe fallback; thirds and tip report missing root angles.
+Parent periods 1–20 are supported. Inward depth is max(4096,512*P) for root,
+doubling and final tip tracing, and max(4096,768*P) for thirds. Tip discovery
+uses max(256,64*P). These budgets and visual endpoint checks are numerical
+engineering choices rather than proof of landing.
+
+See [PARAMETER_RAYS.md](PARAMETER_RAYS.md) for the five-group overview,
+flowchart, API, ownership, rendering policy and diagnostics;
+[SATELLITE_RAYS.md](SATELLITE_RAYS.md) for complex multiplier attachments and
+threefold tuning; and [ANTENNA_RAYS.md](ANTENNA_RAYS.md) for tip angles,
+preperiodic endpoint checks and partial-result limitations. Their published
+basis is [Milnor (2000), sections 3, 6 and 8](https://numdam.org/item/AST_2000__261__277_0/)
+and [Schleicher (2000)](https://numdam.org/item/AST_2000__261__405_0/).
+Finite-arithmetic context is provided by
+[Romera et al. (2013)](https://doi.org/10.1155/2013/105283).

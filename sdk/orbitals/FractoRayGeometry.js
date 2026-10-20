@@ -52,3 +52,8 @@ export const primitive_period = (points) => {
       return p;
   return points.length;
 };
+
+export const divide = (a, b) => {
+  const d = b.x * b.x + b.y * b.y;
+  return { x: (a.x * b.x + a.y * b.y) / d, y: (a.y * b.x - a.x * b.y) / d };
+};
