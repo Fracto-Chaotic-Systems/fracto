@@ -31,3 +31,11 @@ checks.
 
 Keep route registration and startup orchestration in the root `index.js`; keep
 request-specific behavior in these handlers.
+
+- `clients.js` provides `GET /clients`, an administrator-only, uncached snapshot
+  of unexpired authenticated login sessions. It includes display name, role,
+  browser user agent and creation/activity/expiry timestamps. Opaque session
+  tokens, cookies, provider subjects and email addresses are excluded. The
+  existing explicit lab read-only bypass also permits this GET when auth is
+  disabled. An empty list in that mode is expected: anonymous tabs are not
+  tracked. Sessions disappear on logout, expiration or process restart.

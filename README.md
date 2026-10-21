@@ -2,6 +2,13 @@
 
 Main server for the Fracto mediaplex.
 
+Project-wide engineering rules are in [PROJECT_GUIDELINES.md](PROJECT_GUIDELINES.md).
+In particular, **never transmit personal information of any kind via an API**;
+see [Personal information and APIs](PROJECT_GUIDELINES.md#personal-information-and-apis).
+This is a required design rule, not a claim that every existing endpoint already
+complies. Known authentication-related gaps are recorded in
+[AUTHENTICATION.md](AUTHENTICATION.md#personal-information-policy-compliance-gap).
+
 See [TAGGING.md](TAGGING.md) for the coordinated milestone-tagging convention
 used by the root repository and the independent service repositories.
 
@@ -144,6 +151,7 @@ down`. It refuses to run while production is already running and never uses
 ```powershell
 npm run test:docker
 ```
+
 Generated log files are cleaned up at supervisor startup. Retention defaults to
 30 days and can be changed with `FRACTO_LOG_RETENTION_DAYS`; only files matching
 Fracto's dated service-log names are eligible for removal.

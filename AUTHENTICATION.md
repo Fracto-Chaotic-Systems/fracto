@@ -5,6 +5,27 @@ contract for remaining work. Google OIDC, user provisioning, server-side
 sessions, and enabled-user checks are implemented. Enforcement is selected
 through runtime configuration.
 
+## Personal-information policy compliance gap
+
+The project-wide rule in
+[PROJECT_GUIDELINES.md](PROJECT_GUIDELINES.md#personal-information-and-apis)
+prohibits transmitting personal information of any kind via APIs, including
+internal and administrator-only APIs. The implementation described below is
+not yet compliant with that rule. These descriptions record current behavior,
+not permission to continue or expand those transmissions.
+
+Known examples include OIDC identity exchanges, identity-bearing account and
+session requests/responses, `/auth/session` returning `public_user()` fields
+such as email, display name and provider subject, and the new `/clients`
+snapshot returning user identity and browser metadata. Restricting `/clients`
+to administrators and excluding session tokens does not make its personal
+fields compliant. This is a known gap list, not a completed system-wide audit.
+
+Remediation requires redesigning these contracts to avoid personal data,
+reviewing request/response/error/log paths, and adding non-disclosure tests.
+The documentation update establishes the rule but does not itself remove
+existing fields or replace the authentication architecture.
+
 ## Initial objective
 
 The application must know which authenticated person is using it and must
@@ -509,15 +530,15 @@ login, deployment CORS checks, or browser cookie verification behind HTTPS.
 
 The step 7 checklist is covered by the following automated checks:
 
-| Scenario | Coverage |
-| --- | --- |
-| First enabled login enters once | UI session loading and entry-effect tests; simulated callback session creation |
-| Refresh preserves the application route | UI checks for all five application routes, including checking before session resolution |
-| Repeated checks do not navigate again | UI session refresh and effect replay tests |
-| Disabled users remain denied | UI denied state; HTTP enabled-user and administrator gates, including existing sessions |
-| Logout then login permits entry again | UI logout/session/entry sequence; HTTP old-token rejection and new-session acceptance |
-| Expired or invalid session returns to welcome | HTTP anonymous responses and protected-route rejection; UI anonymous response routing |
-| Bypass retains manual entry | Actual configuration checks for false/unset enforcement; UI bypass with or without a denied identity |
+| Scenario                                      | Coverage                                                                                             |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| First enabled login enters once               | UI session loading and entry-effect tests; simulated callback session creation                       |
+| Refresh preserves the application route       | UI checks for all five application routes, including checking before session resolution              |
+| Repeated checks do not navigate again         | UI session refresh and effect replay tests                                                           |
+| Disabled users remain denied                  | UI denied state; HTTP enabled-user and administrator gates, including existing sessions              |
+| Logout then login permits entry again         | UI logout/session/entry sequence; HTTP old-token rejection and new-session acceptance                |
+| Expired or invalid session returns to welcome | HTTP anonymous responses and protected-route rejection; UI anonymous response routing                |
+| Bypass retains manual entry                   | Actual configuration checks for false/unset enforcement; UI bypass with or without a denied identity |
 
 The UI suite exercises the actual component methods and JSX with simulated
 React/router behavior. Provider exchange and database responses are simulated

@@ -49,9 +49,12 @@ const session_from_request = async (req) => {
     }
     if (!response.ok) throw new Error("User authorization lookup failed");
     const { user } = await response.json();
-    if (!user || `${user.id}` !== `${session.user.id}` ||
-        user.provider !== session.user.provider ||
-        user.provider_subject !== session.user.provider_subject) {
+    if (
+      !user ||
+      `${user.id}` !== `${session.user.id}` ||
+      user.provider !== session.user.provider ||
+      user.provider_subject !== session.user.provider_subject
+    ) {
       lookup_outcome = "identity_mismatch";
       destroy_session(token);
       return null;
@@ -77,8 +80,7 @@ const session_from_request = async (req) => {
   }
 };
 
-const oidc_is_configured = () =>
-  AUTH_CONFIG.configured;
+const oidc_is_configured = () => AUTH_CONFIG.configured;
 
 const unavailable_response = (res) => {
   res.status(503).json({
@@ -88,8 +90,13 @@ const unavailable_response = (res) => {
 };
 
 const safe_return_to = (value) => {
-  if (typeof value !== "string" || !value.startsWith("/") ||
-      value.startsWith("//") || /[\\\x00-\x20\x7f]/.test(value)) return "/";
+  if (
+    typeof value !== "string" ||
+    !value.startsWith("/") ||
+    value.startsWith("//") ||
+    /[\\\x00-\x20\x7f]/.test(value)
+  )
+    return "/";
   const base = new URL(AUTH_CONFIG.ui_origin);
   const destination = new URL(value, base);
   return destination.origin === base.origin ? value : "/";
@@ -98,7 +105,10 @@ const safe_return_to = (value) => {
 const redirect_to_ui = (res, return_to = "/", error_code = null) => {
   let destination;
   try {
-    destination = new URL(error_code ? "/" : safe_return_to(return_to), AUTH_CONFIG.ui_origin);
+    destination = new URL(
+      error_code ? "/" : safe_return_to(return_to),
+      AUTH_CONFIG.ui_origin,
+    );
   } catch {
     destination = new URL("http://localhost:3006/");
   }
@@ -148,17 +158,24 @@ const provision_user = async (identity, request) => {
   });
   const body = await response.json().catch(() => ({}));
   if (!response.ok || !body.user) {
-    const response_type = response.headers.get("content-type") || "unknown content type";
+    const response_type =
+      response.headers.get("content-type") || "unknown content type";
     throw new Error(
       `User provisioning failed (HTTP ${response.status}; requested ${endpoint}; ` +
-      `responded at ${response.url || endpoint}; ${response_type})`,
+        `responded at ${response.url || endpoint}; ${response_type})`,
     );
   }
   return body.user;
 };
 
 /** Record a non-secret lifecycle event without exposing provider credentials. */
-const record_auth_event = async ({ user, event_type, success, request, details }) => {
+const record_auth_event = async ({
+  user,
+  event_type,
+  success,
+  request,
+  details,
+}) => {
   const data_port = Number(process.env.FRACTO_DATA_PORT || 3002);
   const response = await fetch(`http://127.0.0.1:${data_port}/login_event`, {
     signal: AbortSignal.timeout(5000),
@@ -176,7 +193,9 @@ const record_auth_event = async ({ user, event_type, success, request, details }
     }),
   });
   if (!response.ok) {
-    throw new Error(`Authentication event recording failed (${response.status})`);
+    throw new Error(
+      `Authentication event recording failed (${response.status})`,
+    );
   }
 };
 
@@ -200,15 +219,18 @@ export const handle_auth_login = async (req, res) => {
       return_to: safe_return_to(req.query.return_to),
     });
     set_auth_transaction_cookie(res, transaction.state);
-    const authorization_url = oidc.buildAuthorizationUrl(provider.configuration, {
-      redirect_uri: AUTH_CONFIG.redirect_uri,
-      response_type: "code",
-      scope: "openid email profile",
-      state: transaction.state,
-      nonce: transaction.nonce,
-      code_challenge,
-      code_challenge_method: "S256",
-    });
+    const authorization_url = oidc.buildAuthorizationUrl(
+      provider.configuration,
+      {
+        redirect_uri: AUTH_CONFIG.redirect_uri,
+        response_type: "code",
+        scope: "openid email profile",
+        state: transaction.state,
+        nonce: transaction.nonce,
+        code_challenge,
+        code_challenge_method: "S256",
+      },
+    );
     res.redirect(authorization_url.href);
   } catch (error) {
     console.error("OIDC authorization redirect failed", error.message);
@@ -222,8 +244,7 @@ export const handle_auth_callback = async (req, res) => {
     unavailable_response(res);
     return;
   }
-  const state =
-    typeof req.query.state === "string" ? req.query.state : null;
+  const state = typeof req.query.state === "string" ? req.query.state : null;
   const transaction_cookie = get_auth_transaction_cookie(req);
   const transaction =
     state && transaction_cookie === state ? get_auth_transaction(state) : null;
@@ -277,7 +298,7 @@ export const handle_auth_callback = async (req, res) => {
       redirect_to_ui(res, return_to, "user_provisioning_failed");
       return;
     }
-    const session = create_session(user);
+    const session = create_session(user, { user_agent: req.get("user-agent") });
     destroy_session(get_cookie(req, AUTH_COOKIE_NAME));
     set_session_cookie(res, session.token);
     redirect_to_ui(res, return_to);

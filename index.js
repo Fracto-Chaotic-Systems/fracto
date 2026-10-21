@@ -23,6 +23,7 @@ import {handle_main_status} from './handlers/status.js'
 import {handle_logs} from './handlers/logs.js'
 import {handle_auth_callback, handle_auth_login, handle_auth_logout, handle_auth_session, require_enabled_user_if_configured} from './handlers/auth.js'
 import {create_health_handler} from './handlers/health.js'
+import {handle_clients} from './handlers/clients.js'
 import {validate_startup} from './scripts/startup_preflight.js'
 import {root_log} from './utils/logging.js'
 import {ansi_segments} from './utils/ansi_colors.js'
@@ -283,6 +284,7 @@ const create_main_server = () => {
    app.get('/auth/session', handle_auth_session)
    app.post('/auth/logout', handle_auth_logout)
    const health_response = create_health_handler(service_states, build_info)
+   app.get('/clients', handle_clients)
    app.get('/healthz', health_response)
    app.get('/readyz', health_response)
    app.get('/status', require_enabled_user_if_configured, handle_tile)

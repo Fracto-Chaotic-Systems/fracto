@@ -47,3 +47,9 @@ and terminal output formatting.
 
 Authentication secrets and session tokens are runtime data. Do not add them to
 this documentation or commit them to Git.
+
+Session client snapshots include a separate non-secret random client ID, a
+length-limited user agent captured at login and last authenticated activity.
+`list_client_sessions()` expires old records before returning a copied
+allowlist of fields. Login-session existence does not establish live browser
+presence, and displayed user roles reflect the last session verification.

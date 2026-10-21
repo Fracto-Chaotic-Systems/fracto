@@ -98,6 +98,30 @@ in the README for that feature or service.
   multiple areas, and avoid leaving contradictory descriptions in either
   place.
 
+## Personal information and APIs
+
+- Never transmit personal information of any kind via an API. This applies to
+  request and response bodies, URL paths and query parameters, headers,
+  cookies, error details, logs, and telemetry. It covers public,
+  administrator-only, internal, and server-to-server APIs.
+- Personal information includes names, email addresses, telephone numbers,
+  physical and IP addresses, account/user/provider identifiers, personal
+  profile data, identifying browser/device information, and any other values
+  that identify or can be linked to an individual. Renaming or hashing an
+  identifying value does not automatically make it non-personal.
+- Authentication, administrator privileges, encryption, or a trusted network
+  do not create an exception. Keep personal information within its owning
+  process; design API contracts around non-identifying operational data or
+  aggregates instead.
+- Use explicit allowlists for serialized fields. Never return complete user,
+  profile, request, or session objects. Check both successful and error paths,
+  and add regression checks that personal fields cannot cross API boundaries.
+- Treat an existing API that transmits personal information as a compliance
+  defect, not a precedent or an implicit exception. Call out the conflict and
+  document the remediation required; do not describe it as compliant merely
+  because access is protected. Do not add further personal-data transmission
+  while extending that API.
+
 ## Data, logging, and operations
 
 - Treat the cloud tile source and database migration history as authoritative;

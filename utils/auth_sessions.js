@@ -53,7 +53,7 @@ export const append_set_cookie = (response, cookie) => {
 };
 
 /** Create an opaque server-side session for a validated user identity. */
-export const create_session = (user) => {
+export const create_session = (user, client = {}) => {
   remove_expired_sessions();
   while (sessions.size >= MAX_SESSIONS) {
     sessions.delete(sessions.keys().next().value);
@@ -62,6 +62,12 @@ export const create_session = (user) => {
   const now = Date.now();
   sessions.set(token, {
     user: { ...user },
+    client_id: crypto.randomUUID(),
+    user_agent:
+      typeof client.user_agent === "string"
+        ? client.user_agent.replace(/[\r\n]+/g, " ").slice(0, 512)
+        : "",
+    last_seen_at: now,
     created_at: now,
     expires_at: now + SESSION_TTL_MS,
   });
@@ -88,7 +94,8 @@ export const renew_session = (token) => {
   if (!session) {
     return null;
   }
-  session.expires_at = Date.now() + SESSION_TTL_MS;
+  session.last_seen_at = Date.now();
+  session.expires_at = session.last_seen_at + SESSION_TTL_MS;
   return session;
 };
 
@@ -115,7 +122,11 @@ export const get_cookie = (request, name) => {
 };
 
 /** Attach the opaque session cookie to a response. */
-export const set_session_cookie = (response, token, max_age = SESSION_TTL_MS) => {
+export const set_session_cookie = (
+  response,
+  token,
+  max_age = SESSION_TTL_MS,
+) => {
   append_set_cookie(
     response,
     `${AUTH_COOKIE_NAME}=${encodeURIComponent(token)}; ${cookie_attributes(max_age)}`,
@@ -124,10 +135,7 @@ export const set_session_cookie = (response, token, max_age = SESSION_TTL_MS) =>
 
 /** Clear the browser session cookie. */
 export const clear_session_cookie = (response) => {
-  append_set_cookie(
-    response,
-    `${AUTH_COOKIE_NAME}=; ${cookie_attributes(0)}`,
-  );
+  append_set_cookie(response, `${AUTH_COOKIE_NAME}=; ${cookie_attributes(0)}`);
 };
 
 /** Return a session-safe user representation without credentials. */
@@ -141,3 +149,22 @@ export const public_user = (user) => ({
   enabled: user?.enabled === true || Number(user?.enabled) === 1,
   role: user?.role ?? null,
 });
+
+/** Administrative snapshot: never expose tokens, provider identities, or cookies. */
+export const list_client_sessions = () => {
+  remove_expired_sessions();
+  return [...sessions.values()]
+    .map((session) => ({
+      id: session.client_id,
+      user: {
+        id: session.user.id ?? null,
+        display_name: session.user.display_name ?? null,
+        role: session.user.role ?? null,
+      },
+      user_agent: session.user_agent,
+      created_at: new Date(session.created_at).toISOString(),
+      last_seen_at: new Date(session.last_seen_at).toISOString(),
+      expires_at: new Date(session.expires_at).toISOString(),
+    }))
+    .sort((a, b) => b.last_seen_at.localeCompare(a.last_seen_at));
+};

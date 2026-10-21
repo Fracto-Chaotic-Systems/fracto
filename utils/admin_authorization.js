@@ -1,6 +1,7 @@
 import { trusted_mutation_origin } from "./auth_request_origin.js";
 
 const LAB_READONLY_ADMIN_PATHS = new Set([
+  "/clients",
   "/commits",
   "/logs",
   "/reference/document",
@@ -35,9 +36,13 @@ export const require_administrator = async (req, res, next) => {
       res.status(401).json({ error: "Authentication required" });
       return;
     }
-    if (session.auth_state !== "authenticated" ||
-        !(session.user?.enabled === true || Number(session.user?.enabled) === 1) ||
-        session.user?.role !== "admin") {
+    if (
+      session.auth_state !== "authenticated" ||
+      !(
+        session.user?.enabled === true || Number(session.user?.enabled) === 1
+      ) ||
+      session.user?.role !== "admin"
+    ) {
       res.status(403).json({ error: "Administrator access required" });
       return;
     }
