@@ -5,13 +5,13 @@
 <p class="subtitle">This ledger records images and other media uploaded for the Fracto Bluesky
 account. Entries are listed newest first, with one entry per media asset. This
 listing is generated from Bluesky directly, do not edit!</p>
-<p class="ledger-generated"><strong>Ledger generated:</strong> October 8, 2026</p>
+<p class="ledger-generated"><strong>Ledger generated:</strong> October 21, 2026</p>
 
 
 <div class="media-ledger-index">
 <strong>Media index</strong>
 <ul>
-  <li><a href="#media-bafyreigitjo7tzlsux5d3kwbvk4ddfpqwvvgpyn4wjmptllim53bdbwmia-0">2026-09-30 — video…</a></li>
+  <li><a href="#media-bafyreigitjo7tzlsux5d3kwbvk4ddfpqwvvgpyn4wjmptllim53bdbwmia-0">2026-09-30 — (none…</a></li>
   <li><a href="#media-bafyreic567zzvovdr22d7yycy67bqnwnshn22xdclghrkrzpiy5iie6s4m-0">2026-09-04 — When different areas of the interior collide, they…</a></li>
   <li><a href="#media-bafyreif57qkdsfdyiihi6zk67vxmika7he7rufgqgfdsdpqwld5brponcm-0">2026-09-04 — Lined up like bars on a xylophone, these…</a></li>
   <li><a href="#media-bafyreicfseangnmdqsfc4wevh3uqiv457qkzu2uwy4fm56ozcyvbl5vhmy-0">2026-09-04 — A kaleidoscope of colors is found inside of…</a></li>
@@ -33,7 +33,7 @@ listing is generated from Bluesky directly, do not edit!</p>
 
 <a id="media-bafyreigitjo7tzlsux5d3kwbvk4ddfpqwvvgpyn4wjmptllim53bdbwmia-0"></a>
 
-## 2026-09-30 — video…
+## 2026-09-30 — (none…
 
 <div class="media-entry">
 <div class="media-entry-visual"><a href="https://video.bsky.app/watch/did%3Aplc%3Af4r4ysvnudlmotcxt3t36dhd/bafkreidpc2xpshv7i3v4j4vwpj5snumujvj5za3jximx2iphxp6ybnm4ry/playlist.m3u8"><img src="https://video.bsky.app/watch/did%3Aplc%3Af4r4ysvnudlmotcxt3t36dhd/bafkreidpc2xpshv7i3v4j4vwpj5snumujvj5za3jximx2iphxp6ybnm4ry/thumbnail.jpg" alt="Thumbnail" /></a></div>
