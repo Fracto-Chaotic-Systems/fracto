@@ -1,6 +1,10 @@
+import {
+  MAX_PARAMETER_PERIOD,
+  finite_parameter,
+  parameter_distance,
+} from "./FractoParameterPrecision.js";
 import { component_attachment } from "./FractoParameterAttachment.js";
 import { tuned_wake_angles } from "./FractoParameterTuning.js";
-import { distance, finite } from "./FractoRayGeometry.js";
 import {
   trace_parameter_ray_group,
   trace_depth_for_period,
@@ -21,10 +25,10 @@ export function find_satellite_wake_rays(
     const wake = WAKES[rotation];
     if (
       !wake ||
-      !finite(core) ||
+      !finite_parameter(core) ||
       !Number.isInteger(period) ||
       period < 1 ||
-      period > 20 ||
+      period > MAX_PARAMETER_PERIOD ||
       !Number.isFinite(tolerance) ||
       tolerance < 1e-12
     )
@@ -38,8 +42,8 @@ export function find_satellite_wake_rays(
       y: Math.sin(theta),
     });
     if (
-      distance(core, attachment.center) >
-      Math.max(1e-5, 2 * distance(attachment.center, attachment.root))
+      parameter_distance(core, attachment.center) >
+      Math.max(1e-5, 2 * parameter_distance(attachment.center, attachment.root))
     )
       throw Error("core_unresolved");
     on_progress("third_angles");

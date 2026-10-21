@@ -155,6 +155,8 @@ both flags. UI rows appear as tip, 1/2, 1/3, 2/3, 0/1, with the tip selected
 initially. The default SDK call remains root/doubling. All labels are global
 external fractions, even when table rows identify local rotations.
 
+- `FractoParameterRootAngles.js` coordinates numerical discovery and recursive
+  ancestry tuning via `FractoParameterParent.js`; ancestors are not retraced.
 - `FractoParameterAttachment.js` refines the center and continues real/complex
   multipliers to parabolic attachments.
 - `FractoParameterAngles.js` discovers root angles and fallback doubling angles.
@@ -165,14 +167,14 @@ external fractions, even when table rows identify local rotations.
 - `FractoAntennaRays.js` locates and checks the tuned analogue of c=-2 using a
   preperiodic critical-orbit relation, distinct from parabolic continuation.
 - `FractoParameterRayTrace.js` follows inward paths;
-  `FractoParameterRaySolver.js` uses a 64-digit reference with native
+  `FractoParameterRaySolver.js` uses a 64-digit native-path or 80-digit precise reference with native
   perturbations to retain small corrections. The reference cache is bounded.
 
 Every requested group retains its status and accepted partial paths. Landing
 is unconfirmed for incomplete paths and no final connector is synthesized.
 Only completed root access supplies exact tuning. Without it, doubling keeps
 its independent probe fallback; thirds and tip report missing root angles.
-Parent periods 1–20 are supported. Inward depth is max(4096,512*P) for root,
+Parent periods 1–32 are supported. Inward depth is max(4096,512*P) for root,
 doubling and final tip tracing, and max(4096,768*P) for thirds. Tip discovery
 uses max(256,64*P). These budgets and visual endpoint checks are numerical
 engineering choices rather than proof of landing.
@@ -186,3 +188,17 @@ basis is [Milnor (2000), sections 3, 6 and 8](https://numdam.org/item/AST_2000__
 and [Schleicher (2000)](https://numdam.org/item/AST_2000__261__405_0/).
 Finite-arithmetic context is provided by
 [Romera et al. (2013)](https://doi.org/10.1155/2013/105283).
+
+For the current 1–32 attempt range, Decimal endpoint/angle fallbacks, satellite
+ancestry shortcut, exact-coordinate propagation, progress timer, runtime limits
+and higher-period regression examples, see
+[PARAMETER_PRECISION.md](PARAMETER_PRECISION.md). Earlier native algorithm
+sections describe the fast path through period 20; the precision guide defines
+the extended path and cites the published Milnor/Schleicher and numerical
+extrapolation references. Period 32 is the recommended next ceiling to attempt.
+
+Parameter-ray geometry now supports shared per-minibrot persistence through
+`FractoMinibrotRayCache.js`. See [RAY_CACHE.md](RAY_CACHE.md) for versioned
+identity, per-group accuracy reuse, incremental saves, transactional merge,
+compressed storage, migration rollout and verification. Cached geometry keeps
+the published numerical/theoretical distinctions described in these guides.

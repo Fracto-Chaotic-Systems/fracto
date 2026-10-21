@@ -1,3 +1,4 @@
+import { MAX_PARAMETER_PERIOD } from "./FractoParameterPrecision.js";
 import { rational_angle } from "./FractoRayGeometry.js";
 
 /** Exact binary-block substitution for local bulb wakes. Milnor (2000), section 8;
@@ -7,7 +8,7 @@ function parent_blocks(root_angles, period) {
   if (
     !Number.isInteger(period) ||
     period < 1 ||
-    period > 20 ||
+    period > MAX_PARAMETER_PERIOD ||
     !Array.isArray(root_angles)
   )
     throw Error("angles_unresolved");
@@ -53,7 +54,7 @@ export function tuned_wake_angles(root_angles, period, words) {
         typeof word === "string" &&
         /^[01]+$/.test(word) &&
         word.length === words[0].length &&
-        word.length <= 16,
+        word.length <= Math.max(16, Math.floor(MAX_PARAMETER_PERIOD / period)),
     )
   )
     throw Error("angles_unresolved");

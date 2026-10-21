@@ -33,7 +33,7 @@ The existing parameter-ray tracer first follows one tuned angle with the core
 as its numerical reference, collecting a prefix with max(256,64*P) depth.
 The final accepted point seeds Newton refinement of
 f_c^(3P)(0)-f_c^(2P)(0)=0. Parameter derivatives reuse `critical` from the
-attachment module. The proposed point must have finite iterates, residual at
+attachment module. The native proposed point must have finite iterates, residual at
 most 1e-8, a repelling P-step return with multiplier modulus above 1+1e-6,
 and distinct f_c^P(0) and f_c^(2P)(0). The actual eventual period may divide P;
 requiring primitive period exactly P would incorrectly reject satellite copies.
@@ -47,9 +47,10 @@ endpoint tolerance and max(4096,512*P) depth. No final connector is fabricated.
 If refinement cannot verify the tip, available prefixes remain incomplete and
 landing unconfirmed. Root-angle failure returns `root_angles_required`;
 unsupported periods or tolerances return `unsupported`. Native endpoint
-refinement can lose accuracy in tiny components even though the shared tracer
-uses a high-precision reference; partial paths remain useful in that case.
-Parent periods remain limited to 1–20. An inaccurate reference/core may also
+refinement uses doubles at lower periods; periods above 20 use Decimal
+refinement and preserve an exact endpoint for tracing. Either path may remain
+unresolved; partial paths stay useful in that case.
+Parent periods remain limited to 1–32. An inaccurate reference/core may also
 prevent discovery. No claim is made that every supported input will resolve.
 
 ## API and UI
@@ -88,3 +89,11 @@ Here paths were traced using the core as reference, so their `endpoint_error`
 is distance to that reference, not a certified error to an unknown tip.
 The UI reports incomplete landing; it does not treat this diagnostic as a
 verified endpoint. The final validated trace uses the refined tip as reference.
+
+For the current 1–32 attempt range, Decimal endpoint/angle fallbacks, satellite
+ancestry shortcut, exact-coordinate propagation, progress timer, runtime limits
+and higher-period regression examples, see
+[PARAMETER_PRECISION.md](PARAMETER_PRECISION.md). Earlier native algorithm
+sections describe the fast path through period 20; the precision guide defines
+the extended path and cites the published Milnor/Schleicher and numerical
+extrapolation references. Period 32 is the recommended next ceiling to attempt.

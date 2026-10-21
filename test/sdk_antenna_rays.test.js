@@ -72,7 +72,7 @@ test("tip discovery requires verified root angles and valid inputs", () => {
     find_antenna_tip_rays({ x: 0, y: 0 }, 1).status,
     "root_angles_required",
   );
-  assert.equal(find_antenna_tip_rays({ x: 0, y: 0 }, 21).status, "unsupported");
+  assert.equal(find_antenna_tip_rays({ x: 0, y: 0 }, 33).status, "unsupported");
   assert.throws(() => refine_antenna_tip({ x: 0, y: 0 }, 1), /tip_unresolved/);
 });
 
@@ -103,6 +103,8 @@ test("unverified endpoint preserves prefixes and never claims landing", () => {
     tuned_tip_angles: () => [angle(1, 2)],
     trace_parameter_ray: () => prefix,
     trace_parameter_ray_group: () => ({ status: "complete", rays: [prefix] }),
+    MAX_PARAMETER_PERIOD: 32,
+    finite_parameter: (p) => Number.isFinite(p?.x) && Number.isFinite(p?.y),
     finite: (p) => Number.isFinite(p?.x) && Number.isFinite(p?.y),
     critical: () => {
       throw Error("tip_unresolved");

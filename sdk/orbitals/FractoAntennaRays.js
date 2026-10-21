@@ -1,3 +1,8 @@
+import { big_refine_antenna_tip } from "./FractoParameterBigTip.js";
+import {
+  MAX_PARAMETER_PERIOD,
+  finite_parameter,
+} from "./FractoParameterPrecision.js";
 /** Principal tuned antenna tip; published theory and limits: ANTENNA_RAYS.md. */
 import { tuned_tip_angles } from "./FractoParameterTuning.js";
 import { critical } from "./FractoParameterAttachment.js";
@@ -18,8 +23,14 @@ const ZERO = { x: 0, y: 0 };
 
 /** A tuned -2 satisfies f^(3P)(0)=f^(2P)(0), with a repelling return. */
 export function refine_antenna_tip(guess, period) {
-  if (!finite(guess) || !Number.isInteger(period) || period < 1 || period > 20)
+  if (
+    !finite(guess) ||
+    !Number.isInteger(period) ||
+    period < 1 ||
+    period > MAX_PARAMETER_PERIOD
+  )
     throw Error("tip_unresolved");
+  if (period > 20 || guess.exact) return big_refine_antenna_tip(guess, period);
   let c = { ...guess };
   for (let k = 0; k < 40; k++) {
     const a = critical(c, 2 * period),
@@ -56,10 +67,10 @@ export function find_antenna_tip_rays(
 ) {
   try {
     if (
-      !finite(core) ||
+      !finite_parameter(core) ||
       !Number.isInteger(period) ||
       period < 1 ||
-      period > 20 ||
+      period > MAX_PARAMETER_PERIOD ||
       !Number.isFinite(tolerance) ||
       tolerance < 1e-12
     )

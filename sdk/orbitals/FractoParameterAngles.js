@@ -1,3 +1,4 @@
+import { big_attachment_angles } from "./FractoParameterBigAngles.js";
 /** Numerical characteristic-angle discovery; see PARAMETER_RAYS.md. */
 import {
   add,
@@ -60,7 +61,7 @@ function external_angle(c) {
   }
   return null;
 }
-export function attachment_angles(
+function native_attachment_angles(
   attachment,
   n,
   { angle_period = 2 * n, cusp = false, probe_scale = 0.5, shrink = 0.5 } = {},
@@ -72,7 +73,7 @@ export function attachment_angles(
     let epsilon = distance(attachment.center, attachment.root) * probe_scale,
       previous = null,
       found = null;
-    for (let k = 0; k < 16; k++, epsilon *= shrink) {
+    for (let k = 0; k < (n > 20 ? 48 : 16); k++, epsilon *= shrink) {
       const radius = distance(attachment.center, attachment.root);
       const probe = cusp
         ? add(
@@ -97,4 +98,20 @@ export function attachment_angles(
   }
   if (result[0].key === result[1].key) throw Error("angles_unresolved");
   return result;
+}
+
+export function attachment_angles(attachment, n, options = {}) {
+  const angle_period = options.angle_period ?? 2 * n;
+  // Native discovery has ample angular resolution through 32 bits; final
+  // inward endpoint checks still validate its candidates. Failed native
+  // reconstruction switches to Decimal for precise attachments or P > 20;
+  // native P <= 20 failures are returned to the caller for probe retries.
+  if (angle_period <= 32) {
+    try {
+      return native_attachment_angles(attachment, n, options);
+    } catch (error) {
+      if (n <= 20 && !attachment.precision) throw error;
+    }
+  }
+  return big_attachment_angles(attachment, n, options);
 }

@@ -1,5 +1,9 @@
+import {
+  MAX_PARAMETER_PERIOD,
+  finite_parameter,
+  parameter_distance,
+} from "./FractoParameterPrecision.js";
 import { tuned_doubling_angles } from "./FractoParameterTuning.js";
-import { distance, finite } from "./FractoRayGeometry.js";
 import { doubling_attachment } from "./FractoParameterAttachment.js";
 import { attachment_angles } from "./FractoParameterAngles.js";
 import { trace_parameter_ray } from "./FractoParameterRayTrace.js";
@@ -48,18 +52,18 @@ export function find_doubling_rays(
   try {
     if (
       !Number.isFinite(tolerance) ||
-      !finite(core) ||
+      !finite_parameter(core) ||
       !Number.isInteger(period) ||
       period < 1 ||
-      period > 20 ||
+      period > MAX_PARAMETER_PERIOD ||
       !(tolerance >= 1e-12)
     )
       return { status: "unsupported", rays: [] };
     on_progress("attachment");
     const attachment = doubling_attachment(core, period);
     if (
-      distance(core, attachment.center) >
-      Math.max(1e-5, 2 * distance(attachment.center, attachment.root))
+      parameter_distance(core, attachment.center) >
+      Math.max(1e-5, 2 * parameter_distance(attachment.center, attachment.root))
     )
       throw Error("core_unresolved");
     on_progress("angles");

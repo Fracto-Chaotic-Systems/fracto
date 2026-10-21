@@ -1,7 +1,17 @@
+import {
+  ray_cache_matches,
+  reusable_ray_group,
+  best_ray_group,
+  visible_ray_group,
+} from "./FractoMinibrotRayCache.js";
+import { component_root_angles } from "./FractoParameterRootAngles.js";
+import {
+  MAX_PARAMETER_PERIOD,
+  finite_parameter,
+  parameter_distance,
+} from "./FractoParameterPrecision.js";
 import { find_antenna_tip_rays } from "./FractoAntennaRays.js";
 import { find_satellite_wake_rays } from "./FractoSatelliteRays.js";
-import { attachment_angles } from "./FractoParameterAngles.js";
-import { distance, finite } from "./FractoRayGeometry.js";
 import { component_attachment } from "./FractoParameterAttachment.js";
 import {
   find_doubling_rays,
@@ -16,10 +26,10 @@ export function find_component_root_rays(
 ) {
   try {
     if (
-      !finite(core) ||
+      !finite_parameter(core) ||
       !Number.isInteger(period) ||
       period < 1 ||
-      period > 20 ||
+      period > MAX_PARAMETER_PERIOD ||
       !Number.isFinite(tolerance) ||
       tolerance < 1e-12
     )
@@ -27,21 +37,12 @@ export function find_component_root_rays(
     on_progress("root_attachment");
     const attachment = component_attachment(core, period, 1);
     if (
-      distance(core, attachment.center) >
-      Math.max(1e-5, 2 * distance(attachment.center, attachment.root))
+      parameter_distance(core, attachment.center) >
+      Math.max(1e-5, 2 * parameter_distance(attachment.center, attachment.root))
     )
       throw Error("core_unresolved");
     on_progress("root_angles");
-    const angles =
-      period === 1
-        ? [{ numerator: "0", denominator: "1", value: 0, key: "0/1" }]
-        : attachment_angles(attachment, period, {
-            angle_period: period,
-            cusp: attachment.cusp,
-            probe_scale: attachment.cusp ? 0.5 : 1,
-            // Keep confirmation inside narrow usable exterior bands at cusps.
-            shrink: 0.8,
-          });
+    const angles = component_root_angles(attachment, period, on_progress);
     for (const angle of angles) {
       let a = BigInt(angle.numerator),
         d = BigInt(angle.denominator);
@@ -68,17 +69,54 @@ export function find_component_root_rays(
 
 /** Preserve complete rays and accepted partial paths from every requested access. */
 export function find_minibrot_rays(core, period, options = {}) {
-  const root = find_component_root_rays(core, period, options);
-  const doubling = find_doubling_rays(core, period, {
-    ...options,
-    root_angles:
-      root.status === "complete"
-        ? root.rays.map((ray) => ray.angle)
-        : undefined,
-  });
+  const cache =
+    options.cache && ray_cache_matches(options.cache, core, period)
+      ? options.cache
+      : null;
+  const calculate = (id, fn) => {
+    const saved = cache?.groups?.[id];
+    if (saved && reusable_ray_group(saved, options.tolerance ?? 1e-3))
+      return saved.result;
+    const fresh = fn();
+    options.on_group?.(id, fresh);
+    if (
+      saved &&
+      best_ray_group(saved, {
+        result: fresh,
+        tolerance: options.tolerance ?? 1e-3,
+      }) === saved
+    )
+      return visible_ray_group(saved, options.tolerance ?? 1e-3);
+    return fresh;
+  };
+  const root = calculate("root_access", () =>
+    find_component_root_rays(core, period, options),
+  );
+  const doubling = calculate("doubling", () =>
+    find_doubling_rays(core, period, {
+      ...options,
+      root_angles:
+        root.status === "complete"
+          ? root.rays.map((ray) => ray.angle)
+          : undefined,
+    }),
+  );
   const third_results = options.include_thirds
     ? ["1/3", "2/3"].map((rotation) =>
-        find_satellite_wake_rays(core, period, rotation, {
+        calculate(rotation, () =>
+          find_satellite_wake_rays(core, period, rotation, {
+            ...options,
+            root_angles:
+              root.status === "complete"
+                ? root.rays.map((ray) => ray.angle)
+                : undefined,
+          }),
+        ),
+      )
+    : [];
+  const antenna_tip = options.include_tip
+    ? calculate("antenna_tip", () =>
+        find_antenna_tip_rays(core, period, {
           ...options,
           root_angles:
             root.status === "complete"
@@ -86,15 +124,6 @@ export function find_minibrot_rays(core, period, options = {}) {
               : undefined,
         }),
       )
-    : [];
-  const antenna_tip = options.include_tip
-    ? find_antenna_tip_rays(core, period, {
-        ...options,
-        root_angles:
-          root.status === "complete"
-            ? root.rays.map((ray) => ray.angle)
-            : undefined,
-      })
     : undefined;
   const groups = [
     doubling,

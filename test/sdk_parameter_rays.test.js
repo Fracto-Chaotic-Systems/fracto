@@ -64,7 +64,7 @@ test("a lower-period core, invalid data, and unsupported precision never supply 
   for (const [core, period, options, status] of [
     [{ x: -1, y: 0 }, 4, {}, "period_mismatch"],
     [{ x: 3, y: 0 }, 1, {}, "core_unresolved"],
-    [{ x: 0, y: 0 }, 21, {}, "unsupported"],
+    [{ x: 0, y: 0 }, 33, {}, "unsupported"],
     [{ x: NaN, y: 0 }, 1, {}, "unsupported"],
     [{ x: 0, y: 0 }, 1, { tolerance: 1e-15 }, "unsupported"],
     [{ x: 0, y: 0 }, 1, { tolerance: Infinity }, "unsupported"],
@@ -128,7 +128,7 @@ test("the main cardioid adds exactly one zero ray beside the doubling pair", () 
 test("root-access rejects incorrect periods and unsupported inputs", () => {
   for (const [core, n, status] of [
     [{ x: -1, y: 0 }, 4, "period_mismatch"],
-    [{ x: 0, y: 0 }, 21, "unsupported"],
+    [{ x: 0, y: 0 }, 33, "unsupported"],
   ]) {
     const r = find_component_root_rays(core, n);
     assert.equal(r.status, status);
@@ -421,4 +421,19 @@ test("a single accepted segment is enough to preserve an incomplete ray", () => 
   assert.ok(
     ray.points.every((p) => Number.isFinite(p.x) && Number.isFinite(p.y)),
   );
+});
+
+test("period-17 primitive cusp retries its probe schedule and traces the characteristic pair", () => {
+  const core = { x: -0.732796739121, y: 0.216291599911 };
+  const result = find_minibrot_rays(core, 17, { tolerance: 1e-7 });
+  assert.equal(result.root_access.status, "complete");
+  assert.deepEqual(result.root_access.rays.map((ray) => ray.angle.key).sort(), [
+    "43685/131071",
+    "43686/131071",
+  ]);
+  for (const ray of result.root_access.rays) {
+    assert.equal(ray.landed, true);
+    assert.ok(ray.endpoint_error <= 1e-7);
+  }
+  assert.ok(result.doubling.rays.length > 0);
 });

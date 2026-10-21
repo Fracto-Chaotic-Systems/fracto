@@ -604,3 +604,11 @@ service while keeping `/readyz` at HTTP 503 until MySQL recovers.
 context used when maintaining this system. Any manual edits to it must remain
 accurate and synchronized with the scripts, Docker configuration, and documented
 workflows.
+
+Database initialization now serializes migration/bootstrap work with a
+database-specific advisory lock. `database_backup_columns.js` extracts the
+dump's original table columns so refreshes preserve fields added by later
+migrations. Migration 003 adds nullable minibrot ray-path storage; see
+[the migration guide](../database/migrations/README.md) and
+[ray cache contract](../sdk/orbitals/RAY_CACHE.md). No existing migration checksum
+or backup dump was modified.

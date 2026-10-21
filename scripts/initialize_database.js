@@ -1,149 +1,258 @@
-import crypto from 'node:crypto'
-import fs from 'node:fs'
-import path from 'node:path'
-import mysql from 'mysql2/promise'
+import crypto from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
+import mysql from "mysql2/promise";
 
-import config from '../config/mysql.json' with {type: 'json'}
-import {ROOT_DIR} from '../constants.js'
-import {normalize_backup_collations} from './database_collation_compatibility.js'
+import config from "../config/mysql.json" with { type: "json" };
+import { ROOT_DIR } from "../constants.js";
+import { backup_insert_columns } from "./database_backup_columns.js";
+import { normalize_backup_collations } from "./database_collation_compatibility.js";
 
-const database = process.env.FRACTO_MYSQL_DATABASE || config.database
-const backup_directory = path.resolve(process.env.FRACTO_DB_BACKUP_DIR || path.join(ROOT_DIR, 'backup'))
-const migration_directory = path.resolve(process.env.FRACTO_DB_MIGRATION_DIR || path.join(ROOT_DIR, 'database', 'migrations'))
-const host = process.env.FRACTO_MYSQL_HOST || config.host
-const port = process.env.FRACTO_MYSQL_PORT ? Number(process.env.FRACTO_MYSQL_PORT) : Number(config.port || 3306)
-const baseline_version = '001_baseline.sql'
-const migrations_table = 'fracto_schema_migrations'
-const force_argument = process.argv[2] === '--force' ? process.argv[3] : null
+const database = process.env.FRACTO_MYSQL_DATABASE || config.database;
+const backup_directory = path.resolve(
+  process.env.FRACTO_DB_BACKUP_DIR || path.join(ROOT_DIR, "backup"),
+);
+const migration_directory = path.resolve(
+  process.env.FRACTO_DB_MIGRATION_DIR ||
+    path.join(ROOT_DIR, "database", "migrations"),
+);
+const host = process.env.FRACTO_MYSQL_HOST || config.host;
+const port = process.env.FRACTO_MYSQL_PORT
+  ? Number(process.env.FRACTO_MYSQL_PORT)
+  : Number(config.port || 3306);
+const baseline_version = "001_baseline.sql";
+const migrations_table = "fracto_schema_migrations";
+const force_argument = process.argv[2] === "--force" ? process.argv[3] : null;
 
-if (process.argv[2] === '--force' && (!force_argument || !/^\d{3,}$/.test(force_argument))) {
-   throw new Error('The --force option requires a migration number, for example: --force 002')
+if (
+  process.argv[2] === "--force" &&
+  (!force_argument || !/^\d{3,}$/.test(force_argument))
+) {
+  throw new Error(
+    "The --force option requires a migration number, for example: --force 002",
+  );
 }
 
-if (!database || !/^[A-Za-z0-9_$-]+$/.test(database)) throw new Error('FRACTO_MYSQL_DATABASE must be a valid database name')
-if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('FRACTO_MYSQL_PORT must be a valid TCP port')
-if (!fs.existsSync(backup_directory)) throw new Error(`Database backup directory not found: ${backup_directory}`)
-if (!fs.existsSync(migration_directory)) throw new Error(`Database migration directory not found: ${migration_directory}`)
+if (!database || !/^[A-Za-z0-9_$-]+$/.test(database))
+  throw new Error("FRACTO_MYSQL_DATABASE must be a valid database name");
+if (!Number.isInteger(port) || port < 1 || port > 65535)
+  throw new Error("FRACTO_MYSQL_PORT must be a valid TCP port");
+if (!fs.existsSync(backup_directory))
+  throw new Error(`Database backup directory not found: ${backup_directory}`);
+if (!fs.existsSync(migration_directory))
+  throw new Error(
+    `Database migration directory not found: ${migration_directory}`,
+  );
 
-const connection_options = {...config, host, port, database, multipleStatements: true}
-const admin_options = {...connection_options}
-delete admin_options.database
-const identifier = value => `\`${value.replaceAll('`', '``')}\``
-const backup_files = fs.readdirSync(backup_directory).filter(name => name.endsWith('.sql')).sort()
-const migration_files = fs.readdirSync(migration_directory).filter(name => name.endsWith('.sql')).sort()
+const connection_options = {
+  ...config,
+  host,
+  port,
+  database,
+  multipleStatements: true,
+};
+const admin_options = { ...connection_options };
+delete admin_options.database;
+const identifier = (value) => `\`${value.replaceAll("`", "``")}\``;
+const backup_files = fs
+  .readdirSync(backup_directory)
+  .filter((name) => name.endsWith(".sql"))
+  .sort();
+const migration_files = fs
+  .readdirSync(migration_directory)
+  .filter((name) => name.endsWith(".sql"))
+  .sort();
 
-if (!backup_files.length) throw new Error(`No SQL backups found in ${backup_directory}`)
-if (!migration_files.includes(baseline_version)) throw new Error(`Required baseline migration is missing: ${baseline_version}`)
-if (migration_files.some(name => !/^\d{3,}_[A-Za-z0-9-]+\.sql$/.test(name))) throw new Error('Migration files must use the format NNN_description.sql')
-if (force_argument && migration_files.filter(name => name.startsWith(`${force_argument}_`)).length !== 1) {
-   throw new Error(`No unique migration found for --force ${force_argument}`)
+if (!backup_files.length)
+  throw new Error(`No SQL backups found in ${backup_directory}`);
+if (!migration_files.includes(baseline_version))
+  throw new Error(
+    `Required baseline migration is missing: ${baseline_version}`,
+  );
+if (migration_files.some((name) => !/^\d{3,}_[A-Za-z0-9-]+\.sql$/.test(name)))
+  throw new Error("Migration files must use the format NNN_description.sql");
+if (
+  force_argument &&
+  migration_files.filter((name) => name.startsWith(`${force_argument}_`))
+    .length !== 1
+) {
+  throw new Error(`No unique migration found for --force ${force_argument}`);
 }
 
-const checksum = filepath => crypto.createHash('sha256').update(fs.readFileSync(filepath)).digest('hex')
+const checksum = (filepath) =>
+  crypto.createHash("sha256").update(fs.readFileSync(filepath)).digest("hex");
 
-const ensure_migrations_table = async connection => {
-   await connection.query(`CREATE TABLE IF NOT EXISTS ${identifier(migrations_table)} (
+const ensure_migrations_table = async (connection) => {
+  await connection.query(`CREATE TABLE IF NOT EXISTS ${identifier(migrations_table)} (
       version VARCHAR(255) NOT NULL PRIMARY KEY,
       checksum CHAR(64) NOT NULL,
       applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-   )`)
-}
+   )`);
+};
 
 const record_migration = async (connection, filename, file_checksum) => {
-   await connection.query(`INSERT INTO ${identifier(migrations_table)} (version, checksum) VALUES (?, ?)`, [filename, file_checksum])
-}
+  await connection.query(
+    `INSERT INTO ${identifier(migrations_table)} (version, checksum) VALUES (?, ?)`,
+    [filename, file_checksum],
+  );
+};
 
 const update_migration = async (connection, filename, file_checksum) => {
-   await connection.query(`UPDATE ${identifier(migrations_table)} SET checksum = ?, applied_at = CURRENT_TIMESTAMP WHERE version = ?`, [file_checksum, filename])
-}
+  await connection.query(
+    `UPDATE ${identifier(migrations_table)} SET checksum = ?, applied_at = CURRENT_TIMESTAMP WHERE version = ?`,
+    [file_checksum, filename],
+  );
+};
 
-const backup_refresh_directive = migration_sql => migration_sql.match(
-   /^--\s*FRACTO-BACKUP-REFRESH:\s*([^\s]+)\s+AS\s+([A-Za-z0-9_$-]+)\s*$/mi,
-)
+const backup_refresh_directive = (migration_sql) =>
+  migration_sql.match(
+    /^--\s*FRACTO-BACKUP-REFRESH:\s*([^\s]+)\s+AS\s+([A-Za-z0-9_$-]+)\s*$/im,
+  );
 
 const apply_backup_refresh = async (connection, migration_sql) => {
-   const directive = backup_refresh_directive(migration_sql)
-   if (!directive) return false
-   const [, backup_filename, table_name] = directive
-   const backup_path = path.join(backup_directory, backup_filename)
-   if (!fs.existsSync(backup_path)) throw new Error(`Backup refresh file not found: ${backup_path}`)
-   const dump = fs.readFileSync(backup_path, 'utf8')
-   const escaped_table_name = table_name.replaceAll(String.fromCharCode(96), `${String.fromCharCode(96)}${String.fromCharCode(96)}`)
-   const backtick = String.fromCharCode(96)
-   const insert_pattern = new RegExp(`INSERT INTO ${backtick}${escaped_table_name}${backtick} VALUES ([\\s\\S]*?);`, 'i')
-   const insert_match = dump.match(insert_pattern)
-   if (!insert_match) throw new Error(`No INSERT statement found for ${table_name} in ${backup_filename}`)
-   const [columns] = await connection.query(`SHOW COLUMNS FROM ${identifier(table_name)}`)
-   if (!columns.length) throw new Error(`Target table has no columns: ${table_name}`)
-   const assignments = columns.map(column => {
-      const column_name = identifier(column.Field)
-      return `${column_name}=VALUES(${column_name})`
-   }).join(', ')
-   const statement = `INSERT INTO ${identifier(table_name)} VALUES ${insert_match[1]} ON DUPLICATE KEY UPDATE ${assignments}`
-   await connection.query(statement)
-   console.log(`Refreshed ${table_name} from ${backup_filename} without deleting existing rows.`)
-   return true
-}
+  const directive = backup_refresh_directive(migration_sql);
+  if (!directive) return false;
+  const [, backup_filename, table_name] = directive;
+  const backup_path = path.join(backup_directory, backup_filename);
+  if (!fs.existsSync(backup_path))
+    throw new Error(`Backup refresh file not found: ${backup_path}`);
+  const dump = fs.readFileSync(backup_path, "utf8");
+  const escaped_table_name = table_name.replaceAll(
+    String.fromCharCode(96),
+    `${String.fromCharCode(96)}${String.fromCharCode(96)}`,
+  );
+  const backtick = String.fromCharCode(96);
+  const insert_pattern = new RegExp(
+    `INSERT INTO ${backtick}${escaped_table_name}${backtick} VALUES ([\\s\\S]*?);`,
+    "i",
+  );
+  const insert_match = dump.match(insert_pattern);
+  if (!insert_match)
+    throw new Error(
+      `No INSERT statement found for ${table_name} in ${backup_filename}`,
+    );
+  const [columns] = await connection.query(
+    `SHOW COLUMNS FROM ${identifier(table_name)}`,
+  );
+  if (!columns.length)
+    throw new Error(`Target table has no columns: ${table_name}`);
+  const source_columns = backup_insert_columns(
+    dump,
+    table_name,
+    columns.map((column) => column.Field),
+  );
+  const assignments = source_columns
+    .map((column) => {
+      const column_name = identifier(column);
+      return `${column_name}=VALUES(${column_name})`;
+    })
+    .join(", ");
+  const statement = `INSERT INTO ${identifier(table_name)} (${source_columns.map(identifier).join(", ")}) VALUES ${insert_match[1]} ON DUPLICATE KEY UPDATE ${assignments}`;
+  await connection.query(statement);
+  console.log(
+    `Refreshed ${table_name} from ${backup_filename} without deleting existing rows.`,
+  );
+  return true;
+};
 
 const apply_migrations = async (connection, existing_database) => {
-   await ensure_migrations_table(connection)
-   const [applied_rows] = await connection.query(`SELECT version, checksum FROM ${identifier(migrations_table)}`)
-   const applied = new Map(applied_rows.map(row => [row.version, row.checksum]))
+  await ensure_migrations_table(connection);
+  const [applied_rows] = await connection.query(
+    `SELECT version, checksum FROM ${identifier(migrations_table)}`,
+  );
+  const applied = new Map(
+    applied_rows.map((row) => [row.version, row.checksum]),
+  );
 
-   for (const filename of migration_files) {
-      const filepath = path.join(migration_directory, filename)
-      const file_checksum = checksum(filepath)
-      const is_forced = force_argument && filename.startsWith(`${force_argument}_`)
-      if (applied.has(filename) && !is_forced) {
-         if (applied.get(filename) !== file_checksum) throw new Error(`Migration ${filename} was changed after it was applied`)
-         continue
-      }
-      if (existing_database && filename === baseline_version) {
-         await record_migration(connection, filename, file_checksum)
-         console.log(`Recorded existing database baseline ${filename}.`)
-         continue
-      }
-      const migration_sql = fs.readFileSync(filepath, 'utf8')
-      if (!existing_database && backup_refresh_directive(migration_sql)) {
-         console.log(`Recorded bootstrap-complete refresh migration ${filename}.`)
-         await record_migration(connection, filename, file_checksum)
-         continue
-      }
-      console.log(`${is_forced ? 'Reapplying' : 'Applying'} migration ${filename}...`)
-      const is_backup_refresh = await apply_backup_refresh(connection, migration_sql)
-      if (!is_backup_refresh) await connection.query(migration_sql)
-      if (applied.has(filename)) await update_migration(connection, filename, file_checksum)
-      else await record_migration(connection, filename, file_checksum)
-   }
-}
+  for (const filename of migration_files) {
+    const filepath = path.join(migration_directory, filename);
+    const file_checksum = checksum(filepath);
+    const is_forced =
+      force_argument && filename.startsWith(`${force_argument}_`);
+    if (applied.has(filename) && !is_forced) {
+      if (applied.get(filename) !== file_checksum)
+        throw new Error(
+          `Migration ${filename} was changed after it was applied`,
+        );
+      continue;
+    }
+    if (existing_database && filename === baseline_version) {
+      await record_migration(connection, filename, file_checksum);
+      console.log(`Recorded existing database baseline ${filename}.`);
+      continue;
+    }
+    const migration_sql = fs.readFileSync(filepath, "utf8");
+    if (!existing_database && backup_refresh_directive(migration_sql)) {
+      console.log(`Recorded bootstrap-complete refresh migration ${filename}.`);
+      await record_migration(connection, filename, file_checksum);
+      continue;
+    }
+    console.log(
+      `${is_forced ? "Reapplying" : "Applying"} migration ${filename}...`,
+    );
+    const is_backup_refresh = await apply_backup_refresh(
+      connection,
+      migration_sql,
+    );
+    if (!is_backup_refresh) await connection.query(migration_sql);
+    if (applied.has(filename))
+      await update_migration(connection, filename, file_checksum);
+    else await record_migration(connection, filename, file_checksum);
+  }
+};
 
-const admin_connection = await mysql.createConnection(admin_options)
+const admin_connection = await mysql.createConnection(admin_options);
 const [collation_rows] = await admin_connection.query(
-   `SELECT COLLATION_NAME FROM INFORMATION_SCHEMA.COLLATIONS
+  `SELECT COLLATION_NAME FROM INFORMATION_SCHEMA.COLLATIONS
     WHERE COLLATION_NAME IN ('utf8mb4_0900_ai_ci', 'utf8mb4_unicode_520_ci')`,
-)
-const supported_collations = new Set(collation_rows.map(row => row.COLLATION_NAME))
-await admin_connection.query(`CREATE DATABASE IF NOT EXISTS ${identifier(database)} CHARACTER SET utf8mb4`)
-await admin_connection.end()
+);
+const supported_collations = new Set(
+  collation_rows.map((row) => row.COLLATION_NAME),
+);
+await admin_connection.query(
+  `CREATE DATABASE IF NOT EXISTS ${identifier(database)} CHARACTER SET utf8mb4`,
+);
+await admin_connection.end();
 
-const connection = await mysql.createConnection(connection_options)
+const connection = await mysql.createConnection(connection_options);
+const migration_lock = `fracto-schema:${crypto.createHash("sha256").update(database).digest("hex").slice(0, 40)}`;
 try {
-   const [tables] = await connection.query('SHOW TABLES')
-   const existing_database = tables.length > 0
-   if (!existing_database) {
-      for (const filename of backup_files) {
-         console.log(`Loading ${filename}...`)
-         const backup_sql = fs.readFileSync(path.join(backup_directory, filename), 'utf8')
-         await connection.query(normalize_backup_collations(backup_sql, supported_collations))
-      }
-      console.log(`Database ${database} bootstrapped from ${backup_files.length} SQL files.`)
-   } else if (process.env.FRACTO_DB_INIT_CONFIRM === 'reset') {
-      throw new Error('Destructive database reloads are no longer supported; create a numbered migration instead')
-   } else {
-      console.log(`Database ${database} already contains tables; applying pending migrations only.`)
-   }
-   await apply_migrations(connection, existing_database)
+  const [[lock_result]] = await connection.query(
+    "SELECT GET_LOCK(?, 60) AS acquired",
+    [migration_lock],
+  );
+  if (Number(lock_result.acquired) !== 1)
+    throw new Error("Timed out waiting for the database migration lock");
+  const [tables] = await connection.query("SHOW TABLES");
+  const existing_database = tables.length > 0;
+  if (!existing_database) {
+    for (const filename of backup_files) {
+      console.log(`Loading ${filename}...`);
+      const backup_sql = fs.readFileSync(
+        path.join(backup_directory, filename),
+        "utf8",
+      );
+      await connection.query(
+        normalize_backup_collations(backup_sql, supported_collations),
+      );
+    }
+    console.log(
+      `Database ${database} bootstrapped from ${backup_files.length} SQL files.`,
+    );
+  } else if (process.env.FRACTO_DB_INIT_CONFIRM === "reset") {
+    throw new Error(
+      "Destructive database reloads are no longer supported; create a numbered migration instead",
+    );
+  } else {
+    console.log(
+      `Database ${database} already contains tables; applying pending migrations only.`,
+    );
+  }
+  await apply_migrations(connection, existing_database);
 } finally {
-   await connection.end()
+  await connection
+    .query("SELECT RELEASE_LOCK(?)", [migration_lock])
+    .catch(() => {});
+  await connection.end();
 }
-console.log(`Database ${database} is up to date.`)
+console.log(`Database ${database} is up to date.`);

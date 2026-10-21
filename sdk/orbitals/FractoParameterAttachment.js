@@ -1,3 +1,4 @@
+import { big_component_attachment } from "./FractoParameterBigAttachment.js";
 /** Critical-center refinement and multiplier continuation; see PARAMETER_RAYS.md. */
 import {
   add,
@@ -36,6 +37,13 @@ function orbit(c, z, n) {
   return { f: sub(z, start), a, b, aa, ab };
 }
 export function component_attachment(guess, n, rotation = -1) {
+  if (
+    n > 20 ||
+    guess.exact ||
+    typeof guess.x === "string" ||
+    typeof guess.y === "string"
+  )
+    return big_component_attachment(guess, n, rotation);
   const multiplier =
     typeof rotation === "number" ? { x: rotation, y: 0 } : rotation;
   if (!finite(multiplier) || Math.abs(distance(multiplier, ZERO) - 1) > 1e-12)

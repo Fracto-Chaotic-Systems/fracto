@@ -135,6 +135,12 @@ lightness to about 65%, compared with about 45% at the default 255. The tip uses
 the parent-period hue as a display convention. Thin dark outlines are retained.
 Only selected paths receive black fraction text in white bordered edge boxes.
 The table always lists all returned fractions, including incomplete paths.
+Both table and canvas display exact unreduced fractions with exponential
+denominators: 2^P-1, 2^(2P)-1, 2^(3P)-1, or 2^P(2^P-1) for the tip.
+The UI formatter expands the numerator with BigInt to match the chosen natural
+denominator, and renders superscript exponents. The canonical reduced SDK
+fractions remain unchanged for tracing and identity. This presentation follows
+the tuning denominators described here; it does not approximate the angle.
 
 Ray results are painted in the state-update completion callback so the selected
 group is committed before repainting. Raster completion also triggers painting;
@@ -150,13 +156,15 @@ certified combinatorial classification. A stable reconstructed fraction alone
 is insufficient to claim complete access: both inward rays must also reach
 the computed attachment. Truncated paths have separate incomplete status.
 
-The initial implementation accepts integer parent periods 1–20 and tolerances
-at least 10^-12. Center/angle discovery and perturbations use native doubles;
-inward tracing has a 64-decimal-digit reference orbit. It limits critical escape probes to
+The initial implementation accepts integer parent periods 1–32 and tolerances
+at least 10^-12. The native fast path uses doubles for center/angle discovery and perturbations,
+with a 64-decimal-digit reference orbit; the extended path uses Decimal
+endpoints/angle discovery, exact ancestry tuning and an 80-digit reference
+with Decimal sample retries (see the precision guide). The native path limits critical escape probes to
 8192 iterates, outward integration to 12000 attempts per probe, sixteen shrinking
 probes per side, and Newton solves to 40 iterations per sample. The combined
-root/doubling pipeline uses inward depth max(4096, 512*P), up to 10240 at P=20.
-Each optional threefold wake uses max(4096, 768*P), up to 15360 at P=20.
+root/doubling pipeline uses inward depth max(4096, 512*P), up to 16384 at P=32.
+Each optional threefold wake uses max(4096, 768*P), up to 24576 at P=32.
 The low-level `trace_parameter_ray` still defaults to 4096 unless overridden. Tiny components, narrow wakes, inaccurate cores, large periods, and
 slow parabolic approach can remain unresolved. Unsupported inputs, incorrect
 period and unresolved core/attachment/angles return empty rays. Trace failures
@@ -184,7 +192,7 @@ root landing results in
 A satellite component's local root is its attachment to its parent; it need not
 be a geometrical cusp. Global 0/1 is not moved to an arbitrary minibrot.
 
-`component_attachment(core,P,+1)` follows the selected component's multiplier
+The native `component_attachment(core,P,+1)` path follows the selected component's multiplier
 from 0 to 1-10^-6. Stopping short avoids the singular equations at multiplier
 +1. The resulting root is a numerical approximation (the period-one case uses
 exact c=1/4). Ordinary attachments use dc/dlambda for the outward direction.
@@ -387,3 +395,37 @@ relation instead of a parabolic multiplier attachment. See
 partial-path handling, validation and the published Milnor/Schleicher basis.
 Earlier descriptions of root and satellite groups describe that subset;
 the tip is a separate fifth group.
+
+For the current 1–32 attempt range, Decimal endpoint/angle fallbacks, satellite
+ancestry shortcut, exact-coordinate propagation, progress timer, runtime limits
+and higher-period regression examples, see
+[PARAMETER_PRECISION.md](PARAMETER_PRECISION.md). Earlier native algorithm
+sections describe the fast path through period 20; the precision guide defines
+the extended path and cites the published Milnor/Schleicher and numerical
+extrapolation references. Period 32 is the recommended next ceiling to attempt.
+
+Parameter-ray geometry now supports shared per-minibrot persistence through
+`FractoMinibrotRayCache.js`. See [RAY_CACHE.md](RAY_CACHE.md) for versioned
+identity, per-group accuracy reuse, incremental saves, transactional merge,
+compressed storage, migration rollout and verification. Cached geometry keeps
+the published numerical/theoretical distinctions described in these guides.
+
+## Primitive-cusp probe retry
+
+The native root-angle search first uses its existing gently shrinking probes.
+If that returns `angles_unresolved` for a native attachment at P <= 20,
+`FractoParameterRootAngles.js` retries with an initial offset equal to the
+center-to-root distance and halves the offset each time. This covers a wider
+range of exterior scales within the same finite probe count. Increasing
+precision alone does not fix a probe schedule that fails to reconstruct a
+consistent characteristic pair. The retry retains exact rational reconstruction
+and independent inward endpoint validation, following the rational landing
+framework of [Schleicher (2000)](https://numdam.org/item/AST_2000__261__405_0/).
+It is a numerical search improvement, not a landing proof or an increased period
+limit. The period-17 example near -0.732796739121+0.216291599911i recovers
+43685/131071 and 43686/131071; both trace within 1e-7 of the computed root.
+
+In the full five-group regression experiment at tolerance 1e-7, this point
+produced ten drawable paths in approximately 58 seconds: root and antenna-tip
+groups completed, while all three satellite groups retained partial paths.
+These timings are machine-dependent and do not assert satellite landing.

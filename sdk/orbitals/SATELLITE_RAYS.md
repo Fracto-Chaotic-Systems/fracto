@@ -51,8 +51,8 @@ preserves its root/doubling API behavior. The minibrot worker enables the flag.
 The result includes `thirds["1/3"]` and `thirds["2/3"]`, each with its own
 status and paths, alongside `root_access` and `doubling`.
 
-Parent periods 1 through 20 are supported. Each threefold group receives
-max(4096,256*P*3) inward iterations, at most 15360. Root and doubling groups
+Parent periods 1 through 32 are supported. Each threefold group receives
+max(4096,256*P*3) inward iterations, at most 24576. Root and doubling groups
 retain max(4096,512*P). These are bounded engineering budgets.
 
 Without verified root angles a third group returns `root_angles_required`.
@@ -87,3 +87,11 @@ relation instead of a parabolic multiplier attachment. See
 partial-path handling, validation and the published Milnor/Schleicher basis.
 Earlier descriptions of root and satellite groups describe that subset;
 the tip is a separate fifth group.
+
+For the current 1–32 attempt range, Decimal endpoint/angle fallbacks, satellite
+ancestry shortcut, exact-coordinate propagation, progress timer, runtime limits
+and higher-period regression examples, see
+[PARAMETER_PRECISION.md](PARAMETER_PRECISION.md). Earlier native algorithm
+sections describe the fast path through period 20; the precision guide defines
+the extended path and cites the published Milnor/Schleicher and numerical
+extrapolation references. Period 32 is the recommended next ceiling to attempt.

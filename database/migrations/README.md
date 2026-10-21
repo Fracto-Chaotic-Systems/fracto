@@ -123,3 +123,24 @@ Keep migration files in source control and deploy them together with the code
 that requires the schema. Do not put credentials or data dumps in this
 directory; secrets remain under the ignored `config/` directory and bootstrap
 data remains under `backup/`.
+
+## Migration 003: minibrot ray geometry
+
+`003_minibrot-ray-paths.sql` adds nullable `free_bailiwicks.ray_paths` JSON.
+Existing rows and timestamps are preserved. The information_schema guard makes
+recovery safe if column creation committed before migration-history recording.
+Do not alter migrations 001 or 002, whose recorded checksums must remain valid.
+The initializer now holds a database-specific advisory lock while checking and
+applying migrations, including bootstrap, so servers sharing a database wait
+rather than race. Each distinct database still requires its own migration run.
+
+The backup-refresh implementation names the original dump columns explicitly.
+Replaying an old dump therefore preserves later-added columns such as ray_paths;
+it no longer attempts an incompatible positional insert into the expanded table.
+
+Validation can also run directly with `node scripts/validate_migrations.js`.
+Apply with `node scripts/initialize_database.js` from the configured root, or
+use the existing Docker database-init/deployment commands above. Deploy/restart
+the matching data service after migration; old records remain readable before
+any paths have been generated. See [the ray cache guide](../../sdk/orbitals/RAY_CACHE.md)
+for API/schema compatibility, storage bounds and the separate numerical basis.
