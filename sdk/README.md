@@ -1,5 +1,16 @@
 # Fracto SDK
 
+`terrain/` provides tile-level mesh planning, normalized mesh generation and
+versioned binary caching for the freeform bailiwick test workflow. See its README
+for cache layout, coordinate transforms, palette data and deferred edge handling.
+`terrain/Inventory.js` adds exact and spatial mesh availability lookup, separate
+from numerical tile coverage. Its in-memory inventory is the first step toward
+the mesh heat map. `terrain/InventoryStore.js` now maintains its snapshot,
+journal, publication recovery, and reconciliation for the tiles service.
+`terrain/HeatMap.js` derives level-based mesh coverage buffers from that
+in-memory inventory, with ready-only filtering, mirrored coverage and bounded
+spatial queries. The tiles service exposes it as `/mesh_heat_map_buffer`.
+
 Shared JavaScript utilities for Fracto's fractal calculations, coordinate handling, coloring, tile discovery, caching, and rendering data.
 
 The SDK is defined as the `@fracto/sdk` package in this repository. It uses ES

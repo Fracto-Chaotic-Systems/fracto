@@ -65,7 +65,9 @@ services:
       - /app/servers/fracto-tiles-server/node_modules
       - ./servers/fracto-ui:/app/servers/fracto-ui
       - /app/servers/fracto-ui/node_modules
-      - fracto-tile-data:/var/lib/fracto/tiles:ro
+      # Numerical cache writes remain disabled by FRACTO_TILE_CACHE_READ_ONLY;
+      # the meshes subtree on this same volume must be writable.
+      - fracto-tile-data:/var/lib/fracto/tiles
       - fracto-tile-index:/var/lib/fracto/index:ro
       - fracto-dev-assets:/app/assets
       - fracto-dev-videos:/app/videos

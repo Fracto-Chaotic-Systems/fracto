@@ -589,3 +589,12 @@ requests. `FRACTO_SURVEY_MAX_GRID_SIZE` (default 1024) and
 are forwarded by both Compose application targets. See the
 [data-service contract](servers/fracto-data-server/README.md#independent-survey-grid-and-canvas-dimensions)
 for request options and compatibility behavior.
+
+## Mesh storage
+
+Prebuilt terrain meshes live in `meshes/` on the active numerical tile volume,
+mirroring its shortcode file layout. Run `npm run meshes:init` to initialize
+and probe storage; the tiles service also verifies it before listening.
+Local-source deployments require a prepared writable `meshes/` subtree beneath
+the otherwise read-only source mount. See [the mesh storage guide](sdk/terrain/README.md)
+for initialization, mounts, binary contents, and retrieval APIs.

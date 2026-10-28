@@ -13,6 +13,14 @@ services:
         read_only: true
         bind:
           create_host_path: false
+      # Prepare this directory with npm run meshes:init on the source host.
+      # Only this subtree is writable; numerical source tiles stay read-only.
+      - type: bind
+        source: ${FRACTO_TILE_SOURCE_HOST_DIR:?Set FRACTO_TILE_SOURCE_HOST_DIR to the EC2 tile directory}/meshes
+        target: /mnt/fracto-tile-source/meshes
+        read_only: false
+        bind:
+          create_host_path: false
 
   index-refresh:
     environment:

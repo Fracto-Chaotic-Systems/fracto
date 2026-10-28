@@ -8,6 +8,7 @@
     ".": "./index.js",
     "./*.js": "./*.js",
     "./orbitals/*.js": "./orbitals/*.js",
+    "./terrain/*.js": "./terrain/*.js",
     "./math/*.js": "./math/*.js",
     "./utils/*.js": "./utils/*.js",
     "./package.json": "./package.json"

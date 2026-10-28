@@ -7,6 +7,11 @@ and persistence rules.
 
 ## Normal workflow
 
+`npm run meshes:init` prepares and probes the mesh subtree on the active tile
+volume. `initialize_mesh_storage.js --tiles-directory PATH --layout level`
+prepares a local-source host directory before its nested writable Docker mount
+is created. See `sdk/terrain/README.md` for the two layouts and permissions.
+
 For a normal local launch:
 
 ```powershell
