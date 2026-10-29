@@ -18,8 +18,11 @@ Y by the **whole navigator scope / 25**, not by each tile's width. Bounds and
 mirrored placements come from the assembly manifest. Normals are omitted.
 
 Edges currently clamp to local source samples, including the extra boundary
-row/column. Neighbor lookup and cross-level stitching are deferred; manifests
-explicitly mark this provisional boundary policy. Missing indexed tiles and
+row/column. Build-time neighbor lookup remains deferred; the simulator welds
+equal-level visible edges and corners, then stitches 2:1 coarse/fine boundaries
+at render time using per-placement height and edge-coordinate overrides.
+Stored files and their provisional boundary
+policy remain unchanged. Missing indexed tiles and
 failed reads are reported as gaps, never silently rendered as zero-height data.
 
 Raw signed pattern IDs and Float64 iteration values accompany each mesh so a
