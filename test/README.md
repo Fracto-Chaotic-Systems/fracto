@@ -55,3 +55,5 @@ Run `npm run test:mesh-lifecycle` for the full lifecycle fixture, or
 `npm run test:mesh-heat-map`. See `MESH_LIFECYCLE.md` for verification scope.
 
 mesh_transform.test.js covers indexed region selection, mirrored de-duplication, stale counts, durable mesh publication, shared queue cancellation, capacity aborts and decoded source-cache release. Run npm run test:mesh-transform; temporary volume tests require atomic rename support.
+
+mesh_runtime.test.js verifies sufficient-level selection, level-seven fallback, display budgets, mirroring, incomplete coverage, endpoint validation and shared palette histograms. Included in test:terrain-cache; run test:mesh-runtime for focused checks.

@@ -66,3 +66,31 @@ export function decode_terrain_bytes(raw, include_attributes = true) {
     throw new Error("Invalid terrain mesh dimensions");
   return result;
 }
+
+/** Bound decompression before parsing the shared, validated mesh format. */
+export async function decode_terrain_gzip(compressed) {
+  const reader = new Blob([compressed])
+    .stream()
+    .pipeThrough(new DecompressionStream("gzip"))
+    .getReader();
+  const chunks = [];
+  let length = 0;
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      length += value.length;
+      if (length > 16 * 1024 * 1024) throw new Error("Mesh preview too large");
+      chunks.push(value);
+    }
+  } finally {
+    await reader.cancel();
+  }
+  const raw = new Uint8Array(length);
+  let offset = 0;
+  for (const chunk of chunks) {
+    raw.set(chunk, offset);
+    offset += chunk.length;
+  }
+  return decode_terrain_bytes(raw);
+}

@@ -19,6 +19,7 @@ export class FractoCanvasBuffer {
    * @param {number} scale_factor output pixel scale
    * @param {boolean} heat_map use heat-map level colors
    * @param {Array<number>|null} selected_levels levels retained in a heat map
+   * @param {Object|null} palette optional shared escaped/inner/outer tone maps for tiled views
    * @returns {void}
    */
   static buffer_to_canvas = (
@@ -27,6 +28,7 @@ export class FractoCanvasBuffer {
     scale_factor = 1,
     heat_map = false,
     selected_levels = null,
+    palette = null,
   ) => {
     if (!canvas_buffer || !ctx) {
       console.log("!canvas_buffer || !ctx", ctx);
@@ -73,26 +75,32 @@ export class FractoCanvasBuffer {
       }
     }
 
-    const not_pattern_greys_map = heat_map
-      ? FractoColors.get_heat_map_greys_map(canvas_buffer)
-      : FractoColors.get_greys_map(
-          all_not_pattern_pixels,
-          all_not_pattern_sets,
-          GREY_BASE,
-          GREY_RANGE,
-        );
-    const inner_pattern_greys_map = FractoColors.get_greys_map(
-      all_inner_pattern_pixels,
-      all_inner_pattern_sets,
-      COLOR_LUM_BASE_PCT,
-      COLOR_LUM_BASE_RANGE_PCT,
-    );
-    const outer_pattern_greys_map = FractoColors.get_greys_map(
-      all_outer_pattern_pixels,
-      all_outer_pattern_sets,
-      COLOR_LUM_BASE_PCT,
-      COLOR_LUM_BASE_RANGE_PCT,
-    );
+    const not_pattern_greys_map =
+      palette?.escaped ??
+      (heat_map
+        ? FractoColors.get_heat_map_greys_map(canvas_buffer)
+        : FractoColors.get_greys_map(
+            all_not_pattern_pixels,
+            all_not_pattern_sets,
+            GREY_BASE,
+            GREY_RANGE,
+          ));
+    const inner_pattern_greys_map =
+      palette?.inner ??
+      FractoColors.get_greys_map(
+        all_inner_pattern_pixels,
+        all_inner_pattern_sets,
+        COLOR_LUM_BASE_PCT,
+        COLOR_LUM_BASE_RANGE_PCT,
+      );
+    const outer_pattern_greys_map =
+      palette?.outer ??
+      FractoColors.get_greys_map(
+        all_outer_pattern_pixels,
+        all_outer_pattern_sets,
+        COLOR_LUM_BASE_PCT,
+        COLOR_LUM_BASE_RANGE_PCT,
+      );
 
     const pixel_size = 1.5 * scale_factor;
     for (let i = 0; i < all_not_pattern_pixels.length; i++) {
