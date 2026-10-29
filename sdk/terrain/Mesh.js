@@ -1,15 +1,7 @@
 import { createHash } from "node:crypto";
 
-export const TERRAIN_MESH_PROFILE = {
-  version: 1,
-  sample_edge: 256,
-  vertex_edge: 257,
-  height_reference: 1000000,
-  height_encoding: "normalized-log1p",
-  smoothing: "gaussian-binomial-radius2-100",
-  boundary_policy: "clamp-local-v1",
-  palette: "raw-pattern-iteration",
-};
+import { TERRAIN_MESH_PROFILE } from "./Profile.js";
+export { TERRAIN_MESH_PROFILE };
 const KERNEL = [1, 4, 6, 4, 1];
 
 /** Complete uploadable geometry plus original numerical attributes for palette assembly. */

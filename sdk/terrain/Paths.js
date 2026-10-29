@@ -70,5 +70,8 @@ export async function assert_mesh_capacity(root = MESH_DIRECTORY) {
     throw new Error("FRACTO_TILE_MIN_FREE_BYTES must be non-negative");
   const stats = await fs.statfs(root);
   if (stats.bavail * stats.bsize < minimum)
-    throw new Error("Insufficient free space on the tile/mesh volume");
+    throw Object.assign(
+      new Error("Insufficient free space on the tile/mesh volume"),
+      { code: "MESH_CAPACITY" },
+    );
 }

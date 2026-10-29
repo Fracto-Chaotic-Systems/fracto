@@ -1,3 +1,4 @@
+import { decode_terrain_bytes } from "./Decode.js";
 import fs from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
@@ -73,58 +74,10 @@ export function encode_terrain_mesh(mesh, metadata) {
 }
 
 export function decode_terrain_mesh(compressed, include_attributes = true) {
-  const raw = gunzipSync(compressed, { maxOutputLength: 16 * 1024 * 1024 });
-  if (raw.length < 16 || raw.toString("utf8", 0, 8) !== MAGIC)
-    throw new Error("Invalid terrain mesh magic");
-  const header_length = raw.readUInt32LE(8),
-    start = 16 + align(header_length);
-  if (header_length < 2 || start > raw.length)
-    throw new Error("Invalid terrain mesh header");
-  const metadata = JSON.parse(raw.toString("utf8", 16, 16 + header_length));
-  if (metadata.magic !== MAGIC || metadata.byte_length !== raw.length - start)
-    throw new Error("Invalid terrain mesh profile or size");
-  if (
-    JSON.stringify(metadata.profile) !== JSON.stringify(TERRAIN_MESH_PROFILE)
-  ) {
-    const error = new Error("Mesh build profile requires rebuilding");
-    error.code = "MESH_STALE";
-    throw error;
-  }
-  const result = { metadata, raw_bytes: raw.length };
-  let end = 0;
-  for (const [name, Type] of Object.entries(TYPES)) {
-    const attr = metadata.attributes?.[name];
-    if (
-      !attr ||
-      !Number.isSafeInteger(attr.offset) ||
-      !Number.isSafeInteger(attr.length) ||
-      attr.length < 0 ||
-      attr.offset !== end ||
-      attr.bytes !== attr.length * Type.BYTES_PER_ELEMENT ||
-      attr.offset + attr.bytes > metadata.byte_length
-    )
-      throw new Error(`Invalid terrain mesh attribute: ${name}`);
-    end = align(attr.offset + attr.bytes);
-    if (include_attributes) {
-      const array = new Type(attr.length);
-      Buffer.from(array.buffer).set(
-        raw.subarray(start + attr.offset, start + attr.offset + attr.bytes),
-      );
-      result[name] = array;
-    }
-  }
-  if (
-    end !== metadata.byte_length ||
-    metadata.attributes.positions.length !== 257 * 257 * 3 ||
-    metadata.attributes.uvs.length !== 257 * 257 * 2 ||
-    metadata.attributes.patterns.length !== 256 * 256 ||
-    metadata.attributes.iterations.length !== 256 * 256 ||
-    metadata.attributes.indices.length % 3 !== 0 ||
-    metadata.vertex_count !== 257 * 257 ||
-    metadata.triangle_count !== metadata.attributes.indices.length / 3
-  )
-    throw new Error("Invalid terrain mesh dimensions");
-  return result;
+  return decode_terrain_bytes(
+    gunzipSync(compressed, { maxOutputLength: 16 * 1024 * 1024 }),
+    include_attributes,
+  );
 }
 
 async function atomic_write(filename, contents) {
@@ -143,7 +96,10 @@ export async function cache_terrain_plan({
   before_write = async () => {},
   after_tile = async () => {},
 }) {
-  if (!Number.isSafeInteger(plan.bailiwick_id) || plan.bailiwick_id <= 0)
+  if (
+    plan.kind !== "region" &&
+    (!Number.isSafeInteger(plan.bailiwick_id) || plan.bailiwick_id <= 0)
+  )
     throw new Error("Invalid bailiwick id");
   await initialize_mesh_storage({ root: cache_root, layout: mesh_layout });
   const namespace = terrain_namespace(source_identity);
@@ -200,6 +156,7 @@ export async function cache_terrain_plan({
         sha256: hash(compressed),
       });
     } catch (error) {
+      if (error.code === "MESH_CAPACITY") throw error;
       failed_tiles.push({ short_code, reason: "mesh_build_failed" });
       on_progress({ warning: error.message, short_code });
     }
@@ -211,6 +168,7 @@ export async function cache_terrain_plan({
       reused,
       failed: failed_tiles.length,
       short_code,
+      mesh_ready: completed.at(-1)?.short_code === short_code,
     });
   }
   const status =
@@ -219,7 +177,11 @@ export async function cache_terrain_plan({
       : failed_tiles.length || plan.missing_tiles.length
         ? "partial"
         : "completed";
-  const manifest_relative = `manifests/${namespace}/free-bailiwick-${plan.bailiwick_id}-${hash(JSON.stringify(plan.region)).slice(0, 16)}.json`;
+  const manifest_name =
+    plan.kind === "region"
+      ? `region-level-${plan.level}`
+      : `free-bailiwick-${plan.bailiwick_id}`;
+  const manifest_relative = `manifests/${namespace}/${manifest_name}-${hash(JSON.stringify(plan.region)).slice(0, 16)}.json`;
   const manifest = {
     ...plan,
     source_identity,

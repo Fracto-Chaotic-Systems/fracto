@@ -36,3 +36,22 @@ precedence, mirrored/real-axis coverage, rectangular views, level 34, subpixel
 meshes, boundary rounding, request limits, bounded inventory collection, and
 sanitized endpoint failures. Raster results are checked against a direct
 pixel-center reference. Run it with `npm run test:mesh-heat-map`.
+It also checks indexed tile counts, reflected-view deduplication, tile-only
+levels and the exact `tile_count - mesh_count` arithmetic used by the UI table.
+
+`mesh_lifecycle.integration.test.js` connects the real store, cache builder,
+retrieval and heat-map HTTP handlers on an ephemeral loopback server. It verifies
+build/reuse, missing/corrupt retrieval repair, external reconciliation, source
+changes, persistent reopen, and rebuild refresh tokens in both `LNN` and
+four-character shortcode layouts. A child process is actually killed before
+and after durable publication; recovery must neither invent coverage nor lose
+a published mesh. `mesh_lifecycle_helpers.js` owns the temporary stores, HTTP
+fixture and child-process cleanup. Fault injection touches only these isolated
+stores, never the development tile volume.
+
+Run `npm run test:mesh-lifecycle` for the full lifecycle fixture, or
+`npm run test:terrain-cache` for all mesh tests. UI lifecycle tests live in
+`servers/fracto-ui/test/mesh_heat_map.test.js`; from that repository run
+`npm run test:mesh-heat-map`. See `MESH_LIFECYCLE.md` for verification scope.
+
+mesh_transform.test.js covers indexed region selection, mirrored de-duplication, stale counts, durable mesh publication, shared queue cancellation, capacity aborts and decoded source-cache release. Run npm run test:mesh-transform; temporary volume tests require atomic rename support.

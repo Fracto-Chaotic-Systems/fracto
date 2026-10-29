@@ -8,6 +8,7 @@ import {
   MESH_HEAT_MAP_LIMITS,
 } from "../sdk/terrain/HeatMap.js";
 import { create_mesh_heat_map_handler } from "../servers/fracto-tiles-server/terrain/HeatMap.js";
+import { count_indexed_tiles_in_scope } from "../sdk/terrain/TileCounts.js";
 
 const inventory = () => new MeshInventory({ generation: "heat-map-test" });
 const add = (index, short_code, changes = {}) =>
@@ -24,6 +25,51 @@ const query = (changes = {}) => ({
   focal_point_y: "1.5",
   scope: "1",
   ...changes,
+});
+
+test("indexed tile counts use the same strict viewport and canonical mirroring as meshes", () => {
+  const data = {
+    tile_size: 1,
+    columns: [
+      { left: -2, tiles: [{ bottom: 1 }, { bottom: 0 }, { bottom: -1 }] },
+      { left: -1, tiles: [{ bottom: 0 }, { bottom: 1 }] },
+      { left: 0, tiles: [{ bottom: 0 }] },
+    ],
+  };
+  assert.equal(count_indexed_tiles_in_scope(data, { x: -1.5, y: 1.5 }, 1), 1);
+  assert.equal(count_indexed_tiles_in_scope(data, { x: -1.5, y: -1.5 }, 1), 1);
+  assert.equal(count_indexed_tiles_in_scope(data, { x: -1.5, y: 0 }, 1, 2), 2);
+  assert.equal(count_indexed_tiles_in_scope(data, { x: 0, y: 0 }, 4), 6);
+  assert.equal(count_indexed_tiles_in_scope(data, { x: 1.5, y: 1.5 }, 1), 0);
+  assert.equal(count_indexed_tiles_in_scope(null, { x: 0, y: 0 }, 1), 0);
+});
+
+test("coverage includes tile-only levels and reports the exact tile-minus-mesh difference", () => {
+  const index = inventory();
+  add(index, "00");
+  add(index, "0000");
+  const counter = (level) => (level === 2 ? 3 : level === 3 ? 10 : 0);
+  const res = response();
+  create_mesh_heat_map_handler(index, { count_tiles_in_scope: counter })(
+    { query: query() },
+    res,
+  );
+  assert.equal(res.code, 200);
+  assert.deepEqual(
+    res.body.coverage.map((row) => [
+      row.level,
+      row.tile_count,
+      row.mesh_count,
+      row.can_do,
+    ]),
+    [
+      [2, 3, 1, 2],
+      [3, 10, 0, 10],
+      [4, 0, 1, -1],
+    ],
+  );
+  assert.equal(res.body.coverage[1].pixel_count, 0);
+  assert.equal(res.body.uncovered_pixel_count, 0);
 });
 const response = () => ({
   code: 200,
@@ -205,6 +251,7 @@ test("endpoint uses only in-memory mesh lookups and sanitizes errors", () => {
         "heat_map_buffer",
         "height_px",
         "inventory_revision",
+        "inventory_epoch",
         "namespace",
         "timings_ms",
         "uncovered_pixel_count",

@@ -14,6 +14,19 @@ const entry = (short_code, updates = {}) => ({
   ...updates,
 });
 
+test("inventory generation survives snapshot reload and migrates legacy snapshots", () => {
+  const index = new MeshInventory(identity);
+  index.upsert(entry("00"));
+  const snapshot = index.snapshot();
+  assert.equal(MeshInventory.restore(identity, snapshot).epoch, index.epoch);
+  const legacy = { ...snapshot };
+  delete legacy.epoch;
+  assert.notEqual(MeshInventory.restore(identity, legacy).epoch, index.epoch);
+  assert.throws(() =>
+    MeshInventory.restore(identity, { ...snapshot, epoch: "invalid" }),
+  );
+});
+
 test("exact mesh membership does not imply parent, child, or numerical tile availability", () => {
   const index = new MeshInventory(identity);
   assert.equal(index.revision, 0);

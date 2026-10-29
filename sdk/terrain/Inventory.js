@@ -1,4 +1,5 @@
 import FractoUtil from "../FractoUtil.js";
+import { randomUUID } from "node:crypto";
 import { terrain_namespace } from "./Cache.js";
 
 const validate_code = (code) => {
@@ -23,6 +24,7 @@ export class MeshInventory {
   #spatial = new Map();
   #namespace;
   #revision = 0;
+  #epoch = randomUUID();
 
   constructor(source_identity) {
     if (
@@ -40,10 +42,14 @@ export class MeshInventory {
   get namespace() {
     return this.#namespace;
   }
+  get epoch() {
+    return this.#epoch;
+  }
 
   /** Raw validation states, preserving identity-derived stale status on reload. */
   snapshot() {
     return {
+      epoch: this.#epoch,
       revision: this.#revision,
       records: [...this.#records.values()].map((record) => ({
         short_code: record.short_code,
@@ -63,6 +69,16 @@ export class MeshInventory {
     )
       throw new Error("Invalid mesh inventory snapshot");
     const inventory = new MeshInventory(source_identity);
+    if (snapshot.epoch !== undefined) {
+      if (
+        typeof snapshot.epoch !== "string" ||
+        !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(
+          snapshot.epoch,
+        )
+      )
+        throw new Error("Invalid mesh inventory epoch");
+      inventory.#epoch = snapshot.epoch;
+    }
     for (const record of snapshot.records) {
       if (!inventory.upsert(record))
         throw new Error("Duplicate mesh inventory record");
@@ -258,6 +274,7 @@ export class MeshInventory {
       compressed_bytes: 0,
     });
     const result = {
+      inventory_epoch: this.#epoch,
       revision: this.#revision,
       namespace: this.#namespace,
       ...counts(),

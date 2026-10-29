@@ -287,6 +287,15 @@ export class FractoTileCache {
       }
    }
 
+   /** Release a decoded tile when a one-pass worker no longer needs it. */
+   static release_tile(short_code) {
+      const identity = cache_identity(short_code)
+      if (!CACHED_TILES[identity]) return false
+      delete CACHED_TILES[identity]
+      CACHE_STATS.evictions++
+      return true
+   }
+
    static trim_cache(extra_ms = 0) {
       const short_codes = Object.keys(CACHED_TILES)
       if (short_codes.length < CACHE_POLICY.min) {

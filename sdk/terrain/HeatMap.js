@@ -53,7 +53,7 @@ export function mesh_heat_map_view(query) {
 }
 
 /** Pure inventory lookup and rasterization: no filesystem, mesh decode, or tile reads. */
-export function mesh_heat_map(inventory, query) {
+export function mesh_heat_map(inventory, query, { count_tiles_in_scope } = {}) {
   const view = mesh_heat_map_view(query),
     start = performance.now();
   const { width_px, height_px, focal_point, scope, aspect_ratio, left, top } =
@@ -72,11 +72,20 @@ export function mesh_heat_map(inventory, query) {
       { limit: remaining },
     );
     remaining -= meshes.length;
-    if (!meshes.length) continue;
-    levels.push({ level, meshes });
+    const tile_count = count_tiles_in_scope?.(
+      level,
+      focal_point,
+      scope,
+      aspect_ratio,
+    );
+    if (!meshes.length && !tile_count) continue;
+    if (meshes.length) levels.push({ level, meshes });
     coverage.push({
       level,
       mesh_count: meshes.length,
+      ...(tile_count === undefined
+        ? {}
+        : { tile_count, can_do: tile_count - meshes.length }),
       compressed_bytes: meshes.reduce(
         (sum, mesh) => sum + mesh.compressed_bytes,
         0,
@@ -149,6 +158,7 @@ export function mesh_heat_map(inventory, query) {
     heat_map_buffer,
     coverage,
     inventory_revision,
+    inventory_epoch: inventory.epoch,
     namespace,
     width_px,
     height_px,

@@ -132,6 +132,9 @@ bounds are always derived from the shortcode.
 - `summary()` reports counts and compressed bytes overall and by level.
 - `revision` changes on actual inserts, updates, or removals; repeated identical
   observations do not change it.
+- `epoch` (reported as `inventory_epoch`) identifies this inventory's revision
+  history. It survives snapshot reload. Rebuilding without a usable snapshot
+  creates a new epoch so clients refresh even if the revision number repeats.
 
 `tiles_in_scope(level, focal_point, scope, aspect_ratio, options)` returns copied
 records with canonical bounds, ordered by left coordinate then descending top.
@@ -175,7 +178,10 @@ triggers a full scan of the canonical mesh paths before the service becomes
 ready. Initial startup thus discovers meshes built before inventory support.
 Corrupt and incompatible files are invalid; valid older source identities are
 stale. Corrupt snapshot recovery can start a new revision history if no valid
-baseline survives. The mesh files remain authoritative.
+baseline survives; its new inventory epoch makes that reset observable to
+clients. Legacy snapshots without an epoch receive one on load and persist it
+at the startup checkpoint, without rescanning valid meshes. The mesh files
+remain authoritative.
 
 Before replacing a file, a construction worker waits for the service to journal
 a `begin` intent. Existing availability is conservatively invalidated while
@@ -217,6 +223,10 @@ GET `/mesh_heat_map_buffer` accepts `width_px`, `focal_point_x`,
 service-owned in-memory inventory only: no directory scans, mesh decompression,
 numerical tile reads, or construction. The synchronous lookup/raster operation
 returns one consistent inventory revision.
+`TileCounts.js` also counts numerical tile availability from the service's
+already-loaded compiled index, without reading tile files or allocating tile
+records. It does not assume source columns/rows are sorted. Canonical counts
+use the same positive-area and reflected-view rules as mesh queries.
 
 The response includes:
 
@@ -224,13 +234,18 @@ The response includes:
   renderer. Level 0 means no ready mesh; levels 2–34 identify mesh resolution.
   The ordinary tile heat map's default level 4 is deliberately not used for
   uncovered mesh pixels.
-- `coverage`: ascending rows of `{ level, mesh_count, compressed_bytes,
-  pixel_count }`. Counts describe distinct canonical ready meshes intersecting
+- `coverage`: ascending rows of `{ level, tile_count, mesh_count, can_do,
+  compressed_bytes, pixel_count }`. Tile count is the number of indexed
+  numerical tiles intersecting the view; mesh count counts current ready meshes.
+  Can do is exactly `tile_count - mesh_count`, without clamping. Levels with
+  numerical tiles and zero meshes are included. Direct SDK consumers can omit
+  the `count_tiles_in_scope` provider for mesh-only results; production injects
+  the compiled tile index counter. Counts describe distinct canonical files intersecting
   the view. Pixel counts describe the final visible level after overlap; a mesh
   smaller than a pixel can contribute zero visible pixels. Mirrored instances
   do not double the mesh count or compressed size. Stale and invalid meshes
   are excluded. Tile-generation classifications are not included.
-- `inventory_revision`, `namespace`, `width_px`, `height_px`,
+- `inventory_revision`, `inventory_epoch`, `namespace`, `width_px`, `height_px`,
   `uncovered_pixel_count`, and lookup/raster/total `timings_ms`.
 
 Height is `round(width_px * aspect_ratio)` without truncating odd dimensions.
@@ -248,3 +263,18 @@ the mesh budget returns 422 rather than an incomplete map; other failures return
 a generic 503. Successful responses use `Cache-Control: no-store` so inventory
 changes can be seen without moving the navigator. The endpoint inherits existing
 tile-service authentication.
+
+## Lifecycle verification (step 5)
+
+The lifecycle integration suite joins construction, persistence, retrieval,
+reconciliation and heat-map HTTP responses in both storage layouts. It also
+kills a separate process at durable publication boundaries. See
+`test/MESH_LIFECYCLE.md` for the verification matrix and commands. Client refresh
+identity is the combination of inventory epoch, source/profile namespace and
+revision; a damaged snapshot rebuild must not leave a stationary view stale.
+
+### Manual region transforms
+
+TransformPlan.js selects missing, stale or invalid meshes from the compiled tile index at the clicked level in the captured navigator region. Canonical files are selected once for mirrored coverage. The supplied count must match current availability (HTTP 409 otherwise); the batch limit is 200,000 tiles. Region manifests describe the selected pending tiles and live under manifests/<namespace>/region-level-<level>-<regionhash>.json. Existing bailiwick plans retain their original format. Workers release each decoded source tile after processing to bound batch memory. Insufficient mesh capacity aborts immediately while retaining completed meshes.
+
+Decode.js validates decompressed FTMESH01 bytes in both Node and browsers; Cache.js retains the bounded gzip decoder for server use. Profile.js contains the unchanged shared mesh profile. Mesh progress marks successful publications with mesh_ready; the queue exposes preview_short_code only after a mesh is durably indexed.

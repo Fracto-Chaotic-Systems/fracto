@@ -26,13 +26,15 @@ try {
     read_tile: (short_code) => FractoTileCache.get_tile(short_code),
     on_progress: (progress) => parentPort.postMessage({ progress }),
     ...(workerData.maintain_inventory
-      ? {
-          before_write: (code) => inventory_request("begin", code),
-          after_tile: (code) => inventory_request("observe", code),
-        }
+      ? { before_write: (code) => inventory_request("begin", code) }
       : {}),
+    after_tile: async (code) => {
+      FractoTileCache.release_tile(code);
+      if (workerData.maintain_inventory)
+        await inventory_request("observe", code);
+    },
   });
   parentPort.postMessage({ result });
 } catch (error) {
-  parentPort.postMessage({ error: error.message });
+  parentPort.postMessage({ error: error.message, code: error.code });
 }

@@ -4,7 +4,7 @@
 versioned binary caching for the freeform bailiwick test workflow. See its README
 for cache layout, coordinate transforms, palette data and deferred edge handling.
 `terrain/Inventory.js` adds exact and spatial mesh availability lookup, separate
-from numerical tile coverage. Its in-memory inventory is the first step toward
+from numerical tile coverage. Its in-memory inventory backs
 the mesh heat map. `terrain/InventoryStore.js` now maintains its snapshot,
 journal, publication recovery, and reconciliation for the tiles service.
 `terrain/HeatMap.js` derives level-based mesh coverage buffers from that
