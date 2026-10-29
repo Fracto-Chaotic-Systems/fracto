@@ -1,6 +1,7 @@
 import { terrain_level } from "./Plan.js";
+import { terrain_refinements } from "./Lod.js";
 
-export const MAX_RUNTIME_MESHES = 64;
+export const MAX_RUNTIME_MESHES = 256;
 const invalid = () =>
   Object.assign(new Error("Invalid terrain request"), {
     code: "MESH_TERRAIN_VIEW",
@@ -55,9 +56,9 @@ export function plan_runtime_terrain(inventory, query, count_tiles) {
         (b >= required_level ? b - required_level : 100 + required_level - b),
     );
   let selected;
+  let budget_limited = false;
   for (const level of levels) {
     const expected = count_tiles(level, focal_point, scope, aspect_ratio);
-    if (expected > MAX_RUNTIME_MESHES) continue;
     let records;
     try {
       records = inventory.tiles_in_scope(
@@ -68,10 +69,13 @@ export function plan_runtime_terrain(inventory, query, count_tiles) {
         { limit: MAX_RUNTIME_MESHES },
       );
     } catch (error) {
-      if (error.code === "MESH_QUERY_LIMIT") continue;
+      if (error.code === "MESH_QUERY_LIMIT") {
+        if (level >= required_level) budget_limited = true;
+        continue;
+      }
       throw error;
     }
-    if (!records.length) continue;
+    if (!records.length || expected > MAX_RUNTIME_MESHES) continue;
     const candidate = {
       level,
       records,
@@ -105,16 +109,23 @@ export function plan_runtime_terrain(inventory, query, count_tiles) {
         y: Math.floor((scope * aspect_ratio) / spacing + 1e-9) + 1,
       }
     : { x: 0, y: 0 };
+  const minimum_met =
+    Math.min(native_resolution.x, native_resolution.y) >= minimum_resolution;
   return {
     region,
     minimum_resolution,
     required_level,
     level,
     native_resolution,
-    minimum_met:
-      Math.min(native_resolution.x, native_resolution.y) >= minimum_resolution,
+    minimum_met,
+    limiting_reason: minimum_met
+      ? null
+      : budget_limited
+        ? "mesh_budget"
+        : "availability",
     missing_count: selected?.missing_count ?? null,
     tiles,
+    refinements: terrain_refinements(inventory, tiles, region),
     namespace: summary.namespace,
     inventory_epoch: summary.inventory_epoch,
     inventory_revision: summary.revision,

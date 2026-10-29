@@ -12,9 +12,9 @@ const query = {
   scope: 2.5,
   minimum_resolution: 1000,
 };
-function inventory() {
+function inventory(maximum_level = 7) {
   const inv = new MeshInventory({ source: "runtime-test" });
-  for (let level = 2; level <= 7; level++) {
+  for (let level = 2; level <= maximum_level; level++) {
     const edge = 2 ** level;
     for (let y = 0; y < edge / 2; y++)
       for (let x = 0; x < edge; x++) {
@@ -45,8 +45,9 @@ test("runtime selects the coarsest sufficient cached level and reports level-sev
     assert.equal(result.level, level);
     assert.equal(result.native_resolution.x, samples);
     assert.equal(result.minimum_met, scope !== 0.1);
+    assert.equal(result.limiting_reason, scope === 0.1 ? "availability" : null);
     assert.equal(result.missing_count, 0);
-    assert.ok(result.tiles.length <= 64);
+    assert.ok(result.tiles.length <= 256);
     assert.ok(
       result.tiles.every(
         (tile) =>
@@ -64,11 +65,29 @@ test("runtime selects the coarsest sufficient cached level and reports level-sev
   assert.equal(rectangular.native_resolution.y, 1025);
   const limited = plan_runtime_terrain(
     inv,
-    { ...query, minimum_resolution: 5000 },
+    { ...query, scope: 2.4, minimum_resolution: 5000 },
     count,
   );
   assert.equal(limited.minimum_met, false);
-  assert.ok(limited.tiles.length <= 64);
+  assert.equal(limited.limiting_reason, "mesh_budget");
+  assert.equal(limited.mesh_limit, 256);
+  assert.ok(limited.tiles.length <= 256);
+});
+
+test("3500 overview minimum uses level-five meshes when levels through eight are ready", () => {
+  const inv = inventory(8);
+  const result = plan_runtime_terrain(
+    inv,
+    { ...query, minimum_resolution: 3500 },
+    (level, focal, scope, aspect) =>
+      inv.tiles_in_scope(level, focal, scope, aspect).length,
+  );
+  assert.equal(result.level, 5);
+  assert.equal(result.native_resolution.x, 5121);
+  assert.equal(result.minimum_met, true);
+  assert.equal(result.limiting_reason, null);
+  assert.ok(result.tiles.length > 64);
+  assert.ok(result.tiles.length <= 256);
 });
 
 test("runtime mirrors canonical meshes once, falls back from incomplete coverage and leaves gaps explicit", () => {

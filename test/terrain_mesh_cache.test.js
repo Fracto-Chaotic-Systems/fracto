@@ -240,3 +240,35 @@ test("data endpoint reads only the selected freeform region with a bound query",
   assert.deepEqual(Object.keys(res.body.result), ["id", "display_settings"]);
   assert.ok(disconnected);
 });
+
+test("terrain region handler imports and runs injected requests without database configuration", async () => {
+  const source = await fs.readFile(
+    new URL(
+      "../servers/fracto-data-server/handlers/minibrot_terrain_region.js",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  // A data URL has no neighboring mysql.js or config directory, even on configured developer hosts.
+  const isolated = await import(
+    `data:text/javascript;base64,${Buffer.from(source).toString("base64")}`
+  );
+  let closed = false;
+  const handler = isolated.create_minibrot_terrain_region_handler({
+    connect: () => ({ promise: () => ({ query: async () => [[record]] }) }),
+    disconnect: () => {
+      closed = true;
+    },
+  });
+  const res = response();
+  await handler({ params: { id: "55" } }, res);
+  assert.equal(res.code, 200);
+  assert.equal(res.body.result.id, 55);
+  assert.equal(closed, true);
+  const invalid = response();
+  await isolated.handle_minibrot_terrain_region(
+    { params: { id: "bad" } },
+    invalid,
+  );
+  assert.equal(invalid.code, 400);
+});

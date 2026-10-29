@@ -57,3 +57,10 @@ Run `npm run test:mesh-lifecycle` for the full lifecycle fixture, or
 mesh_transform.test.js covers indexed region selection, mirrored de-duplication, stale counts, durable mesh publication, shared queue cancellation, capacity aborts and decoded source-cache release. Run npm run test:mesh-transform; temporary volume tests require atomic rename support.
 
 mesh_runtime.test.js verifies sufficient-level selection, level-seven fallback, display budgets, mirroring, incomplete coverage, endpoint validation and shared palette histograms. Included in test:terrain-cache; run test:mesh-runtime for focused checks.
+
+terrain_lod.test.js covers complete-quartet availability, independent mirrored refinement, atomic parent fallback, canonical file sharing, coarsening and stable finer-level tone mapping. Included in test:terrain-cache and test:terrain-lod.
+
+`terrain_mesh_cache.test.js` includes a configuration-free handler import test.
+It loads the terrain-region handler from an isolated data URL without neighboring
+database modules and exercises its injected database functions, preventing an
+import-time dependency on the untracked production `config/mysql.json` file.
