@@ -130,9 +130,11 @@ in the README for that feature or service.
   color semantics, and make anomalous data-layer conditions visible.
 - Mark temporary fallback code with a clear TODO describing exactly when it
   should be removed, and summarize such cleanup work in the relevant README.
-- Avoid destructive operations by default. Database changes should use
-  versioned, idempotent migrations with explicit confirmation for resets or
-  forced reapplication.
+- Avoid destructive operations by default. Schema changes and initial database
+  snapshots use versioned, idempotent migrations; routine editorial record edits
+  use the data service registered request API with validated keys/fields and
+  optional expected-value checks. Resets or forced migration reapplication
+  require explicit confirmation.
 
 ## Collaboration and maintenance
 

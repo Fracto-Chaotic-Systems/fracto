@@ -71,3 +71,7 @@ import-time dependency on the untracked production `config/mysql.json` file.
 factorization, definitions and notes, SQL text encoding, and the exact initial
 318-entry migration snapshot. Live database verification also checks every seeded
 column against the source and replay behavior using a temporary table.
+
+`node --test test/world_name_suggestions.test.js` verifies full 318-row coverage,
+candidate uniqueness, the three-candidate limit, source senses and exact SQL
+snapshot reproduction, including that world_name is never assigned.

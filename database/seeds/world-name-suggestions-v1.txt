@@ -1,0 +1,318 @@
+1|existence|Cogito|Descartes' certainty of existing through thought makes this a fitting starting world.|Firstlight|An original name for the first undeniable appearance of something rather than nothing.
+2|relation|Bifrost|The Norse bridge between realms makes connection itself into a place.|Twinspan|An original name for a world defined by the bridge between two things.
+3|change|Proteus|The shape-changing figure of Greek myth suggests a world whose identity survives continual transformation.|Chrysalis|The enclosure of metamorphosis makes change a necessary passage rather than an accident.
+4|causality|First Domino|One falling piece starts a chain of effects, making consequences visibly traceable to their causes.
+5|knowledge|Alexandria|The ancient library evokes accumulated learning, shared inquiry and the fragility of preserved knowledge.|Lamplibrary|An original world-name joining illumination with the gathering of knowledge.
+6|opposition|Antipode|Opposite positions become the organizing principle of a world whose inhabitants define themselves against one another.
+7|value|Touchstone|A stone used to assess precious metal becomes a metaphor for discovering what is truly valuable.|Aurum|Gold provides a recognizable image of worth, while leaving its moral value open to question.
+8|correlation|Twindance|Two movements vary together, without claiming that either one causes the other.
+9|destruction|Ashfall|The landscape after an irreversible burning embodies damage that cannot simply be repaired.
+10|concept|Idearium|An original name for a place where particular experiences are distilled into general ideas.
+11|quantity|Abacus|Its countable beads turn abstract amount into a world that can be handled and measured.
+12|consequence|Afterwake|The wake left behind an action suggests the lasting outcomes through which inhabitants must travel.
+13|time|Hourglass|A world shaped by the passage from what has not happened into what can no longer be changed.|Chronos|The Greek personification of time gives the world's governing abstraction a mythic presence.
+14|justice|Themis|The Greek figure of divine law and right order offers a strong foundation for a world devoted to justice.|Even Scales|A familiar judicial image makes fairness something the world must continually restore.
+15|learning|Apprentice Dawn|Each new day begins with skills still to be acquired, making growth through practice the world's central journey.
+16|correspondence|Mirrorlands|Each part answers to another in form or degree, evoking correspondence without requiring literal identity.
+17|space|Farfield|An original name emphasizing the expanse that lets things occupy different places.|Unbounded|The absence of a final edge makes room itself the world's defining experience.
+18|separation|Sunderreach|An original name for a realm made by division, where every crossing remembers an earlier break.
+19|action|Deedforge|A world in which intentions become real only when shaped into deeds.|Praxis|The established philosophical term for action and practice makes doing the world's central commitment.
+20|inference|Tracehaven|Inhabitants reconstruct unseen events from the traces they leave, making indirect evidence their route to conclusions.
+21|improvement|Betterbrook|An original river-world whose course suggests continuous movement toward a more desirable condition.
+22|equality|Equalis|An original name for a world that asks what it means for quantities, rights or standing to be equal.
+23|emotion|Heartsea|Changing tides and depths provide a landscape for the intensity and variety of feeling.|Stormheart|A more turbulent alternative, emphasizing emotions powerful enough to reshape experience.
+24|covariance|Twin Current|Two currents are understood through how their departures from their usual courses vary together.
+25|belief|Credence|The name evokes what is accepted as true, including convictions that remain open to revision.
+26|continuity|Unbroken Thread|A single thread running through every era makes connected duration visible and gives interruptions real significance.
+27|annihilation|Nullshore|A boundary beyond which things cease to remain, making complete erasure distinct from ordinary ruin.
+28|judgment|Verdict Vale|Every journey ends in a considered decision, with the valley standing for the weighing of competing claims.
+29|possibility|Elsewhere|A world named for what could exist beyond the present arrangement of things.|Mayhaven|An original name for a refuge of unrealized alternatives, where 'may' has not yet become 'is'.
+30|comparison|Twinlens|Two views are examined together, allowing resemblance and difference to emerge through deliberate comparison.
+31|attribute|Prism|One thing reveals several distinguishable qualities, just as light separates into visible aspects through a prism.
+32|association|Entwine|A world whose connections arise from interaction, shared experience and mutual dependence.
+33|growth|Greenrise|The first emergence of living shoots provides an image of beginnings that gradually become more substantial.
+34|boundary|Threshold|A world defined by the line between inside and outside, with every crossing changing what rules apply.
+35|wisdom|Seasoned Oak|Long experience and slow growth become an image of judgment that has endured many conditions.|Athena's Grove|A myth-inspired alternative linking a place of reflection with Athena's association with wisdom.
+36|disintegration|Unravel|An organized fabric loses its structure thread by thread, making systemic breakdown the world's defining process.
+37|intention|Aimward|An original name for a world whose paths take shape around what its inhabitants mean to accomplish.|Telos|The philosophical language of ends gives anticipated outcomes a compact and resonant name.
+38|cooperation|Manyhands|No important work can be completed alone, making coordinated contribution the world's basic unit of action.
+39|event|Happenstance|A world understood through occurrences that meet at particular places and moments, rather than through permanent objects.
+40|reasoning|Threadwise|Conclusions are reached by following connected strands of thought, with tangled reasoning becoming a navigable landscape.
+41|power|Sovereign Flame|A flame that can warm or consume makes controlling influence feel potent and morally unsettled.|Kratos|The Greek personification of strength and power supplies a stark mythic alternative.
+42|reform|Mended Charter|A damaged system is corrected rather than merely replaced, emphasizing better institutions built through deliberate revision.
+43|identity|Theseus|The ship-of-Theseus problem makes exact sameness a question that the world can continually test.|Selfsame|A more direct original alternative, emphasizing what must remain identical through every comparison.
+44|ratio|Quotient Quay|A harbor where every measure is understood relative to another, making proportion the basis of exchange and navigation.
+45|forgetfulness|Lethe|The Greek river of forgetfulness makes neglected or lost recollection into the character of an entire landscape.
+46|sympathy|Fellowshore|Separate shores share the same tide, suggesting the sharing of another's emotional condition without becoming identical.
+47|order|Harmonic Grid|Distinct elements occupy comprehensible relations, making arrangement itself the source of the world's coherence.
+48|alignment|Truebearing|Parts are brought into a shared direction, suggesting both mechanical adjustment and a common course.
+49|goodness|Goodharbor|A place named for what sustains and benefits its inhabitants, rather than for wealth or dominance.
+50|faith|Unseen Bridge|Crossing requires confidence before the whole route can be observed, making trust in a person or plan experiential.
+51|movement|Wayfar|An original name for a world whose defining condition is passage from one location to another.
+52|timing|Rightbeat|The same action succeeds or fails according to when it occurs, making coordination with the moment essential.
+53|energy|Emberdrive|A stored ember becomes forceful effort, connecting potential warmth with vigorous exertion.
+54|disconnection|Severline|A world of interrupted routes and broken circuits, emphasizing the act of ending a connection.
+55|information|Signalharbor|Messages arrive from many directions, but become information only when they are received and understood.
+56|evaluation|Touchstone Court|A place for testing worth by considered criteria, extending value into the act of appraisal.
+57|creation|Firstforge|Raw possibilities become made things here, emphasizing the human act of bringing a new work into being.
+58|uncertainty|Mistward|The next landmark cannot be settled in advance, turning doubt and dependence on chance into a lived environment.
+59|constraint|Boundloom|The loom's limits shape what can be woven, making constraint a productive force as well as a restriction.
+60|explanation|Clearwork|A hidden mechanism becomes comprehensible when its structure is exposed, making understanding the world's central craft.
+61|agency|Ownhand|An original name for a realm where inhabitants are defined by their ability to act and exert influence themselves.
+62|difference|Unalike|A world whose significance lies in distinguishing qualities rather than dissolving them into sameness.
+63|harm|Bitterturn|A change takes a damaging direction, making the experience of becoming worse the world's emotional center.
+64|connection|Nexus|A meeting of routes and relations gives connection a tangible geographical form.|Rootbridge|An original image of a living connection that becomes stronger through continued dependence.
+65|memory|Mnemosyne|The Greek personification of memory makes retained experience the world's governing presence.|Remembersea|An original alternative in which experiences return like tides rather than remain fixed like monuments.
+66|increase|Rising Measure|A world in which amounts become greater, making expansion observable without assuming that more is always better.
+67|attention|Lantern Eye|A movable pool of light represents the selective concentration that leaves other features in darkness.
+68|orientation|Compassward|A world that becomes intelligible only when its inhabitants establish how they stand relative to other directions.
+69|surprise|Unforeseen|An original name for a realm whose emotional force comes from what no expectation had prepared its inhabitants to meet.
+70|meaning|Signhaven|Things become significant through what they convey, making interpretation the difference between mere marks and meaningful messages.
+71|self|Innerlight|A world centered on awareness of one's own identity, with interior illumination standing for conscious selfhood.
+72|dissolution|Parting Tide|Relationships end as once-shared waters draw apart, distinguishing dissolution from the destruction of physical things.
+73|unity|Onefold|Many parts form one whole, with the name preserving the tension between plurality and togetherness.
+74|intimacy|Nearhearth|The warmth of a shared hearth gives close friendship an inhabitable center rather than a purely spatial closeness.
+75|revision|Secondscript|A written world can be reconsidered and altered, making a better version possible without denying the first.
+76|intervention|Betweenward|An original name for a place whose role is to step between opposing forces and change what would otherwise happen.
+77|degree|Gradus|A name evoking graduated steps, where intensity and amount are understood through positions on a scale.
+78|transition|Janus Gate|Janus' association with gates and beginnings makes this a world of passages between states.|Betweenlight|An original alternative emphasizing the unsettled interval between one condition and another.
+79|function|Purpose Mill|Every structure is understood by what it does, making use rather than appearance the basis of its identity.
+80|interpretation|Readingglass|A lens changes how signs are understood, giving the construction of meaning a visible instrument.
+81|demolition|Hammerfall|A deliberately struck blow brings a constructed thing down, distinguishing demolition from accidental collapse.
+82|dependence|Anchorhold|Safety rests on what another structure provides, making reliance both a source of security and a limitation.
+83|balance|Stillpoint|Opposing tendencies meet without prevailing, making equilibrium feel like a place that can be reached and lost.
+84|reparation|Mendhaven|Repair is owed for harm already done, so the world is organized around making amends rather than forgetting damage.
+85|perception|Senseglass|A world encountered through the instruments of sensing, with every view reminding inhabitants that perception mediates experience.
+86|similarity|Kindred Echo|One form recalls another without becoming identical, capturing likeness across distinct things.
+87|randomness|Dicewind|An unpredictable wind makes every casting uncertain, turning the absence of a discernible plan into weather.
+88|measurement|Metron|A name drawn from the language of measure, suggesting a world made legible by assigning quantities according to rules.
+89|importance|Keystone|One stone matters because the wider structure depends on it, making significance relational rather than merely conspicuous.
+90|disillusionment|Unveiling|A world entered when a persuasive appearance falls away and a less comfortable understanding becomes possible.
+91|patience|Slowgarden|Cultivation cannot be hurried without damaging its outcome, making tolerance of delay a practical way of life.
+92|conditioning|Bellgarden|The learned association between a signal and an expected event evokes conditioned responses without reducing all learning to habit.
+93|stability|Deepanchor|A securely held foundation resists disturbance, embodying endurance rather than the absence of all movement.
+94|hierarchy|Tierhold|A world built in ordered levels, making rank and grouping visible in its geography.
+95|communication|Hermes|The messenger of Greek myth gives the movement of understood messages a recognizable patron.|Message Reach|An original alternative for a world in which distance is overcome through what can be communicated.
+96|rearrangement|Shuffleworks|Existing parts acquire new relations without requiring new parts, making altered arrangement the world's creative engine.
+97|structure|Framework|The underlying arrangement that holds things together becomes the world's most important landscape.
+98|morality|Rightward|A world named for orientation toward right conduct, while leaving inhabitants to contest how right and wrong are distinguished.
+99|reduction|Lessening|Subtraction and simplification reshape the world, with every removal asking what remains essential.
+100|conviction|Ironcreed|A belief holds with the rigidity of forged metal, expressing certainty while allowing its inflexibility to remain troubling.
+101|process|Wayworks|The route matters as much as its destination, making a planned sequence of actions the substance of the world.
+102|displacement|Elsewhither|An original name for the act of being carried from one position to another without changing one's form.
+103|will|Choosefire|An inner flame becomes conscious decision, making self-directed choice a force that can alter the landscape.
+104|synchrony|Samebeat|Separate events share a moment, giving simultaneous occurrence the image of one beat heard in many places.
+105|discovery|Newshore|A coast becomes known through arrival, capturing discovery as a change in the discoverer's knowledge rather than creation from nothing.
+106|exchange|Crossmarket|A crossing of goods and obligations makes giving something in return the basis of the world's relations.
+107|negation|Notland|A stark name for a world organized around denying propositions and testing what follows from their being false.
+108|abolition|Broken Yoke|The removal of a binding institution becomes a decisive act of ending oppression rather than merely adjusting its terms.
+109|logic|Syllogia|An original name evoking linked propositions and conclusions, where coherence is the world's governing architecture.
+110|organization|Ordered Loom|Separate strands are assigned places in a workable whole, making classification and coordination productive rather than decorative.
+111|decision|Forkhaven|Every important place is a branching point, making commitment to one course the world's characteristic act.
+112|criticism|Assay Hall|Claims and creations are examined for their strengths and flaws, making serious scrutiny an essential public practice.
+113|evidence|Witness Vale|What can attest to an occurrence gives the landscape its meaning, distinguishing indications from mere assertion.
+114|interaction|Answerflow|Every action receives a response that changes the next action, making reciprocity a dynamic process rather than a fixed connection.
+115|empathy|Otherheart|Inhabitants cross into another's felt perspective, making understanding more demanding than simply sharing a mood.
+116|feasibility|Canreach|An original name for a place where proposed possibilities are tested against what can actually be accomplished.
+117|ending|Lastlight|The final illumination marks a completed course, allowing an ending to be poignant without necessarily being destructive.
+118|restriction|Narrowgate|A passage admits only what satisfies its conditions, making permitted extent the world's central problem.
+119|beauty|Roseglass|A familiar beautiful form is refracted into many appearances, keeping sensory pleasure central without declaring a single perfect standard.
+120|analysis|Apartscope|An original instrument-like name for understanding a whole by separating and studying its constituent parts.
+121|number|Unitide|Individual units gather into countable quantities, making number a landscape that begins with distinguishable ones.
+122|delegation|Many Seals|Authority travels through entrusted marks, letting action be authorized without requiring the original decision-maker's presence.
+123|empowerment|Granted Flame|A transferred flame represents power or sanction conferred on someone who could not exercise it before.
+124|character|Temperforge|A person's enduring moral qualities take shape under repeated choices, like a metal whose temper is revealed under strain.
+125|expectation|Tomorrowglass|A window appears to show what comes next, making a mental picture of the future useful but potentially misleading.
+126|injustice|Crooked Scales|The familiar emblem of judgment is made unequal, exposing unfair treatment as a distortion of the world's institutions.
+127|contingency|Ifshore|An original realm that may be reached only if other circumstances take a particular course.
+128|interdependence|Rootweave|Different lives are sustained by intertwined roots, making reliance mutual rather than a one-way dependence.
+129|individualization|Singular Mark|A distinct mark separates one member from its class, making recognition of the particular the world's founding act.
+130|recollection|Mnemosyne's Well|Returning to the waters of memory suggests the active effort of retrieving experience rather than merely retaining it.
+131|reason|Groundstone|A conclusion stands because something supports it, giving logical justification the image of a sound foundation.
+132|accumulation|Gatherdeep|Successive contributions collect in one place, making the slow act of amassing more significant than any single addition.
+133|fairness|Evenhand|The same standards are applied without favoritism, making impartial treatment a practice rather than a promised ideal.
+134|focus|Burning Lens|Dispersed attention or energy is brought into one point, making concentration visibly more intense than general awareness.
+135|amnesia|Blankhaven|A world whose inhabitants confront gaps in memory, emphasizing involuntary absence rather than ordinary neglect.|Lethe's Veil|A myth-inspired alternative that casts memory loss as an obscuring veil rather than a chosen forgetting.
+136|position|Herehold|A place defined by where it stands relative to other places, turning location into the world's essential attribute.
+137|intensity|Whiteheat|Heat driven toward its visible extreme provides a strong sensory image of a high degree of any experience.
+138|excitement|Quickening|An increase in emotional arousal makes the world feel faster and more vivid, before any outcome has been settled.
+139|direction|Arrowreach|Paths are defined by where they point, making orientation toward a course more important than present location.
+140|assessment|Worthcourt|People and things are classified according to an estimate of worth, exposing the choices built into every appraisal.
+141|reordering|New Sequence|A change in order alters how the same events or elements are understood, without requiring their replacement.
+142|individuality|One-of-One|A world named for irreducible particularity, resisting the idea that an individual is only an interchangeable example.
+143|duration|Longwatch|An extended vigil makes elapsed time felt as endurance, distinguishing duration from a single moment or recurring cycle.
+144|decomposition|Returning Earth|An organized form breaks into constituents that can enter other arrangements, making loss of structure part of a larger cycle.
+145|curiosity|Open Cabinet|Unfamiliar objects invite questions, making the desire to know more the world's organizing impulse.
+146|integration|Wholeweave|Separate pieces are combined into a functioning whole while their contribution to the result remains visible.
+147|redemption|Ransom Dawn|Release from a binding wrong suggests salvation earned or given, with dawn marking a genuinely different beginning.
+148|planning|Forechart|A map is drawn before the journey, giving thought about future actions a concrete and revisable form.
+149|agreement|Concordia|A name associated with concord gives harmony of views a civic and almost personified presence.|Common Chord|Different voices settle on a shared sound, suggesting agreement without requiring that the voices become identical.
+150|persuasion|Silver Tongue|Speech changes another's commitments, making eloquence powerful while leaving open whether its influence is honest.
+151|conflict|Crossed Banners|Different commitments meet in active opposition, giving disagreement a public landscape rather than reducing it to private anger.
+152|performance|Proscenium|The threshold of a stage makes the act of doing something before others the world's central event.
+153|removal|Vanishing Step|An element is taken out of an arrangement, making absence the result of a specific act rather than an unexplained condition.
+154|inequality|Uneven Ground|Different starting levels give unequal standing a physical form that inhabitants must either preserve or correct.
+155|awareness|Waking Field|A previously unnoticed environment becomes present to consciousness, making knowing-that-something-is-there the world's awakening.
+156|recurrence|Everturn|An event returns at intervals, making repetition a structure of experience rather than an accidental resemblance.
+157|validity|Soundbridge|A conclusion can be crossed to only when its supports hold, turning rigorous justification into an architectural test.
+158|use|Handwork|Things acquire significance through being employed, emphasizing actual use rather than a merely assigned purpose.
+159|exertion|Strainforge|A result is shaped by spent effort, making physical and mental labor visible in what the world becomes.
+160|synthesis|Joined Horizon|Separate ideas meet in a larger view, producing a whole perspective that no single strand supplied.
+161|joy|Jubilee|A name associated with celebration gives great happiness a communal rather than merely private expression.|Sunmeadow|An original pastoral alternative, making joy feel like an open place rather than a brief victory.
+162|collapse|Fallen Arch|A supporting structure suddenly gives way, turning the loss of integrity into an event with a visible before and after.
+163|accountability|Oathledger|Actions remain recorded against commitments, making responsibility something that can be answered for rather than evaded.
+164|domination|Iron Throne|A seat of rule becomes an image of control imposed on others, with the metal suggesting coercive rigidity.
+165|calculation|Antikythera|The ancient geared calculating device evokes quantities made tractable through an intricate physical procedure.|Reckoner's Reach|An original alternative for a world whose problems are approached through numerical working.
+166|equilibrium|Counterpoise|Opposing forces hold a stable relation, making balanced cancellation more important than the removal of every force.
+167|trust|Surehand|One person can rely on another's honesty and competence, making the offered hand a credible promise.
+168|restoration|Morrowmend|What was damaged can become satisfactory again, with the name emphasizing renewed possibility rather than a perfectly erased past.
+169|period|Measured Season|A bounded stretch of time becomes a distinct place, separate from time's full continuum or the recurrence of cycles.
+170|observation|Watchtower|A dedicated vantage makes sustained looking an active pursuit, with height suggesting perspective rather than authority.
+171|violence|Redhand|Aggression leaves its mark on both the harmed and the actor, giving violent action an unmistakably embodied name.
+172|identification|True Seal|A mark establishes what a thing is, distinguishing the act of identification from the deeper question of identity itself.
+173|commitment|Oathhold|An undertaking continues to bind its maker after the moment of choice, making resolve durable and public.
+174|chance|Tyche|The Greek figure of fortune gives possible success a mythic presence without promising that fortune can be controlled.|Lucky Reach|An original alternative emphasizing a favorable opening whose outcome remains unsettled.
+175|ideology|Utopia|Thomas More's imagined commonwealth offers a fictional setting through which an organizing vision of society can be explored.|Bannerfield|An original alternative for a world shaped by the shared ideas beneath which groups gather.
+176|enumeration|Tallymarch|A procession advances one counted unit at a time, making the act of counting distinct from quantity in general.
+177|liberation|Unshackled|The act of release is the world's defining beginning, emphasizing the removal of a real restraint.
+178|priority|Firstcall|What must be answered before everything else sets the order of action, making urgency and importance practical forces.
+179|benefit|Goodyield|A change produces something that supports well-being, making advantage recognizable through what it provides.
+180|refutation|Counterexample|One decisive case overturns a general claim, making correction a constructive discovery rather than simple opposition.
+181|cost|Pricewater|Every crossing requires something to be given up, making sacrifice visible even when the destination is desirable.
+182|tradition|Elderbraid|An inherited pattern is carried forward through successive hands, with variation possible inside continuity.
+183|initiative|Firstspark|The first self-started action ignites a sequence, distinguishing initiative from merely responding to another's command.
+184|affection|Warmhold|A gentle positive regard becomes a place of shelter, keeping liking distinct from overwhelming passion.
+185|deliberation|Council Lantern|A shared light is kept burning while alternatives are considered, giving careful thought time before a decision.
+186|variation|Manyseed|Seeds from one generation emerge with differences, making variation the source of diversity rather than an error to eliminate.
+187|magnitude|Greatreach|A world's significance lies in its relative extent, making scale felt through distance rather than through rank.
+188|regulation|Governor's Wheel|A guiding mechanism adjusts activity according to rules, emphasizing controlled operation rather than unrestricted power.
+189|evil|Blackthorn|A familiar living form becomes an image of deliberate moral injury, with its beauty unable to excuse its wounds.
+190|dialogue|Two Voices|A conversation requires one voice to answer another, making understanding emerge between speakers rather than from a monologue.
+191|risk|Hazard Sound|A navigable strait promises a destination while exposing travelers to loss, making uncertainty inseparable from the undertaking.
+192|reunion|Homeagain|Those who were separated meet once more, making return a renewal of relationship rather than simply a repeated location.
+193|right|Duehaven|A world organized around what is owed, distinguishing a rightful claim from a favor granted by the powerful.
+194|arrangement|Placework|The significance of each thing depends on where it is placed relative to the rest.
+195|reminiscence|Keepsake Bay|Objects and impressions recall earlier experience, making memory tender and particular rather than an impersonal store.
+196|ethics|Goodreason|Moral choices are examined through reasons and principles, distinguishing ethical inquiry from merely inheriting a code.
+197|insight|Clearflash|A difficult structure becomes comprehensible in a sudden moment, giving understanding the image of illumination.
+198|depletion|Spentwell|A once-adequate resource has been markedly drawn down, making diminished reserves a visible condition of the world.
+199|understanding|Ariadne's Thread|The mythic guide through a labyrinth becomes a metaphor for grasping how a difficult whole fits together.|Clearhaven|An original alternative for the settled condition of comprehending something that once seemed obscure.
+200|dogma|Sealed Book|A body of belief is treated as settled authority, with the sealed cover suggesting both stability and resistance to challenge.
+201|distraction|Will-o'-the-Wisp|The elusive light of folklore evokes attention drawn away from its intended course.|Sideglimmer|An original alternative in which a small peripheral attraction repeatedly diverts the traveler.
+202|procedure|Stepwright|An original craft-name for a world where practical success depends on carrying out an intelligible sequence.
+203|danger|Perilward|A realm named for exposure to possible harm, distinguishing a dangerous condition from harm already suffered.
+204|migration|Passage Isles|A chain of stopping places gives repeated relocation a geography of departure, transit and arrival.
+205|expertise|Prospero's Isle|The learned arts behind Prospero's power in The Tempest connect specialized knowledge with effective practice.|Masterwork|A more direct alternative in which exceptional skill is recognized through what it can accomplish.
+206|resolve|Flintheart|A purpose holds under repeated pressure, with flint suggesting firmness that can also strike a useful spark.
+207|grief|Empty Chair|An absent loved one's place remains perceptible, giving bereavement a concrete and intimate landscape.
+208|simultaneity|One Moment|Different occurrences belong to the same instant, making shared timing the world's defining relation.|Greenwich Bell|Greenwich's association with timekeeping inspires a bell imagined to sound across distant places at once.
+209|work|Taskhaven|A world whose places take shape through directed effort, making activity toward an outcome its ordinary mode of life.
+210|education|Lyceum|A name associated with organized learning makes the cultivation of knowledge a shared institution rather than an isolated discovery.
+211|rule|Guidestone|An explicit guide shapes conduct, giving inhabitants something to consult before acting rather than only a punishment afterward.
+212|vigor|Springblood|Fresh growth and active strength meet in a name for life experienced at its most energetic.
+213|development|Branchrise|An expanding branch becomes more elaborate and capable, making improvement a process of enlargement and refinement.
+214|contradiction|Crossfire|Opposed assertions or forces cannot both proceed unchanged, making incompatibility an active pressure within the world.
+215|representation|Imageward|Something absent is made present to the mind through an image, keeping representation distinct from the thing represented.
+216|catastrophe|Sunderstorm|A single overwhelming event disrupts many lives, making catastrophe larger than an isolated act of damage.
+217|merit|Earned Laurel|Recognition follows what is deserving, with the laurel imagined as something justified rather than merely awarded.
+218|consistency|Unbroken Axiom|A system's statements remain mutually compatible, making logical coherence a structure that must hold throughout.
+219|unification|Confluence|Several streams become a single course, making the act of becoming one visible without denying their separate origins.
+220|induction|Many-to-One|Repeated particular observations support a broader claim, making the passage from cases to a general principle the world's route.
+221|dimension|Axisreach|Extent is understood along a particular direction, giving dimensionality a navigable set of independent courses.
+222|resolution|Setcourse|A decision becomes a settled intention to act, distinguishing a resolution from the earlier process of weighing alternatives.
+223|norm|Common Measure|A shared standard makes conduct or appearance intelligible as typical, without assuming that typical must mean morally right.
+224|esteem|High Regard|Admiration raises someone in others' estimation, making recognition an attitude rather than a formal rank.
+225|disbelief|Unconvinced|A world that declines to accept what is proposed, distinguishing rejection of belief from an inability to decide.
+226|proof|QED|The traditional closing sign of a demonstration makes justified completion the world's characteristic destination.|Necessary Steps|An original alternative emphasizing a chain in which every conclusion follows from what came before.
+227|law|Newton's Orchard|Newton's association with gravitation inspires a world seeking general regularities behind ordinary natural events.|Lawfall|An original alternative in which even apparent disorder follows discoverable natural regularities.
+228|execution|Doneward|The world is reached when an intended act is carried through, emphasizing accomplishment rather than punishment or death.
+229|principle|Firststone|A basic accepted generalization supports further reasoning, making foundations essential without confusing them with final conclusions.
+230|compassion|Open Shelter|Awareness of another's suffering becomes an invitation to relieve it, making concern practical rather than merely observant.
+231|profit|Surplus Quay|What remains after costs are met becomes a new resource, making excess return the basis of further ventures.
+232|likelihood|Favored Outcome|Possible results are not equally expected, making the relative plausibility of one outcome the world's organizing distinction.
+233|model|Smallworld|A simplified world stands for a more complex one, making useful representation possible without claiming complete identity.
+234|cessation|Hushfall|An ongoing activity stops, giving ending a quiet form that does not require destruction or a dramatic final event.
+235|classification|Linnaea|A name honoring Linnaeus links the world to organizing living diversity into intelligible categories.|Cabinet of Kinds|An original alternative making the arrangement of things into classes an inhabitable collection.
+236|inhibition|Heldflame|An impulse remains present but restrained, making conscious withholding different from the absence of desire.
+237|utility|Useful Harbor|A place is valued for what it enables, making practical benefit more important than ornament or reputation.
+238|aesthetics|Gallery of Forms|A world where beauty and taste are examined through encounters with different forms, rather than reduced to a single ideal.
+239|theory|Deep Pattern|Many observations become intelligible within one well-supported explanation, making theory more than an attractive guess.
+240|deduction|Baker Street|Sherlock Holmes' fictional address evokes the pursuit of conclusions through reasoning; the connection is literary rather than a strict account of his methods.|Therefore|A direct alternative naming the movement from accepted premises to what must follow.
+241|hypothesis|Suppose|A tentative explanation opens a path of inquiry without claiming that the path has already been confirmed.
+242|arithmetic|Numberwright|Numerical calculation becomes a practiced craft, distinguishing arithmetic from the wider idea of number or quantity.
+243|devastation|Cinderplain|A landscape after total ruin makes devastation an experienced condition rather than a single destructive gesture.
+244|instrumentality|Leverland|A means enables an outcome greater than unaided effort could achieve, making being-an-instrument the world's distinctive quality.
+245|virtue|Goodstead|Steady moral action becomes an inhabited way of life, emphasizing the practice of avoiding wrong rather than a favorable reputation.
+246|revolution|Overcrown|A governing order is overturned from below, making replacement of rule distinct from reform within its existing structure.
+247|activity|Everdoing|The world is characterized by specific ongoing behaviors, making active participation its ordinary condition.
+248|disposition|Leaning Oak|An enduring inclination shapes future responses, with the tree's lean suggesting tendency rather than unavoidable destiny.
+249|adjustment|Fitward|An arrangement is altered until it suits its circumstances, making adaptation a deliberate act of becoming appropriate.
+250|confirmation|Second Witness|Independent support strengthens an existing belief, making corroboration distinct from the first discovery of a possibility.
+251|progress|Forward Dawn|Successive improvements open a wider horizon, while the rising light suggests advancement rather than motion alone.
+252|punishment|Tartarus|The punitive depths of Greek myth offer a severe world centered on consequences imposed for wrongdoing.|Reckoning Gate|An original alternative emphasizing the encounter with a penalty rather than endless torment.
+253|sentiment|Oldrose|A rose kept after its freshness has passed evokes tender feeling sustained by nostalgia and attachment.
+254|conditionality|Unless|A world whose arrangements hold only under stated conditions, making exceptions and dependencies part of its basic geography.
+255|recognition|Knownagain|An encounter becomes familiar through remembered experience, distinguishing recognition from learning an identity for the first time.
+256|reciprocity|Giftreturn|What is offered creates a relation answered in kind, making mutual action more important than a one-sided gift.
+259|obligation|Oathbond|A shared expectation binds conduct even when immediate desire points elsewhere, making duty a force between people.
+286|sequence|Nextward|Each element gains its place by following another, making serial order the world's principal route.
+310|distinction|Finecut|A precise division separates things by their defining features, making discrimination an act of careful understanding.
+319|limit|Utmost|A final attainable extent defines the world, making the farthest possible degree a destination rather than an arbitrary border.
+341|complexity|Manyfold|Interwoven parts create a whole whose organization cannot be grasped through a single simple relation.|Labyrinthine|A more mysterious alternative, treating intricate structure as something that must be learned by navigating it.
+361|choice|Crossroads|Several courses remain available until one is taken, making selection the event that turns possibilities into a particular journey.
+374|proportion|Partwhole|A component is understood through its relation to the total, making relative magnitude the world's organizing geometry.
+403|presence|Herewake|An original name for the felt condition of something being here, rather than merely remembered or possible.
+447|reconciliation|Bridge Again|A route between estranged shores is reopened, emphasizing restored relationship rather than erasure of the disagreement.|Concord Bridge|A more civic alternative, giving renewed cordial relations the form of a rebuilt shared passage.
+483|hate|Bitterbrand|Intense aversion leaves an enduring mark, making hatred a force that shapes both its object and its bearer.
+511|integrity|Unbroken Seal|Moral soundness is imagined as a whole that has not been secretly breached, connecting consistency of conduct with wholeness.
+527|form|Contour|The arrangement and outline of something define its appearance independently of the material from which it is made.
+529|love|Heartbound|Strong affection becomes a lasting connection, linking the emotional foundation of the mapping to an enduring relation.|Eros|The Greek figure associated with love offers a mythic alternative, with a more passionate emphasis than the broader theme.
+551|freedom|Open Sky|Movement is possible without another's controlling enclosure, making freedom a condition rather than only an act of release.|Ariel's Reach|A literary alternative recalling Ariel's longing for freedom in The Tempest.
+649|scarcity|Lastspring|A remaining source cannot meet every need, making inadequacy of supply a world-defining condition.
+655|inquiry|Question Reach|A search for knowledge becomes an expedition, making good questions the means by which the world's boundaries expand.
+667|fear|Dreadshore|Danger is anticipated before it arrives, making the edge of the unknown an emotional frontier.|Phobos|The Greek personification of fear gives the world's anticipation of danger a mythic embodiment.
+682|diversity|Manyhue|Noticeable differences coexist within one field, making variety itself a visible and valued feature of the world.
+703|motivation|Inner Spur|A desire or need sets behavior in motion, making the force behind action distinct from the action itself.
+707|optimization|Bestfit|Possibilities are adjusted toward the most effective arrangement, making improvement depend on the criteria chosen.
+713|pleasure|Sweetwater|A directly desired sensation gives the world its appeal without requiring a theory of why the experience is satisfying.
+731|symmetry|Mirrorfold|A transformation reveals an answering form, making preserved relations across a shape the world's aesthetic and mathematical signature.
+741|preservation|Arkhold|A protective vessel keeps vulnerable things from loss, turning preservation into an active responsibility rather than mere storage.
+806|regularity|Steadybeat|A dependable rate or principle gives events their recognizable recurrence, making patterned reliability the world's pulse.
+841|potential|Seedvault|Capacities not yet realized are kept alive, making the world about what could come into being rather than what already has.|Unlit Star|An original alternative portraying latent brilliance that has not yet become an event.
+851|desire|Tantalus|The myth of perpetually unreachable satisfaction makes desire a powerful but potentially tormenting world.|Wanting Well|An original alternative in which every apparent fulfillment reveals another depth of longing.
+899|necessity|Ananke|The Greek personification of necessity gives the indispensable and unavoidable a mythic authority.|Needstone|An original alternative naming the support that cannot be removed without making the whole fail.
+961|quality|Truegrain|A material's characteristic grain suggests an essential distinguishing property rather than a score of how good it is.
+1147|goal|Ithaca|Odysseus' homeward destination makes the end of a long undertaking into a place worth reaching.|Endstar|An original alternative for the guiding point that gives a plan its terminus.
+1189|independence|Freehold|A world that answers to its own course rather than another's control, emphasizing a sustained condition of freedom.
+1235|experience|Livedshore|Events matter as they are encountered, making lived apprehension different from an outside description of what occurred.
+1333|property|Common Grain|An essential attribute is shared across a class, distinguishing a common property from an individual's exceptional feature.
+2387|scale|Ladder of Measures|Ordered reference points allow different amounts to be located and compared, giving scale a traversable structure.
+2405|anticipation|Beforelight|The first glow suggests what is about to arrive, making reasoned expectation an experience before the event itself.
+2831|negotiation|Parley|Opposed interests seek agreement through exchange, making discussion an activity with stakes rather than mere conversation.|Treaty Quay|An original meeting place where separate parties approach a settlement without first becoming one.
+2911|self-control|Reinward|The rider turns the reins inward, making the governance of one's own impulses the world's central discipline.|Prospero's Staff|Renunciation of magic in The Tempest supplies a literary image of power restrained by its own holder.
+2945|language|Babel|The biblical story of divided tongues gives language a world-scale power to connect or separate communities.|Rosetta|The multilingual Rosetta Stone evokes the discovery of meaning across different written languages.
+3401|generosity|Openhand|A world named for willing giving, where a resource becomes significant through its release rather than its possession.
+3565|intuition|Inner Compass|Direction is felt before a chain of reasoning can be stated, making instinctive knowing a guide rather than a proof.
+3749|guilt|Stained Hand|The remembered responsibility for an offense persists after the act, making remorse an inward mark rather than an external sentence.
+3999|transformation|Metamorphia|A name evoking metamorphosis makes qualitative change a passage into a genuinely different mode of being.|Chrysalis Deep|An alternative that intensifies change into a hidden remaking rather than a visible adjustment.
+4085|symbol|Sigil|A conventional mark carries a significance beyond its visible shape, making shared interpretation the world's real source of power.
+4117|gratitude|Androcles|The tale of a lion remembering a kindness offers a narrative image of appreciation returned.|Thankwell|An original alternative where received care is remembered as a source that continues to nourish others.
+4331|autonomy|Selfhelm|An inhabitant steers their own course, making personal self-government distinct from merely lacking an outside ruler.
+4495|doubt|Questionmark|A conclusion remains unsettled, making the pause before certainty a place where inquiry can continue.
+4579|experiment|Trialglass|An idea is put into contact with observable conditions, making testing a deliberate encounter rather than a guess.
+4669|hope|Dawnward|A desired future draws the world forward without guaranteeing arrival.|Elpis|The Greek personification of hope gives an uncertain but sustaining expectation a mythic presence.
+5365|imagination|Elsewhen|An original world-name for things and events that can be pictured beyond what presently exists.|Prospero's Dream|The imaginative theater of The Tempest offers a literary alternative where appearances can stage unrealized possibilities.
+5513|consent|Willing Gate|Passage is granted through permission, making a freely given yes more important than the ability to force entry.
+5713|creativity|Unwritten Isle|New work can emerge because the world has not already been fully prescribed.|Promethean Forge|Prometheus' gift of fire inspires a world of inventive making, with responsibility accompanying the power to create.
+5887|opportunity|Kairos|The Greek figure of the opportune moment makes favorable circumstance something that must be recognized and acted upon.|Openwindow|An original alternative emphasizing an opening that may close if its moment is missed.
+5957|preference|Chosen Rose|One possibility is liked more strongly than others, making partiality visible without claiming universal superiority.
+6293|safety|Havenward|A place is deliberately arranged so that specified dangers do not reach its inhabitants, making safety a maintained condition.
+6665|truth|Clear Mirror|A representation answers faithfully to what is there, connecting truth with conformity to reality rather than mere conviction.|Aletheia|The Greek figure and word associated with truth supplies a mythic and philosophical alternative.
+7913|authority|Mandate|The right to direct action gives power a recognized warrant, distinguishing authorized rule from sheer domination.
+8479|leadership|Northstar|Others find a course through an orienting presence, making leadership an activity of guidance rather than simply holding rank.|First Lantern|An original alternative emphasizing someone who makes a path visible for those who follow.
+8791|compromise|Middle Bridge|Both shores give up their preferred route to meet on shared ground, making concessions the cost of accommodation.
+9251|probability|Sample Space|All possible outcomes become a landscape across which likelihood can be assigned and compared.|Chance Atlas|An original alternative for a world that maps uncertainty rather than pretending to remove it.
+11857|confidence|Surefoot|Action proceeds without disabling doubt, giving confidence the physical image of a step that can bear weight.
+17329|state|As It Stands|A world named for its present configuration of attributes, distinguishing a condition from the process that produced it.
+19673|courage|Lionheart|The familiar emblem of a brave heart gives the capacity to meet danger a direct and resonant name.|Fearward|An original alternative emphasizing movement toward danger despite recognizing it, rather than an inability to feel fear.
+28891|loyalty|Penelope|Her steadfast waiting in the Odyssey gives enduring allegiance a narrative center.|Faithful Hearth|An original alternative placing loyalty in sustained care for a person, place or shared commitment.

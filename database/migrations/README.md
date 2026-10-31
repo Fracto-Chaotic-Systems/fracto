@@ -158,8 +158,9 @@ WorldsContenders in the UI repository. It includes the WordNet license. Existing
 rows and notes are preserved on reruns. Browser-local note edits are not imported,
 and the UI now reads the table through the data service mappings endpoint.
 
-Never regenerate this migration after application. Future mapping changes require
-a new numbered migration. The generator and snapshot test document and verify the
+Never regenerate this migration after application. Schema changes and new
+versioned snapshots require a new migration. Routine world_name and notes edits
+now use POST /data/request. The generator and snapshot test document and verify the
 initial conversion; update the test deliberately when introducing a later snapshot.
 
 ## Migration 005: world names
@@ -169,3 +170,12 @@ Existing blank names are initialized as `world N` using the row cardinality.
 The column guard permits safe replay and existing nonblank names are preserved.
 Backfilling does not change existing timestamps. Future inserts should provide
 world_name explicitly. Migration 004 remains unchanged.
+
+## Migration 006: unapproved world-name suggestions
+
+`006_world-name-suggestions.sql` appends 375 suggestions across all 318 worlds;
+57 worlds have a second alternative. Each suggestion includes a brief theme-based
+reason. Existing notes are retained before the appended section. Rows match both
+cardinality and synset, and a marker prevents repeated additions. No names,
+cardinalities, senses or associations change. See ../seeds/README.md for proposal
+sources and reference checks. Do not regenerate 006 after application.

@@ -598,3 +598,13 @@ and probe storage; the tiles service also verifies it before listening.
 Local-source deployments require a prepared writable `meshes/` subtree beneath
 the otherwise read-only source mount. See [the mesh storage guide](sdk/terrain/README.md)
 for initialization, mounts, binary contents, and retrieval APIs.
+
+### Incremental editorial data requests
+
+The data service accepts private POST /data/request operations for registered
+tables, initially single-world reads and updates to world_name/notes. Ordinary
+data edits no longer need migrations; schema changes still do. See
+[the request contract and curl guide](servers/fracto-data-server/handlers/data_requests/README.md).
+Both Compose targets forward optional FRACTO_INTERNAL_SERVICE_TOKEN credentials.
+With auth disabled and no token, only direct loopback CLI calls inside the service
+are accepted.

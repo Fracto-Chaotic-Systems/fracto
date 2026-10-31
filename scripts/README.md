@@ -631,5 +631,16 @@ node scripts/wordnet_mapping_seed.js database/migrations/NNN_wordnet-snapshot.sq
 ```
 
 The generator refuses to overwrite files. Applied migrations are immutable; review
-future snapshots or write a targeted migration for intentional mapping changes.
+future snapshots or write a targeted migration for schema/seed changes. Routine
+world_name and notes edits now use the data service POST /data/request API.
 UTF-8 hex literals preserve quotes, backslashes and Unicode in source text.
+
+## World-name suggestions
+
+`world_name_suggestions.js` validates the pipe-delimited editorial proposal in
+`database/seeds/world-name-suggestions-v1.txt` against all current senses. It
+rejects missing rows, duplicate candidates, theme mismatches and more than three
+names per row. Run `node scripts/world_name_suggestions.js <new-migration.sql>`
+to generate a new snapshot. It refuses overwrites. Migration 006 appends the 375
+proposals once without changing world_name or prior explanations; do not
+regenerate this immutable snapshot after application.
