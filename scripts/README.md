@@ -617,3 +617,19 @@ migrations. Migration 003 adds nullable minibrot ray-path storage; see
 [the migration guide](../database/migrations/README.md) and
 [ray cache contract](../sdk/orbitals/RAY_CACHE.md). No existing migration checksum
 or backup dump was modified.
+
+## WordNet mapping seed
+
+`wordnet_mapping_seed.js` validates and converts the curated worlds definitions
+and contender glosses into a numbered SQL snapshot. Migration 004 holds the initial
+318 entries. Apply it with `npm run db:migrate`.
+
+To create a new snapshot at an unused migration path:
+
+```powershell
+node scripts/wordnet_mapping_seed.js database/migrations/NNN_wordnet-snapshot.sql
+```
+
+The generator refuses to overwrite files. Applied migrations are immutable; review
+future snapshots or write a targeted migration for intentional mapping changes.
+UTF-8 hex literals preserve quotes, backslashes and Unicode in source text.

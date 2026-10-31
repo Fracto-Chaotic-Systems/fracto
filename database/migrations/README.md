@@ -144,3 +144,20 @@ use the existing Docker database-init/deployment commands above. Deploy/restart
 the matching data service after migration; old records remain readable before
 any paths have been generated. See [the ray cache guide](../../sdk/orbitals/RAY_CACHE.md)
 for API/schema compatibility, storage bounds and the separate numerical basis.
+
+## Migration 004: curated WordNet mappings
+
+`004_wordnet-mappings.sql` creates `wordnet_mappings` and seeds the 318 curated
+worlds associations. Cardinality is the primary key; the eight-character WordNet
+synset ID is unique and retains leading zeroes. Rows include WordNet version,
+word, short definition, full gloss, numeric factorization, explanatory notes,
+and creation/update timestamps. All cardinalities 1 through 256 are included.
+
+The snapshot combines WorldsFirstRound, WorldsGapFill and WorldsCompounds with
+WorldsContenders in the UI repository. It includes the WordNet license. Existing
+rows and notes are preserved on reruns. Browser-local note edits are not imported,
+and the UI continues using its current data source.
+
+Never regenerate this migration after application. Future mapping changes require
+a new numbered migration. The generator and snapshot test document and verify the
+initial conversion; update the test deliberately when introducing a later snapshot.

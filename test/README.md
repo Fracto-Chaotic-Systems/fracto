@@ -64,3 +64,10 @@ terrain_lod.test.js covers complete-quartet availability, independent mirrored r
 It loads the terrain-region handler from an isolated data URL without neighboring
 database modules and exercises its injected database functions, preventing an
 import-time dependency on the untracked production `config/mysql.json` file.
+
+## WordNet mapping seed
+
+`node --test test/wordnet_mapping_seed.test.js` checks source validation,
+factorization, definitions and notes, SQL text encoding, and the exact initial
+318-entry migration snapshot. Live database verification also checks every seeded
+column against the source and replay behavior using a temporary table.
