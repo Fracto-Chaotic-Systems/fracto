@@ -156,8 +156,16 @@ and creation/update timestamps. All cardinalities 1 through 256 are included.
 The snapshot combines WorldsFirstRound, WorldsGapFill and WorldsCompounds with
 WorldsContenders in the UI repository. It includes the WordNet license. Existing
 rows and notes are preserved on reruns. Browser-local note edits are not imported,
-and the UI continues using its current data source.
+and the UI now reads the table through the data service mappings endpoint.
 
 Never regenerate this migration after application. Future mapping changes require
 a new numbered migration. The generator and snapshot test document and verify the
 initial conversion; update the test deliberately when introducing a later snapshot.
+
+## Migration 005: world names
+
+`005_world-names.sql` adds `wordnet_mappings.world_name` as VARCHAR(255), NOT NULL.
+Existing blank names are initialized as `world N` using the row cardinality.
+The column guard permits safe replay and existing nonblank names are preserved.
+Backfilling does not change existing timestamps. Future inserts should provide
+world_name explicitly. Migration 004 remains unchanged.

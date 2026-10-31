@@ -3,4 +3,11 @@
 `migrations/` contains immutable, numbered MySQL schema/data changes applied by
 `npm run db:migrate`. See its README for bootstrap, checksum and locking behavior.
 The WordNet mapping migration stores the curated worlds definitions as a database
-snapshot; it does not change the browser's data source or saved notes.
+snapshot. The browser now reads live mappings through the data service.
+
+The worlds UI now reads this table through the data service `/wordnet_mappings`
+endpoint. The original migration remains an immutable initial snapshot. Browser
+note overrides are still local and are not written back to this table.
+
+Migration 005 adds world_name to wordnet_mappings, initializing existing rows as
+`world N`. The name is returned by the mappings API and included in CSV exports.
