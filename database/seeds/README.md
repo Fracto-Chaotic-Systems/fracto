@@ -16,6 +16,75 @@ scripts/README.md. Migration 006 appends the proposal text once, matching both
 cardinality and WordNet sense. Routine editorial revisions now use POST /data/request; this seed remains the
 immutable initial proposal.
 
+## Current naming philosophy: literary references, one world at a time
+
+The initial bulk proposal is an unapproved starting point. Subsequent naming work
+focuses on individual worlds, discussed with the user before any name is adopted.
+Favor meaningful references from literature, film and fictional universes,
+especially mystery, science fiction and fantasy. Sources include Harry Potter,
+The Lord of the Rings, Star Trek, Star Wars and other fantasy franchises; these
+are examples, not an exhaustive list or a franchise quota. Historical and
+mythological references are equally useful when they provide a stronger connection.
+General settings and abstract worlds also work when their meaning is clearer than
+a named allusion; a recognizable source is not required.
+
+- Prefer an evocative existing name whose narrative significance expresses the
+  world's theme, rather than a generic thematic label or a forced new coinage.
+- A place, court or other institution, character, object, inscription, title or
+  recurring motif can supply a name. It need not already name a fictional world.
+- Connect the reference to a specific scene, role, defining quality or mystery.
+  A recognizable franchise reference alone is insufficient. An ironic or
+  cautionary connection is welcome: a flawed judgment can illuminate judgment.
+- Preserve the existing abstraction and its compound interpretation. Naming adds
+  narrative resonance; it does not reassign the theme, prime or cardinality.
+- Prefer variety across sources rather than repeatedly drawing on one franchise.
+  Flag overlapping candidates for later review rather than adopting duplicates by
+  default. Use religious references when their established meaning supports the
+  theme, and distinguish that meaning from creative extensions.
+- Discuss each case separately. Offer up to three alternatives when useful, with
+  a brief explanation of the source and the theme connection. Verify names and
+  canonical details, distinguishing those facts from our creative interpretation.
+- For borrowed names, retain provenance in the world notes: work/franchise,
+  author or creator, an official reference URL when available, and the source's
+  copyright/trademark/publishing-rights notice where relevant. Record unknown or
+  unresolved ascriptions explicitly rather than guessing. Mark usage review as
+  pending until investigated; citation or attribution does not establish permission.
+  Record restrictions or a decision not to use a term if later investigation
+  identifies a blocker. A naming preference is separate from usage clearance.
+- Examples and discussion are proposals, not approval to rename. Leave `world N`
+  in world_name until the user chooses a name for that specific entry. Apply an
+  approved choice through POST /data/request with an expected-value check rather
+  than a migration. Do not replace the existing bulk notes without instruction.
+
+### Illustrative proposals, not adopted names
+
+**World 28, judgment: Wizengamot.** This is the Harry Potter court the user had in
+mind. Harry faces a hearing there and is cleared; do not describe him as having
+been unfairly convicted. The dramatic tension around judgment and an unfairly
+pursued hearing makes the institution a potential thematic name, even though its
+conduct is not an ideal of justice. See the
+[official Wizengamot entry](https://www.harrypotter.com/fact-file/magical-miscellany/the-wizengamot).
+
+**Earlier world 31 proposal, attribute: Rosebud (superseded).** In Citizen Kane, the word belongs to Kane's
+childhood sled. Its role as an identifying inscription with concealed significance
+provides a creative connection to an object's distinguishing attribute. The
+reference's additional associations with memory and identity do not require
+changing the assigned theme. See the
+[American Film Institute's Citizen Kane reference](https://www.afi.com/news/afi-movie-club-citizen-kane/).
+
+These examples establish the intended style; neither is a decided world name.
+The user subsequently replaced all world 31 suggestions with Linnaeus Garden,
+with Uppsala as a variant. Current suggestions and preference order live in the
+database notes; the original seed and these historical examples are not a current
+export. Routine editorial changes are database records, not Git-tracked migrations.
+
+Record approved candidate variants, preference order, related-world distinctions
+and possible gameplay roles in the notes. A possible role (such as world 53 as an
+energy power-up location) is a design annotation, not an implemented mechanic.
+Preserve existing notes when asked to add suggestions; replace the suggestion list
+when explicitly requested. Keep the compound explanation and world name unchanged
+unless the user directs otherwise.
+
 ## Reference checks
 
 These sources support specific allusions; the proposed theme interpretations are

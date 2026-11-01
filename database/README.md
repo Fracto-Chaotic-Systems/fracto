@@ -18,3 +18,7 @@ proposal source and supporting references.
 
 Routine world-name and database-note edits now use POST /data/request rather than
 a new migration. Migrations still own schema changes and initial snapshots.
+
+The current world-naming philosophy is documented in seeds/README.md: prioritize
+meaningful literary/cinematic references and discuss each world individually
+before adopting a name. The original bulk proposal remains historical context.
