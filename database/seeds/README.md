@@ -114,3 +114,40 @@ Further checks: [Linnaeus](https://www.linnean.org/learning/who-was-linnaeus),
 [Ariadne](https://www.theoi.com/Georgikos/Ariadne.html),
 [Tantalus in classical texts](https://www.theoi.com/Text/TzetzesChiliades5.html),
 and [the Rosetta Stone](https://www.britishmuseum.org/collection/object/Y_EA24).
+
+### Current per-world notes layout
+
+Follow the user's edited database entries when making future editorial revisions:
+start with `## theme`, then an italic summary with a bold archetype or compound
+lead-in, for example `_**knowledge x time:** explanation_`. Keep the formula in
+its own table column rather than repeating numeric factorization in this summary.
+Use `### World name suggestions (unapproved):`, a blank line, then list items
+of the form `- **Candidate:** interpretation`. Put candidate-specific attribution,
+variants and references in nested bullets with bold labels. Separate shared
+related-world distinctions, franchise-placement observations and review comments
+into paragraphs outside the final candidate's nested details. Preserve meaningful
+user wording and structure rather than normalizing all existing notes again.
+These conventions guide future revisions; the database remains authoritative.
+
+### Reciprocal world cross-references
+
+Whenever an editorial note adds a cross-reference to another world, also update
+that world's database note with the corresponding distinction or connection back
+to the originating world. Explain the relationship from each world's perspective;
+do not merely add an unexplained backlink. Preserve existing suggestions and
+notes, and avoid duplicate distinctions when a reciprocal reference already exists.
+Use plain `#cardinality theme` references in saved Markdown; browser-specific
+links and scrolling behavior belong only to the rendering layer. Apply both note
+edits through the data request API with expected-value checks and readback
+verification, not seed migrations. If either edit fails, report and reconcile the
+incomplete pair rather than silently treating the cross-reference as complete.
+
+The 2026-11-01 retrospective audit scanned all 318 current notes for explicit
+numbered world references (`#N`, `world N`, and `world #N`). It added 38 missing
+reciprocal explanations across 29 notes, preserving all prior text, suggestions,
+and other fields. Shared-reference placement notes (such as Cogito and Doctor
+Who) also receive explained back-references. These are plain prose references,
+not saved Markdown hyperlinks. The operational recovery snapshot is kept under
+ignored `backup/world-notes-before-backreferences-2026-11-01.json`; it is not a
+migration or authoritative seed. References expressed solely by theme or candidate
+name without a world number are not inferred automatically.

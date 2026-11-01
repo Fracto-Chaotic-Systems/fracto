@@ -75,3 +75,14 @@ column against the source and replay behavior using a temporary table.
 `node --test test/world_name_suggestions.test.js` verifies full 318-row coverage,
 candidate uniqueness, the three-candidate limit, source senses and exact SQL
 snapshot reproduction, including that world_name is never assigned.
+
+`world_notes_markdown.test.js` covers formatting-only world-note conversion,
+including Unicode, source links, content/order preservation, idempotence and
+leaving existing Markdown untouched. Run with
+`node --test test/world_notes_markdown.test.js`.
+
+`auth_endpoint.test.js` mounts the data service's actual route declarations in a
+VM, supplying real authorization middleware (including the private data editor
+and browser notes-origin guards) while replacing database handlers with markers.
+Its editor-route regression verifies that ordinary browser sessions, including
+administrators, cannot bypass private-service authorization.

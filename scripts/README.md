@@ -644,3 +644,23 @@ names per row. Run `node scripts/world_name_suggestions.js <new-migration.sql>`
 to generate a new snapshot. It refuses overwrites. Migration 006 appends the 375
 proposals once without changing world_name or prior explanations; do not
 regenerate this immutable snapshot after application.
+
+## World notes Markdown formatting
+
+`world_notes_markdown.js` makes a formatting-only editorial pass over current
+world notes using the local data API. Run in the data server's loopback network
+context (for development, `docker compose -f compose.yaml -f compose.dev.yaml exec
+-T fracto-dev node scripts/world_notes_markdown.js`). Default mode previews changes.
+Use `--apply --backup /tmp/world-notes-before-markdown.json` to save a UTF-8 recovery
+snapshot before updating records. Choose a new backup path for each run; existing
+files are never overwritten. The backup is operational recovery data, not a seed
+or migration. Container `/tmp` backups last only for that container's lifetime.
+
+The pass adds a suggestion heading, bold candidate names, and nested labeled
+source/review details without changing words, references or candidate order.
+Content-equivalence and idempotence checks run before writes; each write uses the
+previous notes as an expected value, then a full readback verifies every field.
+A conflict stops the batch; already completed rows remain saved, and rerunning
+skips formatted records. It is a first-pass formatter, not a general Markdown
+rewriter: per-world refinements remain deliberate editorial changes. Existing
+formatted notes and notes without the historical suggestion marker are untouched.

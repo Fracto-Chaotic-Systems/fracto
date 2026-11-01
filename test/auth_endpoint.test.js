@@ -22,6 +22,9 @@ import {
   require_internal_service,
 } from "../utils/service_authorization.js";
 
+import { require_data_editor } from "../servers/fracto-data-server/handlers/data_requests/authorization.js";
+import { require_world_notes_origin } from "../servers/fracto-data-server/handlers/world_notes.js";
+
 const users = new Map();
 const create_session = (user) => {
   user = { provider_subject: `subject-${user.id}`, ...user };
@@ -42,6 +45,8 @@ const data_routes = readFileSync(new URL("../servers/fracto-data-server/index.js
 const route_source = data_routes.slice(data_routes.indexOf('app.get("/",'));
 const route_globals = {
   app: data_app,
+  require_data_editor,
+  require_world_notes_origin,
   require_administrator,
   require_enabled_user_if_configured,
   require_internal_service,
@@ -306,6 +311,19 @@ describe("authentication endpoint contract", () => {
       assert.equal((await fetch(url, options)).status, 403, path);
       users.get("30").role = "admin";
       assert.equal((await fetch(url, options)).status, 200, path);
+    }
+  });
+
+  test("private data editor rejects browser sessions even for enabled administrators", async () => {
+    const url = `http://127.0.0.1:${data_server.address().port}/data/request`;
+    const { token } = create_session({ id: 32, provider: "test", enabled: 1, role: "admin" });
+    for (const cookie of [undefined, `${AUTH_COOKIE_NAME}=${token}`]) {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { Origin: ui_origin, ...(cookie ? { Cookie: cookie } : {}) },
+      });
+      assert.equal(response.status, cookie ? 403 : 401);
+      assert.equal((await response.json()).error, cookie ? "Internal service access required" : "Authentication required");
     }
   });
 
