@@ -151,3 +151,5 @@ not saved Markdown hyperlinks. The operational recovery snapshot is kept under
 ignored `backup/world-notes-before-backreferences-2026-11-01.json`; it is not a
 migration or authoritative seed. References expressed solely by theme or candidate
 name without a world number are not inferred automatically.
+
+Present candidate preference through the suggestion list itself; do not repeat the ordered list of names in a closing status or review paragraph. Retain useful status, alternatives, and possible future-placement annotations without restating the visible ordering.
