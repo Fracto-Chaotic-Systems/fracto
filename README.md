@@ -66,7 +66,7 @@ The main server exposes the shared log stream through:
 GET /logs?service=<selector>
 ```
 
-Supported selectors are `main`, `admin`, `data`, `asset`, `tiles`, `ui`, and
+Supported selectors are `main`, `admin`, `data`, `asset`, `tiles`, `ui`, `ai`, and
 `all`. The response contains `lines`, structured `records`, and
 `logfile_name`, matching the existing log viewer contract. For example:
 
@@ -88,9 +88,9 @@ npm run start:check
 npm start
 ```
 
-`npm run start:check` verifies all five service checkouts, entry points, ports, start scripts, dependency directories, and the MySQL connection without launching processes. Database failures identify the configured endpoint and suggest the relevant Docker, firewall, credential, or initialization fix.
+`npm run start:check` verifies all six service checkouts, entry points, ports, start scripts, dependency directories, and the MySQL connection without launching processes. Database failures identify the configured endpoint and suggest the relevant Docker, firewall, credential, or initialization fix.
 
-`npm run tiles:index` compiles the source JSON tile packets into a fingerprinted binary cache under `tiles/cache/indexed/`. Run it whenever the source manifest or packets change. `npm start` first updates the root and all five service repositories and runs startup validation. It opens the main server, starts admin to discover runtime ports, then starts the tile service, which validates and loads its compiled cache before opening its own HTTP port. A missing or stale cache aborts startup with instructions to rebuild it. Use `npm run update:repos` to run only the repository-update phase. After the tile service becomes healthy, the supervisor starts data, asset, and UI sequentially, waiting for each health endpoint. Coverage preloading begins after those services are healthy. Tile-index progress is shown in the console. The default health timeout is 300 seconds and can be changed with `FRACTO_STARTUP_TIMEOUT_MS`. Service output is appended to dated files under `logs/`.
+`npm run tiles:index` compiles the source JSON tile packets into a fingerprinted binary cache under `tiles/cache/indexed/`. Run it whenever the source manifest or packets change. `npm start` first updates the root and all six service repositories and runs startup validation. It opens the main server, starts admin to discover runtime ports, then starts the tile service, which validates and loads its compiled cache before opening its own HTTP port. A missing or stale cache aborts startup with instructions to rebuild it. Use `npm run update:repos` to run only the repository-update phase. After the tile service becomes healthy, the supervisor starts data, asset, UI, and AI sequentially, waiting for each health endpoint. Coverage preloading begins after those services are healthy. Tile-index progress is shown in the console. The default health timeout is 300 seconds and can be changed with `FRACTO_STARTUP_TIMEOUT_MS`. Service output is appended to dated files under `logs/`.
 
 ### Tile source modes
 
@@ -125,7 +125,7 @@ Stop the root process with Ctrl+C to forward shutdown to every child service.
 
 ## Docker
 
-The production image runs the root supervisor and all five internal services in one
+The production image runs the root supervisor and all six internal services in one
 container. Downloaded tiles, generated index generations, assets, and logs use named
 volumes and survive ordinary container replacement and `docker compose down`.
 Docker sets `FORCE_COLOR=1` so supervisor and service health messages retain Chalk
@@ -326,7 +326,7 @@ After a normally operating Docker host is restarted, run:
 ```
 
 Use `.\scripts\cold_boot.bat dev` to run the same workflow but launch the
-development Compose target on ports 3101–3106 instead of production.
+development Compose target on ports 3101–3107 instead of production.
 
 This refreshes the root and service repositories, rebuilds the production image,
 optionally refreshes the cloud-backed tile index, and finally runs `docker compose
@@ -340,7 +340,7 @@ The repository refresh permits the known local IntelliJ metadata change in
 After `docker compose up -d fracto`, the script follows the Docker log stream.
 Press Ctrl+C to stop viewing logs; production continues running.
 
-After cloning the root repository, checking out the five service repositories, and
+After cloning the root repository, checking out the six service repositories, and
 adding the local secret files under `config/`, the complete Windows first-run setup
 can be performed with:
 
@@ -508,8 +508,8 @@ active installations.
 
 The development override adds a separate `fracto-dev` service, bind-mounts the
 working source tree, runs backend processes with Node watch mode, and runs the UI
-through Vite with hot-module replacement. Production can remain online at ports
-3001-3006 while development uses ports 3101-3106.
+through Vite with hot-module replacement. Production uses ports
+3001-3007 while development uses ports 3101-3107.
 
 Development shares the production tile cache and compiled index read-only. Cached
 tiles are reused, but only production can add tiles to the installation cache. When
@@ -552,7 +552,7 @@ To recover local disk space or resolve a corrupted dependency/build cache, use:
 ```
 
 After an explicit confirmation, this removes `node_modules` from the root and all
-five service repositories and clears Docker’s builder cache. It preserves images,
+six service repositories and clears Docker’s builder cache. It preserves images,
 containers, named volumes, tile data, and tile indexes. Rebuild the desired image
 afterward; the development launcher will recreate its container dependency volumes
 when run with `--renew-anon-volumes`.
@@ -608,3 +608,17 @@ data edits no longer need migrations; schema changes still do. See
 Both Compose targets forward optional FRACTO_INTERNAL_SERVICE_TOKEN credentials.
 With auth disabled and no token, only direct loopback CLI calls inside the service
 are accepted.
+
+## AI service foundation
+
+The sixth child service is `servers/fracto-ai-server/`, an independent repository
+using ports 3007 (production) and 3107 (development). It currently serves only
+process health and requires no model credentials or GPU. Its root README and
+ROADMAP.md document monitoring, durable jobs, verified synchronization, bounded
+AI actions, and eventual game direction. Check out and install this repository
+before rebuilding; update root, Admin and UI together. The prestart updater
+requires committed source and a published tracking branch, as for other services.
+
+The root CI workflow checks out the independent service repositories before
+running integrated tests. Publish the AI service and compatible Admin/UI changes
+before the root integration update. The AI repository also has standalone CI.

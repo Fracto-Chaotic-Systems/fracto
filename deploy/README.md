@@ -21,15 +21,15 @@ certificate paths if the current certificate uses another location.
 
 Before reloading nginx, run `sudo nginx -t`. Then use the host's normal reload
 command. Confirm the EC2 security group and host firewall allow inbound HTTPS
-on TCP 3000 and do not allow public access to service ports 3001-3006. The
+on TCP 3000 and do not allow public access to service ports 3001-3007. The
 nginx-to-service connections use loopback HTTP.
-Production Compose also binds all six application ports to `127.0.0.1`, so
+Production Compose also binds all seven application ports to `127.0.0.1`, so
 nginx on the EC2 host can reach them while remote clients cannot connect to
 those ports directly.
 
 The UI selects same-origin API paths when opened outside the local UI ports
 3006 and 3106. The example maps `/api/main/`, `/api/admin/`,
-`/api/data/`, `/api/asset/`, and `/api/tiles/` to the corresponding
+`/api/data/`, `/api/asset/`, `/api/tiles/`, and `/api/ai/` to the corresponding
 localhost listeners and removes the prefix before forwarding the request.
 Unknown `/api/` paths return 404. Local development keeps its current
 direct-port behavior.
@@ -142,7 +142,7 @@ Update fast-forwards the repositories, validates the existing release
 manifest, rebuilds the image, gracefully stops the supervisor before applying
 pending database migrations, runs the full-stack preflight, and starts
 `fracto`. It never refreshes the tile index. The `fracto` container launches
-the main server and supervises the five dependent services; the workflow does
+the main server and supervises the six dependent services; the workflow does
 not run the standalone tile-server launcher. Existing named volumes are
 preserved.
 
@@ -198,7 +198,7 @@ Record the generation ID from the final `Prepared complete tile index
 generation ... without changing CURRENT` line. Then create the candidate
 manifest and run the full startup preflight against that exact index directory
 and candidate source. The preflight also checks the production database and
-all five dependent service packages inside the production image:
+all six dependent service packages inside the production image:
 
 ```sh
 INDEX_GENERATION='<prepared-generation-id>'
@@ -273,7 +273,7 @@ curl -i https://fracto.mikehallstudio.com:3000/api/main/healthz
 After the stack is healthy, run the integrated proxy probe from the EC2
 checkout. It checks `/readyz` through nginx, confirms the public UI returns
 HTML, compares each `/api/...` route with its corresponding loopback service,
-and verifies Docker bound ports 3001-3006 only to `127.0.0.1`:
+and verifies Docker bound ports 3001-3007 only to `127.0.0.1`:
 
 ```sh
 bash scripts/verify_ec2_proxy.sh https://fracto.mikehallstudio.com:3000
@@ -288,3 +288,5 @@ Keep direct backend ports private; production Compose binds them only to host
 loopback. If nginx and Fracto run in separate containers instead of nginx on
 the host, replace loopback upstream addresses with the Fracto container's
 private network name and do not publish backend ports publicly.
+
+The AI foundation is proxied at `/api/ai/` to loopback port 3007. Only health and generic 404 responses exist today; operational endpoints require authorization before they are added.

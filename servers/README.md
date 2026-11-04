@@ -1,6 +1,6 @@
 # Fracto servers
 
-This directory contains the five independently versioned services coordinated by the root Fracto repository. Each subdirectory is its own Git repository with its own dependencies, history, upstream branch, and release lifecycle.
+This directory contains the six independently versioned services coordinated by the root Fracto repository. Each subdirectory is its own Git repository with its own dependencies, history, upstream branch, and release lifecycle.
 
 The root repository ignores service directories under `servers/`, but explicitly tracks this overview README. Commit service changes from their own repository directories and overview changes from the root repository.
 
@@ -13,6 +13,7 @@ The root repository ignores service directories under `servers/`, but explicitly
 | `fracto-tiles-server/` | 3004 | Express | Compiled tile-index loading, tile lookup, coverage, canvas buffers, heat maps, and manifests |
 | `fracto-admin-server/` | 3005 | Express | Administrative status, logs, and version reporting |
 | `fracto-ui/` | 3006 | Vite and React | Browser interface for administration, data, assets, tiles, and fractal studies |
+| `fracto-ai-server/` | 3007 | Express | AI/operations foundation; process health and staged roadmap |
 
 The root supervisor listens on port 3001 and is located one directory above this folder.
 
@@ -28,7 +29,7 @@ Do not treat this directory as a conventional monorepo workspace:
 - `fracto/` and every child under `servers/` have separate `.git` directories.
 - Run `git status`, commits, and branch operations from the repository that owns the file.
 - A root commit cannot include service changes.
-- The root `npm run update:repos` command checks and updates all six repositories.
+- The root `npm run update:repos` command checks and updates all seven repositories.
 - Tracked or staged changes in any repository block automatic startup updates.
 - Untracked runtime files do not block repository updates, though service-specific ignore rules should cover expected artifacts.
 
@@ -41,10 +42,11 @@ npm ci --prefix servers/fracto-data-server
 npm ci --prefix servers/fracto-asset-server
 npm ci --prefix servers/fracto-tiles-server
 npm ci --prefix servers/fracto-admin-server
+npm ci --prefix servers/fracto-ai-server
 npm ci --prefix servers/fracto-ui
 ```
 
-These commands resolve `@fracto/sdk` from the root `sdk/` directory through the
+The AI foundation has no SDK dependency. The other services resolve `@fracto/sdk` from the root `sdk/` directory through the
 local file dependency recorded in each service lockfile. Keep the root SDK
 directory present when installing dependencies or building the Docker image.
 
@@ -67,7 +69,7 @@ The startup sequence is deliberately ordered:
 3. Open the root server on its bootstrap port (3001 by default).
 4. Start admin on its bootstrap port (3005 by default), discover `/ports`, and propagate the validated runtime port map.
 5. Start tiles, loading the compiled index before opening its discovered port.
-6. Start data, asset, and UI sequentially, waiting for each health endpoint.
+6. Start data, asset, UI, and AI sequentially, waiting for each health endpoint.
 7. Trigger coverage preloading after all services are healthy.
 
 Service output is appended to dated files in the root `logs/` directory. The root process forwards shutdown to every child and terminates the tracked process tree on Windows.
@@ -98,13 +100,15 @@ package during development. SDK imports should use package subpaths such as:
 @fracto/sdk/FractoTileData.js
 ```
 
-The package currently resolves to `../../sdk` in each service's
+The package currently resolves to `../../sdk` in each SDK-consuming service's
 `package.json`. Run `npm run sdk:check` from the root after changing the SDK
 version or a service dependency. Root application files such as
 `../../constants.js` remain layout-sensitive, so keep the service directory
 names and their position beneath `servers/` unchanged.
 
-Root-level configuration under `config/` is also shared. It may contain credentials and environment-specific network endpoints and is intentionally excluded from version control.
+The AI foundation has no SDK or shared-config dependency. Root-level configuration
+under `config/` is shared by the existing services. It may contain credentials and
+environment-specific network endpoints and is intentionally excluded from version control.
 
 ## Tile server requirements
 
@@ -224,7 +228,16 @@ npm run lint --prefix servers/fracto-ui
 npm run build --prefix servers/fracto-ui
 ```
 
-Data and admin run Node test suites with `npm test`; asset and tile test scripts remain failing placeholders. The root suite covers shared numerical behavior and selected HTTP, authentication, deployment, and startup contracts. These tests do not replace live database, provider, rendering, or browser checks.
+Data, admin, and AI run Node test suites with `npm test`; asset and tile test scripts remain failing placeholders. The root suite covers shared numerical behavior and selected HTTP, authentication, deployment, and startup contracts. These tests do not replace live database, provider, rendering, or browser checks.
+
+## AI service foundation
+
+The AI service uses port 3007 (3107 in development). Its root README and ROADMAP.md
+document monitoring, durable jobs, verified synchronization, bounded AI actions,
+and eventual game direction. It currently serves only process health and requires
+no model credentials or GPU. Check out and install this sixth service before
+rebuilding; update root, Admin and UI together. The prestart updater requires
+committed source and a published tracking branch, as for other services.
 
 ## Common problems
 

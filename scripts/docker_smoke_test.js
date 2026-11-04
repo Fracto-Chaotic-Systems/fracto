@@ -41,7 +41,8 @@ try {
    await wait_for('http://127.0.0.1:3001/readyz')
    await wait_for('http://127.0.0.1:3004/cache_status')
    await wait_for('http://127.0.0.1:3006/')
-   console.log('Docker smoke test passed: supervisor, tile, and UI endpoints are ready.')
+   await wait_for('http://127.0.0.1:3007/readyz')
+   console.log('Docker smoke test passed: supervisor, tile, UI, and AI foundation endpoints are ready.')
 } finally {
    if (started) await run(['down'])
 }

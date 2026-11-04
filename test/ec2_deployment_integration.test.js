@@ -8,13 +8,13 @@ const read = filepath => fs.readFileSync(path.join(ROOT, filepath), 'utf8')
 
 test('production Docker ports stay on loopback for the host nginx proxy', () => {
    const compose = read('compose.yaml')
-   for (const port of [3001, 3002, 3003, 3004, 3005, 3006]) {
+   for (const port of [3001, 3002, 3003, 3004, 3005, 3006, 3007]) {
       assert.match(compose, new RegExp(`127\\.0\\.0\\.1:${port}:${port}`))
       assert.doesNotMatch(compose, new RegExp(`(?:^|\\s)["']?${port}:${port}["']?`, 'm'))
    }
 })
 
-test('nginx sends the public UI and all five API prefixes to their service listeners', () => {
+test('nginx sends the public UI and all six API prefixes to their service listeners', () => {
    const proxy = read('deploy/nginx/fracto.conf.example')
    const expected = [
       ['main', 3001],
@@ -22,6 +22,7 @@ test('nginx sends the public UI and all five API prefixes to their service liste
       ['asset', 3003],
       ['tiles', 3004],
       ['admin', 3005],
+      ['ai', 3007],
    ]
    for (const [name, port] of expected) {
       assert.match(proxy, new RegExp(`location \\^~ /api/${name}/ \\{[\\s\\S]*?proxy_pass http://127\\.0\\.0\\.1:${port}/;`))

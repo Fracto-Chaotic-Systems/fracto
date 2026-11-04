@@ -58,6 +58,7 @@ fi
 
 SERVICE_REPOSITORIES=(
   fracto-admin-server
+  fracto-ai-server
   fracto-asset-server
   fracto-data-server
   fracto-tiles-server
@@ -77,7 +78,7 @@ for repository in "${SERVICE_REPOSITORIES[@]}"; do
   git clone "${REPOSITORY_BASE%/}/$repository.git" "$repository_path"
 done
 
-echo "Fast-forwarding the root and five service repositories..."
+echo "Fast-forwarding the root and six service repositories..."
 npm run update:repos
 
 echo "Validating production Compose settings and protected configuration..."
@@ -117,4 +118,4 @@ echo "Running full-stack startup preflight, including local tile pairing and MyS
 echo "Starting the complete supervised stack..."
 "${COMPOSE[@]}" up -d --wait --wait-timeout 300 fracto
 
-echo "EC2 $MODE workflow completed. The fracto container supervises all five services."
+echo "EC2 $MODE workflow completed. The fracto container supervises all six services."

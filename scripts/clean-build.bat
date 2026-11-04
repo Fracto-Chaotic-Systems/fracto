@@ -12,6 +12,7 @@ echo Removing host dependencies...
 for %%D in (
   "node_modules"
   "servers\fracto-admin-server\node_modules"
+  "servers\fracto-ai-server\node_modules"
   "servers\fracto-asset-server\node_modules"
   "servers\fracto-data-server\node_modules"
   "servers\fracto-tiles-server\node_modules"

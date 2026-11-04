@@ -31,6 +31,7 @@ services:
       FRACTO_TILES_PORT: 3104
       FRACTO_ADMIN_PORT: 3105
       FRACTO_UI_PORT: 3106
+      FRACTO_AI_PORT: 3107
       VITE_FRACTO_SERVER_PORT: 3101
       VITE_FRACTO_DATA_PORT: 3102
       VITE_FRACTO_ASSET_PORT: 3103
@@ -45,6 +46,7 @@ services:
       - "3104:3104"
       - "3105:3105"
       - "3106:3106"
+      - "127.0.0.1:3107:3107"
     volumes:
       - ./.git:/app/.git:ro
       - ./config:/app/config:ro
@@ -58,6 +60,8 @@ services:
       - ./social:/app/social
       - ./servers/fracto-admin-server:/app/servers/fracto-admin-server
       - /app/servers/fracto-admin-server/node_modules
+      - ./servers/fracto-ai-server:/app/servers/fracto-ai-server
+      - /app/servers/fracto-ai-server/node_modules
       - ./servers/fracto-asset-server:/app/servers/fracto-asset-server
       - /app/servers/fracto-asset-server/node_modules
       - ./servers/fracto-data-server:/app/servers/fracto-data-server

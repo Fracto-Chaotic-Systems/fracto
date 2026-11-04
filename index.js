@@ -16,6 +16,7 @@ import {
    SERVICE_NAME_DATA,
    SERVICE_NAME_TILES,
    SERVICE_NAME_UI,
+   SERVICE_NAME_AI,
 } from './constants.js'
 import {TILE_DATA_DIRECTORY, TILE_INDEX_ROOT} from './sdk/FractoTilePaths.js'
 import {handle_tile} from './handlers/main.js'
@@ -237,6 +238,7 @@ const discover_runtime_ports = async admin_service => {
       [SERVICE_NAME_TILES]: 'tiles',
       [SERVICE_NAME_ADMIN]: 'admin',
       [SERVICE_NAME_UI]: 'ui',
+      [SERVICE_NAME_AI]: 'ai',
    }
    const required = Object.values(service_keys)
    if (required.some(key => !Number.isInteger(Number(discovered[key])))) {
@@ -259,6 +261,7 @@ const discover_runtime_ports = async admin_service => {
    process.env.FRACTO_TILES_PORT = `${discovered.tiles}`
    process.env.FRACTO_ADMIN_PORT = `${discovered.admin}`
    process.env.FRACTO_UI_PORT = `${discovered.ui}`
+   process.env.FRACTO_AI_PORT = `${discovered.ai}`
    return discovered
 }
 

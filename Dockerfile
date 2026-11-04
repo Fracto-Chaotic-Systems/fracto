@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # ownership check remains enabled for every other path.
 RUN git config --system --add safe.directory /app \
     && git config --system --add safe.directory /app/servers/fracto-admin-server \
+    && git config --system --add safe.directory /app/servers/fracto-ai-server \
     && git config --system --add safe.directory /app/servers/fracto-asset-server \
     && git config --system --add safe.directory /app/servers/fracto-data-server \
     && git config --system --add safe.directory /app/servers/fracto-tiles-server \
@@ -29,6 +30,8 @@ COPY sdk/package.json sdk/
 
 COPY servers/fracto-admin-server/package.json servers/fracto-admin-server/package-lock.json servers/fracto-admin-server/
 RUN npm ci --prefix servers/fracto-admin-server
+COPY servers/fracto-ai-server/package.json servers/fracto-ai-server/package-lock.json servers/fracto-ai-server/
+RUN npm ci --prefix servers/fracto-ai-server
 COPY servers/fracto-asset-server/package.json servers/fracto-asset-server/package-lock.json servers/fracto-asset-server/
 RUN npm ci --prefix servers/fracto-asset-server
 COPY servers/fracto-data-server/package.json servers/fracto-data-server/package-lock.json servers/fracto-data-server/
@@ -58,7 +61,7 @@ RUN mkdir -p /var/lib/fracto/tiles /var/lib/fracto/index /app/assets /app/logs /
     && chmod +x /app/docker-entrypoint.sh
 
 USER node
-EXPOSE 3001 3002 3003 3004 3005 3006
+EXPOSE 3001 3002 3003 3004 3005 3006 3007
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["node", "--watch", "--max-old-space-size=16384", "index.js"]
 
@@ -67,10 +70,12 @@ ARG VITE_FRACTO_PROD_URL=https://fracto.mikehallstudio.com
 ENV VITE_FRACTO_PROD_URL=$VITE_FRACTO_PROD_URL
 COPY . .
 RUN npm run check
+RUN npm --prefix servers/fracto-ai-server run check
 RUN npm --prefix servers/fracto-ui run lint
 RUN npm --prefix servers/fracto-ui run build
 RUN npm prune --omit=dev \
     && npm prune --omit=dev --prefix servers/fracto-admin-server \
+    && npm prune --omit=dev --prefix servers/fracto-ai-server \
     && npm prune --omit=dev --prefix servers/fracto-asset-server \
     && npm prune --omit=dev --prefix servers/fracto-data-server \
     && npm prune --omit=dev --prefix servers/fracto-tiles-server \
@@ -98,7 +103,7 @@ RUN mkdir -p /var/lib/fracto/tiles /var/lib/fracto/index /app/assets /app/logs /
     && chmod +x /app/docker-entrypoint.sh
 
 USER node
-EXPOSE 3001 3002 3003 3004 3005 3006
+EXPOSE 3001 3002 3003 3004 3005 3006 3007
 VOLUME ["/var/lib/fracto/tiles", "/var/lib/fracto/index", "/app/assets", "/app/logs", "/app/videos"]
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5m --retries=3 \

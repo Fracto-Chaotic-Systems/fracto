@@ -53,3 +53,5 @@ length-limited user agent captured at login and last authenticated activity.
 `list_client_sessions()` expires old records before returning a copied
 allowlist of fields. Login-session existence does not establish live browser
 presence, and displayed user roles reflect the last session verification.
+
+The logging alias `ai` selects the AI service records.

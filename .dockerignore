@@ -1,6 +1,9 @@
 /.git
 **/.git
 **/node_modules
+**/.env
+**/.env.*
+!**/.env.example
 **/dist
 **/archive
 **/.archive

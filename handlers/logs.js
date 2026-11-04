@@ -1,6 +1,6 @@
 import {collect_log_records, format_log_records} from '../utils/logging.js'
 
-const SERVICE_SELECTORS = new Set(['main', 'admin', 'data', 'asset', 'tiles', 'ui', 'all'])
+const SERVICE_SELECTORS = new Set(['main', 'admin', 'data', 'asset', 'tiles', 'ui', 'ai', 'all'])
 
 export const handle_logs = (req, res) => {
    const service_name = String(req.query.service || 'all')

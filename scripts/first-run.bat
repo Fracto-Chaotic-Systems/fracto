@@ -9,6 +9,7 @@ if not exist "config\mysql.json" (
   goto failed
 )
 if not exist "servers\fracto-admin-server\package.json" goto missing_services
+if not exist "servers\fracto-ai-server\package.json" goto missing_services
 if not exist "servers\fracto-asset-server\package.json" goto missing_services
 if not exist "servers\fracto-data-server\package.json" goto missing_services
 if not exist "servers\fracto-tiles-server\package.json" goto missing_services
@@ -36,7 +37,7 @@ exit /b 0
 
 :missing_services
 echo Missing one or more internal service checkouts under servers\.
-echo Check out all five service repositories before continuing.
+echo Check out all six service repositories before continuing.
 goto failed
 
 :failed

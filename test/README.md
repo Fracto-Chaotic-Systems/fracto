@@ -86,3 +86,5 @@ VM, supplying real authorization middleware (including the private data editor
 and browser notes-origin guards) while replacing database handlers with markers.
 Its editor-route regression verifies that ordinary browser sessions, including
 administrators, cannot bypass private-service authorization.
+
+`ai_service.integration.test.js` checks the supervised AI listener in a child process, port discovery/overrides, readiness participation and shutdown. It uses no database or model.

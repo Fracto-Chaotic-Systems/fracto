@@ -29,7 +29,7 @@ describe('main log endpoint', () => {
    })
 
    test('returns the stable log response for supported selectors', async () => {
-      for (const service of ['main', 'admin', 'data', 'asset', 'tiles', 'ui', 'all']) {
+      for (const service of ['main', 'admin', 'data', 'asset', 'tiles', 'ui', 'ai', 'all']) {
          const response = await fetch(`${base_url}/logs?service=${service}`)
          const body = await response.json()
 

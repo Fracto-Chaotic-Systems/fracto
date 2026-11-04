@@ -25,8 +25,8 @@ npm start
 database initialization, and Docker maintenance are explicit operations because
 they can be long-running or change persistent data.
 
-The root supervisor starts the tile service first, then the root server and the
-remaining services sequentially. It waits for health endpoints before continuing.
+The root supervisor opens the main server, starts admin for runtime port
+discovery, starts tiles, then starts data, asset, UI and AI sequentially. It waits for health endpoints before continuing.
 See the root README for Docker production/development and first-run workflows.
 
 ## Admin page scaffolding contract
@@ -221,7 +221,7 @@ category.
 
 ### `update_repositories.js`
 
-Fetches and fast-forwards the root and five service repositories:
+Fetches and fast-forwards the root and six service repositories:
 
 ```powershell
 npm run update:repos
@@ -286,7 +286,7 @@ without the root supervisor.
 
 - `launch-production.bat` / `launch-production.sh`: build and start production.
 - `launch-development.bat` / `launch-development.sh`: start the Vite-based
-  development stack on ports 3101–3106.
+  development stack on ports 3101–3107.
 - `cold_boot.bat`: after a host restart, refreshes Git, rebuilds the image,
   optionally refreshes the tile index, and starts production with Compose.
 - `ensure_exclusive.bat` / `ensure_exclusive.sh`: check for the other Docker
@@ -325,7 +325,7 @@ without the root supervisor.
   writes a source/index binding manifest. It does not enumerate the corpus.
   Missing tiles are reported when requested. It then runs
   `startup_preflight.js` inside the production image and starts the
-  single `fracto` container; that container supervises the complete six-port
+  single `fracto` container; that container supervises the complete seven-port
   application. It does not invoke the standalone tile-service launcher.
   If a pairing manifest already exists, first-run preserves it and validates
   the existing index/source pairing instead of refreshing the index.
@@ -664,3 +664,5 @@ A conflict stops the batch; already completed rows remain saved, and rerunning
 skips formatted records. It is a first-pass formatter, not a general Markdown
 rewriter: per-world refinements remain deliberate editorial changes. Existing
 formatted notes and notes without the historical suggestion marker are untouched.
+
+The AI service participates in repository updates, first-run checks, Docker smoke tests, formatting and milestone tags.

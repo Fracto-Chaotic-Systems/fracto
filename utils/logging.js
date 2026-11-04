@@ -11,6 +11,7 @@ const service_aliases = {
    tiles: 'fracto-tiles-server',
    admin: 'admin',
    ui: 'fracto-ui',
+   ai: 'fracto-ai-server',
 }
 const date = () => new Date().toISOString().slice(0, 10)
 const logs_directory = () => path.join(import.meta.dirname, '..', LOGS_DIRECTORY)

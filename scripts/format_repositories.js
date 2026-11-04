@@ -1,5 +1,5 @@
 /**
- * Format the UI and data-server repositories with a per-file status report.
+ * Format the UI, data-server and AI repositories with a per-file status report.
  *
  * Usage:
  *   node scripts/format_repositories.js write
@@ -13,6 +13,10 @@ import prettier from "prettier";
 const ROOT = process.cwd();
 const MODE = process.argv[2] || "write";
 const TARGETS = [
+  {
+    directory: path.join(ROOT, "servers", "fracto-ai-server"),
+    extensions: new Set([".js", ".json", ".md"]),
+  },
   {
     directory: path.join(ROOT, "servers", "fracto-ui"),
     extensions: new Set([".css", ".js", ".jsx", ".json", ".md"]),

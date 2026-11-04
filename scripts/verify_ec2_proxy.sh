@@ -44,6 +44,7 @@ declare -a ROUTES=(
   "asset 3003 /api/asset"
   "tiles 3004 /api/tiles"
   "admin 3005 /api/admin"
+  "ai 3007 /api/ai"
 )
 PROBE_PATH="/__fracto_proxy_probe_$(date +%s)_$$"
 
@@ -66,7 +67,7 @@ for route in "${ROUTES[@]}"; do
 done
 
 echo "Checking host bindings are loopback-only..."
-for port in 3001 3002 3003 3004 3005 3006; do
+for port in 3001 3002 3003 3004 3005 3006 3007; do
   binding="$("${COMPOSE[@]}" port fracto "$port")"
   if [[ -z "$binding" || "$binding" == *$'\n'* || "$binding" != 127.0.0.1:* ]]; then
     echo "Port $port is not bound exclusively to 127.0.0.1 (reported: $binding)." >&2
@@ -74,4 +75,4 @@ for port in 3001 3002 3003 3004 3005 3006; do
   fi
 done
 
-echo "EC2 integration probes passed: readiness, UI, five API routes, and private host ports."
+echo "EC2 integration probes passed: readiness, UI, six API routes, and private host ports."

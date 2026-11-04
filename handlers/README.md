@@ -39,3 +39,5 @@ request-specific behavior in these handlers.
   existing explicit lab read-only bypass also permits this GET when auth is
   disabled. An empty list in that mode is expected: anonymous tabs are not
   tracked. Sessions disappear on logout, expiration or process restart.
+
+The centralized log handler also accepts the `ai` service selector.

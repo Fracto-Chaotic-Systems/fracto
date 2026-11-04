@@ -10,6 +10,7 @@ param(
 $repositories = @(
     ".",
     "servers/fracto-ui",
+    "servers/fracto-ai-server",
     "servers/fracto-data-server",
     "servers/fracto-asset-server",
     "servers/fracto-tiles-server",

@@ -30,6 +30,7 @@ services:
       - "127.0.0.1:3004:3004"
       - "127.0.0.1:3005:3005"
       - "127.0.0.1:3006:3006"
+      - "127.0.0.1:3007:3007"
     volumes:
       - ./config:/app/config:ro
       - fracto-tile-data:/var/lib/fracto/tiles

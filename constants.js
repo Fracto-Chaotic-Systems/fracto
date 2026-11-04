@@ -7,6 +7,7 @@ export const FRACTO_ASSET_PORT = port('FRACTO_ASSET_PORT', 3003)
 export const FRACTO_TILES_PORT = port('FRACTO_TILES_PORT', 3004)
 export const FRACTO_ADMIN_PORT = port('FRACTO_ADMIN_PORT', 3005)
 export const FRACTO_UI_PORT = port('FRACTO_UI_PORT', 3006)
+export const FRACTO_AI_PORT = port('FRACTO_AI_PORT', 3007)
 
 export const ROOT_DIR = import.meta.dirname
 
@@ -15,6 +16,7 @@ export const SERVICE_NAME_ASSET = 'fracto-asset-server'
 export const SERVICE_NAME_TILES = 'fracto-tiles-server'
 export const SERVICE_NAME_ADMIN = 'fracto-admin-server'
 export const SERVICE_NAME_UI = 'fracto-ui'
+export const SERVICE_NAME_AI = 'fracto-ai-server'
 
 export const ASSETS_DIRECTORY = 'assets'
 export const LOGS_DIRECTORY = 'logs'
@@ -27,6 +29,7 @@ export const LOGFILE_NAME_ASSET = `${SERVICE_NAME_ASSET}-log-${formattedDate}.tx
 export const LOGFILE_NAME_TILES = `${SERVICE_NAME_TILES}-log-${formattedDate}.txt`
 export const LOGFILE_NAME_ADMIN = `${SERVICE_NAME_ADMIN}-log-${formattedDate}.txt`
 export const LOGFILE_NAME_UI = `${SERVICE_NAME_UI}-log-${formattedDate}.txt`
+export const LOGFILE_NAME_AI = `${SERVICE_NAME_AI}-log-${formattedDate}.txt`
 
 export const ALL_SERVICES = [
    {
@@ -55,6 +58,12 @@ export const ALL_SERVICES = [
       name:SERVICE_NAME_TILES,
       port: FRACTO_TILES_PORT,
       logfile: LOGFILE_NAME_TILES
+   },
+   {
+      name: SERVICE_NAME_AI,
+      port: FRACTO_AI_PORT,
+      health_path: '/readyz',
+      logfile: LOGFILE_NAME_AI,
    },
 ]
 

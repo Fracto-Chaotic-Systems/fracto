@@ -95,7 +95,7 @@ New-NetFirewallRule -DisplayName "Fracto lab Nginx" `
   -RemoteAddress 10.0.0.0/24 -Profile Private
 ```
 
-Do not create LAN firewall rules for Fracto ports `3001–3006`. Keep the
+Do not create LAN firewall rules for Fracto ports `3001–3007`. Keep the
 Windows network profile and allowed remote subnet aligned with the site's
 network policy. This HTTP, authentication-bypass profile is intended only for
 a trusted, isolated development network.

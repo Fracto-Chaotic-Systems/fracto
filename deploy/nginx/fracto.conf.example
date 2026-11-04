@@ -41,6 +41,11 @@ server {
         include snippets/fracto-proxy-headers.conf;
     }
 
+    location ^~ /api/ai/ {
+        proxy_pass http://127.0.0.1:3007/;
+        include snippets/fracto-proxy-headers.conf;
+    }
+
     # Do not accidentally expose an unrecognized API path through the UI app.
     location ^~ /api/ {
         return 404;
