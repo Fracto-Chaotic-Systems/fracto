@@ -42,6 +42,8 @@ server {
     }
 
     location ^~ /api/ai/ {
+        # Local machine inference stays private until peer trust is implemented.
+        if ($uri ~* "^/api/ai/(?:inference|peer)(?:/|$)") { return 404; }
         proxy_pass http://127.0.0.1:3007/;
         include snippets/fracto-proxy-headers.conf;
     }

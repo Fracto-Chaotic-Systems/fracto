@@ -56,12 +56,12 @@ ENV NODE_ENV=development \
     FRACTO_TILE_MIN_FREE_BYTES=1073741824
 
 COPY --chown=node:node . .
-RUN mkdir -p /var/lib/fracto/tiles /var/lib/fracto/index /app/assets /app/logs /app/videos \
+RUN mkdir -p /var/lib/fracto/tiles /var/lib/fracto/index /var/lib/fracto/ai /app/assets /app/logs /app/videos \
     && chown -R node:node /var/lib/fracto /app/assets /app/logs /app/videos \
     && chmod +x /app/docker-entrypoint.sh
 
 USER node
-EXPOSE 3001 3002 3003 3004 3005 3006 3007
+EXPOSE 3001 3002 3003 3004 3005 3006 3007 3447 3547
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["node", "--watch", "--max-old-space-size=16384", "index.js"]
 
@@ -98,13 +98,13 @@ ENV NODE_ENV=production \
 
 WORKDIR /app
 COPY --from=build --chown=node:node /app /app
-RUN mkdir -p /var/lib/fracto/tiles /var/lib/fracto/index /app/assets /app/logs /app/videos \
+RUN mkdir -p /var/lib/fracto/tiles /var/lib/fracto/index /var/lib/fracto/ai /app/assets /app/logs /app/videos \
     && chown -R node:node /var/lib/fracto /app/assets /app/logs /app/videos \
     && chmod +x /app/docker-entrypoint.sh
 
 USER node
-EXPOSE 3001 3002 3003 3004 3005 3006 3007
-VOLUME ["/var/lib/fracto/tiles", "/var/lib/fracto/index", "/app/assets", "/app/logs", "/app/videos"]
+EXPOSE 3001 3002 3003 3004 3005 3006 3007 3447 3547
+VOLUME ["/var/lib/fracto/tiles", "/var/lib/fracto/index", "/var/lib/fracto/ai", "/app/assets", "/app/logs", "/app/videos"]
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5m --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:3001/readyz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"

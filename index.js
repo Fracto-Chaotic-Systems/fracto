@@ -29,6 +29,8 @@ import {validate_startup} from './scripts/startup_preflight.js'
 import {root_log} from './utils/logging.js'
 import {ansi_segments} from './utils/ansi_colors.js'
 import {validate_auth_config} from './utils/auth_config.js'
+import {start_windows_startup_benchmark} from './utils/startup_benchmark.js'
+import {start_windows_ollama} from './servers/fracto-ai-server/ollama_windows.js'
 
 const STARTUP_TIMEOUT_MS = Number(process.env.FRACTO_STARTUP_TIMEOUT_MS || 300000)
 const HEALTH_POLL_MS = 500
@@ -314,6 +316,8 @@ await validate_startup()
 
 try {
    server = create_main_server()
+   start_windows_startup_benchmark({port: Number(process.env.FRACTO_SERVER_PORT || FRACTO_SERVER_PORT)})
+   start_windows_ollama()
    const admin_service = ALL_SERVICES.find(service => service.name === SERVICE_NAME_ADMIN)
    await start_service(admin_service, true)
    await discover_runtime_ports(admin_service)

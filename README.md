@@ -47,7 +47,7 @@ this installation monitors; do not commit deployment-specific `.env` values.
 
 These endpoints form health contract version 1. A caller requests
 `<server-base-url>/healthz`; the callee returns `contract_version`,
-`server_name`, `status`, `uptime_seconds`, `services`, and `build_info`.
+`startup_id`, `server_name`, `status`, `uptime_seconds`, `services`, and `build_info`.
 `/readyz` uses the same response and returns HTTP 503 while required services
 are unhealthy. These read-only health endpoints allow cross-origin browser
 reads without credentials so one Fracto UI can monitor other main servers.
@@ -611,9 +611,36 @@ are accepted.
 
 ## AI service foundation
 
+Standard Windows Fracto launchers now start automatic host inventory and
+post-readiness baseline collection, with no separate benchmark command.
+Native Windows supervisor startup does the same. The hidden host observer
+continues across container restarts; failures never block Fracto readiness.
+See `servers/fracto-ai-server/BENCHMARKS.md` for retained local reports and scope.
+They also provision and start the pinned native Ollama engine asynchronously,
+bound to Windows loopback with cloud features disabled. See
+`servers/fracto-ai-server/OLLAMA.md`; no model is loaded by startup.
+
 The sixth child service is `servers/fracto-ai-server/`, an independent repository
-using ports 3007 (production) and 3107 (development). It currently serves only
-process health and requires no model credentials or GPU. Its root README and
+using ports 3007 (production) and 3107 (development). It provides process health,
+engine status and a machine-authorized bounded local inference queue. See its
+`inference/README.md` for the aggregate-only API, SQLite persistence, automatic
+credentials, resource floors, retention and backup. Compose uses separate AI
+production/development volumes; rebuild for node-owned mount points. Native AI
+listening and published container AI ports use host loopback; nginx examples
+block local inference and peer routes. A separate mutual-TLS peer listener now
+uses 3447 production / 3547 development, also published on loopback by default.
+Identity creation, trust reload and bounded probes are automatic; enrollment
+requires an approved certificate/fingerprint and endpoint. See the AI service's
+`peers/README.md` for scopes, lab interface configuration and rotation/revocation.
+Scoped artifact sharing now runs automatically after explicit exchange grants.
+See the AI service exchange/README.md for allowed records, resumable manifests,
+metadata, retention/resnapshot and authenticated local inspection. Imports remain
+untrusted evidence. Explicit whole-request delegation is now implemented with
+selected-peer/digest constraints, a one-hop limit and durable unknown-outcome
+reconciliation; see the AI service delegation/README.md. It requires a separate
+directional inference grant and never retries generation or chooses a fallback
+peer automatically. Readiness requires no model or
+working inference store. Its root README and
 ROADMAP.md document monitoring, durable jobs, verified synchronization, bounded
 AI actions, and eventual game direction. Check out and install this repository
 before rebuilding; update root, Admin and UI together. The prestart updater

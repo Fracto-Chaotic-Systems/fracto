@@ -7,4 +7,5 @@ cd "$repository_dir"
 node scripts/write_build_info.js
 scripts/ensure_exclusive.sh prod
 
+node scripts/windows_host_startup.js --port 3001
 exec docker compose up --build -d fracto

@@ -7,4 +7,5 @@ cd "$repository_dir"
 node scripts/write_build_info.js
 scripts/ensure_exclusive.sh dev
 
+node scripts/windows_host_startup.js --port 3101
 exec docker compose -f compose.yaml -f compose.dev.yaml up --build --renew-anon-volumes fracto-dev

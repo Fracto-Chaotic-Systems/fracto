@@ -27,6 +27,13 @@ Production Compose also binds all seven application ports to `127.0.0.1`, so
 nginx on the EC2 host can reach them while remote clients cannot connect to
 those ports directly.
 
+The AI peer TLS listener is separate (3447 production / 3547 development). Compose
+publishes it on loopback by default; explicit bind-address overrides can select
+the intended lab interface with a peer-restricted firewall. It must not be made
+public or proxied through HTTP nginx routes. Identity creation, scoped trust and
+automatic probes are documented in the AI service peers/README.md; browser
+bypass grants no peer permissions.
+
 The UI selects same-origin API paths when opened outside the local UI ports
 3006 and 3106. The example maps `/api/main/`, `/api/admin/`,
 `/api/data/`, `/api/asset/`, `/api/tiles/`, and `/api/ai/` to the corresponding

@@ -1,5 +1,9 @@
 # Main server handlers
 
+Health contract version 1 also includes an additive, non-personal `startup_id`
+UUID, stable across this main process's health/readiness requests and replaced
+when it restarts. The host benchmark observer uses it to avoid duplicate runs.
+
 The files in this directory implement request handlers mounted by the root
 Express server in `index.js`. The server starts the Fracto services, while
 these handlers provide its HTTP endpoints and route-level authentication

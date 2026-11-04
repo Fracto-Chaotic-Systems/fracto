@@ -232,10 +232,28 @@ Data, admin, and AI run Node test suites with `npm test`; asset and tile test sc
 
 ## AI service foundation
 
+The AI service includes an Ollama adapter and read-only `GET /engine/status`,
+separate from its foundation readiness. llama.cpp, vLLM and SGLang remain
+unavailable adapter entries. The Windows-local engine is reached natively through
+loopback or through the explicitly enabled same-machine Docker Desktop gateway
+in Compose. A missing model or engine does not make the Fracto stack unready.
+
 The AI service uses port 3007 (3107 in development). Its root README and ROADMAP.md
 document monitoring, durable jobs, verified synchronization, bounded AI actions,
-and eventual game direction. It currently serves only process health and requires
-no model credentials or GPU. Check out and install this sixth service before
+and eventual game direction. Its machine-authorized local inference queue uses
+SQLite and hashed artifacts, one active generation and 16 pending jobs. See its
+`inference/README.md` for the numeric-only operation, credentials, resource bounds,
+recovery and backup. Readiness requires no model or working inference store.
+Its separate peer listener uses mutual TLS on 3447 (3547 in development), with
+automatic identity creation, explicit certificate enrollment and scoped status
+probes. See `peers/README.md` in the AI repository. Explicit `artifacts:exchange`
+grants enable automatic bounded sharing through an independent durable catalog;
+see its `exchange/README.md` for contracts, metadata, relay deduplication, recovery
+and inspection. Status-only enrollment shares no artifacts, and imports are
+untrusted evidence. Explicit one-hop whole-request inference delegation uses a
+separate grant, selected peer/model digest and durable acceptance/status receipts;
+see delegation/README.md. Peer failures do not affect readiness.
+Check out and install this sixth service before
 rebuilding; update root, Admin and UI together. The prestart updater requires
 committed source and a published tracking branch, as for other services.
 

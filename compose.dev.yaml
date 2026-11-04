@@ -6,6 +6,17 @@ services:
     image: fracto:dev
     environment:
       FRACTO_SERVER_NAME: ${FRACTO_SERVER_NAME:-}
+      FRACTO_AI_ENGINE: ${FRACTO_AI_ENGINE:-ollama}
+      FRACTO_AI_DATA_DIR: /var/lib/fracto/ai
+      FRACTO_AI_PEERS_ENABLED: ${FRACTO_AI_PEERS_ENABLED:-true}
+      FRACTO_AI_PEER_LISTEN_HOST: "0.0.0.0"
+      FRACTO_AI_PEER_PORT: "3547"
+      FRACTO_AI_LISTEN_HOST: "0.0.0.0"
+      FRACTO_AI_MIN_FREE_MEMORY_MIB: ${FRACTO_AI_MIN_FREE_MEMORY_MIB:-6144}
+      FRACTO_AI_MIN_FREE_DISK_MIB: ${FRACTO_AI_MIN_FREE_DISK_MIB:-1024}
+      FRACTO_AI_MODEL: ${FRACTO_AI_MODEL:-}
+      FRACTO_OLLAMA_URL: ${FRACTO_OLLAMA_URL:-http://host.docker.internal:11434}
+      FRACTO_OLLAMA_ALLOW_HOST_GATEWAY: "true"
       FRACTO_SURVEY_MAX_GRID_SIZE: ${FRACTO_SURVEY_MAX_GRID_SIZE:-1024}
       FRACTO_SURVEY_MAX_CANVAS_SIZE: ${FRACTO_SURVEY_MAX_CANVAS_SIZE:-16384}
       FRACTO_UI_MODE: vite
@@ -47,6 +58,7 @@ services:
       - "3105:3105"
       - "3106:3106"
       - "127.0.0.1:3107:3107"
+      - "${FRACTO_AI_DEV_PEER_BIND_ADDRESS:-127.0.0.1}:3547:3547"
     volumes:
       - ./.git:/app/.git:ro
       - ./config:/app/config:ro
@@ -73,6 +85,7 @@ services:
       # Numerical cache writes remain disabled by FRACTO_TILE_CACHE_READ_ONLY;
       # the meshes subtree on this same volume must be writable.
       - fracto-tile-data:/var/lib/fracto/tiles
+      - fracto-dev-ai-data:/var/lib/fracto/ai
       - fracto-tile-index:/var/lib/fracto/index:ro
       - fracto-dev-assets:/app/assets
       - fracto-dev-videos:/app/videos
@@ -86,6 +99,7 @@ services:
         max-file: "5"
 
 volumes:
+  fracto-dev-ai-data:
   fracto-dev-assets:
   fracto-dev-logs:
   fracto-dev-videos:

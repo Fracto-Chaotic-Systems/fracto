@@ -7,6 +7,17 @@ services:
     image: fracto:local
     environment:
       FRACTO_SERVER_NAME: ${FRACTO_SERVER_NAME:-}
+      FRACTO_AI_ENGINE: ${FRACTO_AI_ENGINE:-ollama}
+      FRACTO_AI_DATA_DIR: /var/lib/fracto/ai
+      FRACTO_AI_PEERS_ENABLED: ${FRACTO_AI_PEERS_ENABLED:-true}
+      FRACTO_AI_PEER_LISTEN_HOST: "0.0.0.0"
+      FRACTO_AI_PEER_PORT: "3447"
+      FRACTO_AI_LISTEN_HOST: "0.0.0.0"
+      FRACTO_AI_MIN_FREE_MEMORY_MIB: ${FRACTO_AI_MIN_FREE_MEMORY_MIB:-6144}
+      FRACTO_AI_MIN_FREE_DISK_MIB: ${FRACTO_AI_MIN_FREE_DISK_MIB:-1024}
+      FRACTO_AI_MODEL: ${FRACTO_AI_MODEL:-}
+      FRACTO_OLLAMA_URL: ${FRACTO_OLLAMA_URL:-http://host.docker.internal:11434}
+      FRACTO_OLLAMA_ALLOW_HOST_GATEWAY: "true"
       FRACTO_SURVEY_MAX_GRID_SIZE: ${FRACTO_SURVEY_MAX_GRID_SIZE:-1024}
       FRACTO_SURVEY_MAX_CANVAS_SIZE: ${FRACTO_SURVEY_MAX_CANVAS_SIZE:-16384}
       FRACTO_MYSQL_HOST: ${FRACTO_MYSQL_HOST:-host.docker.internal}
@@ -31,9 +42,12 @@ services:
       - "127.0.0.1:3005:3005"
       - "127.0.0.1:3006:3006"
       - "127.0.0.1:3007:3007"
+      # Override only with the intended lab interface; peer TLS is never public nginx.
+      - "${FRACTO_AI_PEER_BIND_ADDRESS:-127.0.0.1}:3447:3447"
     volumes:
       - ./config:/app/config:ro
       - fracto-tile-data:/var/lib/fracto/tiles
+      - fracto-ai-data:/var/lib/fracto/ai
       - fracto-tile-index:/var/lib/fracto/index
       - fracto-assets:/app/assets
       - fracto-videos:/app/videos
@@ -98,6 +112,7 @@ services:
         max-file: "5"
 
 volumes:
+  fracto-ai-data:
   fracto-tile-data:
   fracto-tile-index:
   fracto-assets:

@@ -1,7 +1,10 @@
+import {randomUUID} from 'node:crypto'
+
 export const create_health_handler = (
    service_states,
    build_info = null,
    server_name = process.env.FRACTO_SERVER_NAME || null,
+   startup_id = randomUUID(),
 ) => (req, res) => {
    // Health responses contain only public status and build diagnostics.
    // Other Fracto browser UIs need to read them cross-origin without cookies.
@@ -13,6 +16,7 @@ export const create_health_handler = (
       : null
    res.status(req.path === '/readyz' && !ready ? 503 : 200).json({
       contract_version: 1,
+      startup_id,
       server_name: configured_server_name,
       status: ready ? 'ready' : 'starting',
       uptime_seconds: Math.round(process.uptime()),

@@ -34,6 +34,7 @@ echo [4/4] Starting the %cold_boot_mode% server with Docker Compose...
 call scripts\ensure_exclusive.bat %cold_boot_mode%
 if errorlevel 1 goto failed
 if /I "%cold_boot_mode%"=="dev" goto start_dev
+node scripts\windows_host_startup.js --port 3001
 docker compose up -d fracto
 if errorlevel 1 goto failed
 set "cold_boot_log_service=fracto"
@@ -41,6 +42,7 @@ set "cold_boot_log_compose=docker compose"
 goto stream_logs
 
 :start_dev
+node scripts\windows_host_startup.js --port 3101
 docker compose -f compose.yaml -f compose.dev.yaml up -d fracto-dev
 if errorlevel 1 goto failed
 set "cold_boot_log_service=fracto-dev"

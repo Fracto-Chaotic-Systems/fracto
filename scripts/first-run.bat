@@ -28,6 +28,7 @@ docker compose run --build --rm index-refresh
 if errorlevel 1 goto failed
 
 echo Starting production...
+node scripts\windows_host_startup.js --port 3001
 docker compose up -d fracto
 if errorlevel 1 goto failed
 

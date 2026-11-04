@@ -1,5 +1,20 @@
 # Fracto scripts
 
+`windows_host_startup.js` is the standard launcher bridge for Windows host
+facilities: automatic startup benchmarks and the independent local Ollama engine.
+Both skip Windows setup inside Linux containers. Ollama installation/startup is
+asynchronous and does not change Fracto readiness; its version and loopback-only
+runtime configuration are documented in `servers/fracto-ai-server/OLLAMA.md`.
+
+`startup_benchmark.js` launches the Windows host observer through
+`start_windows_benchmark.ps1`. Production/development launchers, first-run,
+cold-boot invoke it through `windows_host_startup.js`; native root startup invokes
+the helper directly. Its hidden worker
+is deduplicated per checkout/port, collects an inventory for each new Fracto
+startup, waits for stable readiness and then records a passive baseline.
+It never blocks readiness or installs a Windows boot task. Reports and policy
+are documented in `servers/fracto-ai-server/BENCHMARKS.md`.
+
 These scripts are grouped by the work they perform rather than by file type.
 Run commands from the repository root. Files under `config/`, `backup/`,
 `tiles/`, `logs/`, and each service repository retain their existing ownership

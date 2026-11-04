@@ -1,5 +1,10 @@
 # Fracto tests
 
+`startup_benchmark.test.js` covers Windows bootstrap selection/failure isolation,
+automatic entrypoint hooks and process startup markers. The AI repository's
+`startup_observer.test.js` covers lifecycle deduplication, restart cancellation,
+legacy servers, bounded retries and report-status storage failures.
+
 Root tests use Node's built-in test runner and cover SDK, service, script and
 integration behavior. Run the maintained suite with `npm test`; run a focused
 file with `node --test test/<file>.test.js`.
@@ -88,3 +93,12 @@ Its editor-route regression verifies that ordinary browser sessions, including
 administrators, cannot bypass private-service authorization.
 
 `ai_service.integration.test.js` checks the supervised AI listener in a child process, port discovery/overrides, readiness participation and shutdown. It uses no database or model.
+It also checks unattended peer identity creation and empty-trust TLS startup on
+an isolated port/store. The AI repository peers.test.js exercises real mutual
+TLS, scopes, revocation/rotation, bounded automatic probes and privacy separately.
+Its exchange.test.js covers automatic completed-job publication, real scoped TLS
+imports, authenticated inspection, relay loops, per-record resume, quarantine,
+retention/resnapshot, disk/corruption failures and independent local inference.
+Its delegation.test.js verifies scoped full-request mTLS execution on one peer,
+durable idempotency, lost/post-commit acknowledgements, origin/receiver restart,
+no generation retries or fallback, model digest guards, cancellation and revocation.

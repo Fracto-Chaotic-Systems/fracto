@@ -6,6 +6,7 @@ node scripts\write_build_info.js
 if errorlevel 1 exit /b %ERRORLEVEL%
 call scripts\ensure_exclusive.bat dev
 if errorlevel 1 exit /b %ERRORLEVEL%
+node scripts\windows_host_startup.js --port 3101
 docker compose -f compose.yaml -f compose.dev.yaml up --build --renew-anon-volumes fracto-dev
 set "launch_exit_code=%ERRORLEVEL%"
 popd

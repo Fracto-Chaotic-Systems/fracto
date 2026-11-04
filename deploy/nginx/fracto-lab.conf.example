@@ -38,6 +38,8 @@ server {
 
     # Never send an unknown API path to the React UI fallback.
     location ^~ /api/ai/ {
+        # Lab browser authentication bypass must not expose machine inference.
+        if ($uri ~* "^/api/ai/(?:inference|peer)(?:/|$)") { return 404; }
         proxy_pass http://127.0.0.1:3007/;
     }
 

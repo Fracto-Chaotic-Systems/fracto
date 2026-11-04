@@ -1,5 +1,9 @@
 # Main server utilities
 
+`startup_benchmark.js` starts the hidden Windows host benchmark bootstrap from
+native supervisor startup. It is a no-op on other platforms and reports launch
+failures without throwing into application startup. It never waits for sampling.
+
 These modules support the root server and the authentication checks shared by
 the Fracto services. Route handlers and the supervisor import them for
 configuration, identity and session management, authorization, log handling,

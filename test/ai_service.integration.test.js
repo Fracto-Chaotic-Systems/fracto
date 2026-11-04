@@ -60,13 +60,18 @@ test('admin discovers AI with legacy port files and validates overrides', t => {
 })
 
 test('standard launcher serves AI health on its configured port', async t => {
+   const data_directory = fs.mkdtempSync(path.join(os.tmpdir(), 'fracto-ai-launcher-'))
    const reservation = net.createServer().listen(0, '127.0.0.1')
    await once(reservation, 'listening')
    const port = reservation.address().port
    await new Promise(resolve => reservation.close(resolve))
+   const peer_reservation = net.createServer().listen(0, '127.0.0.1')
+   await once(peer_reservation, 'listening')
+   const peer_port = peer_reservation.address().port
+   await new Promise(resolve => peer_reservation.close(resolve))
    const child = spawn(process.execPath, ['scripts/launch_service.js', SERVICE_NAME_AI], {
       cwd: ROOT,
-      env: {...process.env, FRACTO_AI_PORT: String(port), FRACTO_WATCH: 'false'},
+      env: {...process.env, FRACTO_AI_DATA_DIR: data_directory, FRACTO_AI_PEER_DATA_DIR: path.join(data_directory, 'peers'), FRACTO_AI_PORT: String(port), FRACTO_AI_PEERS_ENABLED: 'true', FRACTO_AI_PEER_LISTEN_HOST: '127.0.0.1', FRACTO_AI_PEER_PORT: String(peer_port), FRACTO_WATCH: 'false', FRACTO_OLLAMA_ENABLED: 'false'},
       stdio: ['ignore', 'pipe', 'pipe'],
    })
    let output = '', exit_seen = false
@@ -83,6 +88,9 @@ test('standard launcher serves AI health on its configured port', async t => {
          } else child.kill('SIGTERM')
       }
       await ended
+      assert.equal(path.dirname(path.resolve(data_directory)), path.resolve(os.tmpdir()))
+      assert.ok(path.basename(data_directory).startsWith('fracto-ai-launcher-'))
+      fs.rmSync(data_directory, {recursive: true, force: true})
    })
    const deadline = Date.now() + 10000
    let response
@@ -98,4 +106,17 @@ test('standard launcher serves AI health on its configured port', async t => {
    assert.equal(body.service, SERVICE_NAME_AI)
    assert.equal(body.stage, 'foundation')
    assert.deepEqual(body.capabilities, [])
+   let peer_status
+   while (Date.now() < deadline && !exit_seen) {
+      peer_status = await (await fetch(`http://127.0.0.1:${port}/peers/status`)).json()
+      if (peer_status.state === 'ready') break
+      await new Promise(resolve => setTimeout(resolve, 50))
+   }
+   assert.equal(peer_status?.state, 'ready', output)
+   assert.equal(peer_status.trusted_peers, 0)
+   assert.equal(peer_status.capabilities.artifacts, true)
+   assert.equal(peer_status.exchange.state, 'ready')
+   assert.equal(peer_status.capabilities.delegation, true)
+   assert.equal(peer_status.delegation.state, 'ready')
+   assert.ok(fs.existsSync(path.join(data_directory, 'peers', 'identity.json')))
 })
