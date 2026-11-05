@@ -486,9 +486,9 @@ Pass `dev` to launch the development Compose target instead:
 ```
 
 It runs the repository refresh with the divergence-reset confirmation described
-above, `docker compose build fracto`,
+above, `node scripts/build_windows_image.js prod` (or `dev`),
 optionally `docker compose run --rm index-refresh`, and finally
-`docker compose up -d fracto` (or the development `fracto-dev` target when
+`docker compose up -d --no-build fracto` (or the development `fracto-dev` target when
 `dev` is passed), in that order. It does not initialize/reset
 MySQL, migrate legacy tiles, or delete named volumes. If a stage fails, correct
 the issue and rerun the script; the existing published tile-index generation
@@ -498,6 +498,39 @@ currently published generation. After startup, the script follows the production
 Compose log stream; press Ctrl+C to end log viewing without stopping the container.
 Before launching, it asks whether the other mode may be stopped when both modes
 are running. Answering `N` leaves the other mode untouched and aborts the launch.
+
+### Archive image builds on Windows
+
+`build_windows_image.js` creates a new compressed source archive on every run,
+then gives Docker that archive as binary standard input. This avoids the live
+Windows-directory context synchronization that stalled on the ARM64 lab host.
+It does not reuse an old downloaded snapshot or skip rebuilding changed source.
+The archive is outside the checkout in a newly created temporary directory and
+is removed after successful or failed builds. An interrupted process can leave
+its temporary archive for local inspection; no existing cache or volume is reset.
+
+The helper reads `docker compose config --format json` to preserve the resolved
+image names, Dockerfile, target and build arguments, including `.env` overrides.
+Production builds `fracto:local`. Development builds both the production image
+(used by the optional index refresh) and `fracto:dev` from the same snapshot.
+Cold boot starts the selected image with `--no-build`, preventing an implicit
+return to live-directory transfer. Other Windows launchers keep their existing
+build behavior; this change is scoped to cold boot and the explicit helper.
+
+`docker_build_context.js` streams USTAR/gzip with bounded memory and detects source
+files changing during packaging. It applies the current `.dockerignore` exclusions
+before entering ignored directories, keeping Git, dependencies, local `.env`,
+configuration, model weights and runtime credentials out of the archive while
+retaining `.env.example`. Included links and unsupported ignore syntax fail
+explicitly. Basic `*`, `**`, `?` patterns and the existing `.env.example` exception
+are supported; other negations, character classes and backslash escapes require
+extending the matcher before changing `.dockerignore`. USTAR path/size limits
+also fail explicitly. Unsupported Compose build features such as secret mounts
+require updating the helper rather than being silently dropped.
+
+Run manually with `node scripts/build_windows_image.js prod` or `dev`.
+`test/docker_build_context.test.js` covers excluded secrets/runtime, binary and
+long-path archive contents, fresh source, Compose settings and failure cleanup.
 
 To stop servers explicitly, use `shutdown.bat prod`, `shutdown.bat dev`, or
 `shutdown.bat` with no parameter. The script reports exactly which requested modes
