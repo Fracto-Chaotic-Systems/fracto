@@ -646,6 +646,16 @@ AI actions, and eventual game direction. Check out and install this repository
 before rebuilding; update root, Admin and UI together. The prestart updater
 requires committed source and a published tracking branch, as for other services.
 
+Persist the installed model tag as `FRACTO_AI_MODEL=qwen2.5:7b-instruct-q4_K_M`
+in the root's ignored `.env` for production/development Compose launchers.
+Native AI startup (`npm start`/`npm run dev` in the AI checkout, including the
+root supervisor's service launcher) loads the AI checkout's ignored `.env`
+instead. Inherited process/deployment environment values take precedence.
+Save the same selection in both files when switching between native and Compose.
+Do not set a native loopback engine URL in root Compose configuration; Compose
+already supplies its same-machine Docker Desktop gateway. Selection never pulls
+a model. Restart/recreate the AI service to apply changes.
+
 The root CI workflow checks out the independent service repositories before
 running integrated tests. Publish the AI service and compatible Admin/UI changes
 before the root integration update. The AI repository also has standalone CI.

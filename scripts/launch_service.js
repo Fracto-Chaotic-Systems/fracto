@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import {spawn, spawnSync} from 'node:child_process'
 
-import {ALL_SERVICES, SERVICE_NAME_UI} from '../constants.js'
+import {ALL_SERVICES, SERVICE_NAME_UI, SERVICE_NAME_AI} from '../constants.js'
 
 const service_name = process.argv[2]
 const service = ALL_SERVICES.find(candidate => candidate.name === service_name)
@@ -28,6 +28,8 @@ if (!static_ui && !fs.existsSync(modules_folder)) {
 
 const command = process.execPath
 const watch_args = process.env.FRACTO_WATCH === 'true' ? ['--watch'] : []
+// Installation-local AI selection; inherited deployment settings take precedence.
+const environment_args = service.name === SERVICE_NAME_AI ? ['--env-file-if-exists=.env'] : []
 const args = static_ui
    ? [path.join('scripts', 'serve_ui.js')]
    : service.name === SERVICE_NAME_UI
@@ -35,7 +37,7 @@ const args = static_ui
            path.join('node_modules', 'vite', 'bin', 'vite.js'),
            ...(process.env.FRACTO_WATCH === 'true' ? ['--force'] : []),
         ]
-      : [...watch_args, '--max-old-space-size=16384', 'index.js']
+      : [...environment_args, ...watch_args, '--max-old-space-size=16384', 'index.js']
 
 const child = spawn(command, args, {
    cwd: static_ui ? path.join(import.meta.dirname, '..') : service_folder,
