@@ -18,3 +18,6 @@
 /servers/fracto-data-server/runtime
 **/tiles.csv
 npm-debug.log*
+
+# Local deployment credentials (legacy filename without a leading dot)
+/env

@@ -112,3 +112,8 @@ retention/resnapshot, disk/corruption failures and independent local inference.
 Its delegation.test.js verifies scoped full-request mTLS execution on one peer,
 durable idempotency, lost/post-commit acknowledgements, origin/receiver restart,
 no generation retries or fallback, model digest guards, cancellation and revocation.
+
+`ai_service.integration.test.js` verifies the real AI launcher, health contract and
+peer exchange/delegation readiness on temporary ports and storage. HTTP startup
+and peer startup each have a separate 60-second budget for cold parallel builds,
+with bounded HTTP requests. Missing `.env` is allowed; no engine/model is needed.

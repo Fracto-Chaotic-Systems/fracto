@@ -150,3 +150,6 @@ logs
 backup
 .vs
 codex.txt
+
+# Local deployment credentials (legacy filename without a leading dot)
+/env
