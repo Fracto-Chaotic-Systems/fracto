@@ -9,6 +9,7 @@ services:
       FRACTO_SERVER_NAME: ${FRACTO_SERVER_NAME:-}
       FRACTO_AI_ENGINE: ${FRACTO_AI_ENGINE:-ollama}
       FRACTO_AI_DATA_DIR: /var/lib/fracto/ai
+      FRACTO_DATA_CORRECTION_DIR: /var/lib/fracto/data-corrections
       FRACTO_AI_PEERS_ENABLED: ${FRACTO_AI_PEERS_ENABLED:-true}
       FRACTO_AI_PEER_LISTEN_HOST: "0.0.0.0"
       FRACTO_AI_PEER_PORT: "3447"
@@ -48,6 +49,7 @@ services:
       - ./config:/app/config:ro
       - fracto-tile-data:/var/lib/fracto/tiles
       - fracto-ai-data:/var/lib/fracto/ai
+      - fracto-data-corrections:/var/lib/fracto/data-corrections
       - fracto-tile-index:/var/lib/fracto/index
       - fracto-assets:/app/assets
       - fracto-videos:/app/videos
@@ -113,6 +115,7 @@ services:
 
 volumes:
   fracto-ai-data:
+  fracto-data-corrections:
   fracto-tile-data:
   fracto-tile-index:
   fracto-assets:

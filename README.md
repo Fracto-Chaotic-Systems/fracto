@@ -2,6 +2,13 @@
 
 Main server for the Fracto mediaplex.
 
+Controlled corrections for explicitly registered local environment/asset snapshots
+are owned by the data service; see [its workflow](servers/fracto-data-server/corrections/README.md).
+Compose persists this optional store in separate production/development correction
+volumes. Startup provisions storage only; dataset registration, exact-plan approval,
+application and rollback are explicit local maintenance operations. Existing live
+MySQL records are not mapped into this snapshot protocol.
+
 Project-wide engineering rules are in [PROJECT_GUIDELINES.md](PROJECT_GUIDELINES.md).
 In particular, **never transmit personal information of any kind via an API**;
 see [Personal information and APIs](PROJECT_GUIDELINES.md#personal-information-and-apis).

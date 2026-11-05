@@ -4,6 +4,13 @@ This directory contains deployment-facing examples for the main Fracto
 repository. Keep real hostnames, certificates, secrets, and machine-specific
 paths in the deployment environment; do not commit them.
 
+The optional data-service snapshot correction CLI uses its own private
+`/var/lib/fracto/data-corrections` volume, separate for production/development.
+Rebuild/recreate through normal startup to provision it; never mount a live MySQL
+data directory or reuse the AI store as correction storage. Dataset imports and
+approvals are explicit maintenance operations, not startup actions. See
+`servers/fracto-data-server/corrections/README.md` for backup and rollback.
+
 For shared browser access from a Windows development lab, see the
 [Windows lab deployment guide](WINDOWS_LAB.md). It documents an HTTP Nginx
 proxy with lab-only authentication bypass while keeping Fracto service ports

@@ -1,5 +1,10 @@
 # Fracto tests
 
+`controlled_corrections.integration.test.js` verifies the AI read-only proposal
+handoff to an independent data-service snapshot owner, explicit approval, atomic
+application and monotonic-revision rollback. It uses disposable local datasets,
+not existing MySQL tables or live deployment configuration.
+
 `startup_benchmark.test.js` covers Windows bootstrap selection/failure isolation,
 automatic entrypoint hooks and process startup markers. The AI repository's
 `startup_observer.test.js` covers lifecycle deduplication, restart cancellation,

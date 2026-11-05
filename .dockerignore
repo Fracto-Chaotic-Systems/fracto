@@ -15,5 +15,6 @@
 /tiles
 /servers/fracto-tiles-server/benchmarks
 /servers/fracto-ai-server/runtime
+/servers/fracto-data-server/runtime
 **/tiles.csv
 npm-debug.log*

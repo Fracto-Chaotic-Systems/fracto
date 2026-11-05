@@ -8,6 +8,7 @@ services:
       FRACTO_SERVER_NAME: ${FRACTO_SERVER_NAME:-}
       FRACTO_AI_ENGINE: ${FRACTO_AI_ENGINE:-ollama}
       FRACTO_AI_DATA_DIR: /var/lib/fracto/ai
+      FRACTO_DATA_CORRECTION_DIR: /var/lib/fracto/data-corrections
       FRACTO_AI_PEERS_ENABLED: ${FRACTO_AI_PEERS_ENABLED:-true}
       FRACTO_AI_PEER_LISTEN_HOST: "0.0.0.0"
       FRACTO_AI_PEER_PORT: "3547"
@@ -86,6 +87,7 @@ services:
       # the meshes subtree on this same volume must be writable.
       - fracto-tile-data:/var/lib/fracto/tiles
       - fracto-dev-ai-data:/var/lib/fracto/ai
+      - fracto-dev-data-corrections:/var/lib/fracto/data-corrections
       - fracto-tile-index:/var/lib/fracto/index:ro
       - fracto-dev-assets:/app/assets
       - fracto-dev-videos:/app/videos
@@ -100,6 +102,7 @@ services:
 
 volumes:
   fracto-dev-ai-data:
+  fracto-dev-data-corrections:
   fracto-dev-assets:
   fracto-dev-logs:
   fracto-dev-videos:
