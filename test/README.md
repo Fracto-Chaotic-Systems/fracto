@@ -1,5 +1,22 @@
 # Fracto tests
 
+`chat_stream.test.js` covers incremental UTF-8/NDJSON framing, completion/error
+semantics, size limits, backpressure, browser accumulation, and streaming through
+both HTTP hops. Delayed fixtures verify first text arrives before completion;
+Stop and timeouts abort model work. Engine tests also cover Ollama streaming and
+provider metadata filtering. No real model or machine credential is required.
+
+`admin_chat.test.js` verifies the admin chat bridge's origin/session enforcement,
+bounded text contract, server-only credentials, response filtering, fixed errors
+and timeout cancellation using local HTTP fixtures. It requires no running AI
+engine, model, database or real machine token.
+
+`servers/fracto-ui/test/admin_chat_messages.test.js` covers text-file extraction,
+UTF-8/JSON validation, file size/count bounds, local attachment lifecycle,
+file-only messages and combined/escaped context limits. The admin bridge test
+also verifies that extracted JSON file content reaches an injected model adapter
+through both HTTP hops.
+
 `controlled_corrections.integration.test.js` verifies the AI read-only proposal
 handoff to an independent data-service snapshot owner, explicit approval, atomic
 application and monotonic-revision rollback. It uses disposable local datasets,
