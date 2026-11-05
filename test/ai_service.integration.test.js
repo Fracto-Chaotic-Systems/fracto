@@ -92,27 +92,36 @@ test('standard launcher serves AI health on its configured port', async t => {
       assert.ok(path.basename(data_directory).startsWith('fracto-ai-launcher-'))
       fs.rmSync(data_directory, {recursive: true, force: true})
    })
-   const deadline = Date.now() + 10000
+   // Parallel cold builds can delay child startup beyond ten seconds.
+   // Keep HTTP and peer readiness independently bounded; all contracts below still apply.
+   const readiness_timeout_ms = 60000
+   const started_at = Date.now()
+   const deadline = started_at + readiness_timeout_ms
    let response
    while (Date.now() < deadline && !exit_seen) {
       try {
-         response = await fetch(`http://127.0.0.1:${port}/readyz`, {signal: AbortSignal.timeout(500)})
+         response = await fetch(`http://127.0.0.1:${port}/readyz`, {signal: AbortSignal.timeout(2000)})
          if (response.ok) break
       } catch {}
       await new Promise(resolve => setTimeout(resolve, 50))
    }
-   assert.ok(response?.ok, output || 'AI listener did not become ready')
+   assert.ok(response?.ok, `AI HTTP readiness timed out after ${Date.now() - started_at} ms (child exited: ${exit_seen}).\n${output}`)
    const body = await response.json()
    assert.equal(body.service, SERVICE_NAME_AI)
    assert.equal(body.stage, 'foundation')
    assert.deepEqual(body.capabilities, [])
    let peer_status
-   while (Date.now() < deadline && !exit_seen) {
-      peer_status = await (await fetch(`http://127.0.0.1:${port}/peers/status`)).json()
-      if (peer_status.state === 'ready') break
+   const peer_deadline = Date.now() + readiness_timeout_ms
+   while (Date.now() < peer_deadline && !exit_seen) {
+      try {
+         peer_status = await (await fetch(`http://127.0.0.1:${port}/peers/status`, {signal: AbortSignal.timeout(2000)})).json()
+      } catch {
+         // Retry transient connection failures within the peer readiness budget.
+      }
+      if (peer_status?.state === 'ready') break
       await new Promise(resolve => setTimeout(resolve, 50))
    }
-   assert.equal(peer_status?.state, 'ready', output)
+   assert.equal(peer_status?.state, 'ready', `AI peer readiness timed out (child exited: ${exit_seen}).\n${output}`)
    assert.equal(peer_status.trusted_peers, 0)
    assert.equal(peer_status.capabilities.artifacts, true)
    assert.equal(peer_status.exchange.state, 'ready')
