@@ -5,6 +5,11 @@ handoff to an independent data-service snapshot owner, explicit approval, atomic
 application and monotonic-revision rollback. It uses disposable local datasets,
 not existing MySQL tables or live deployment configuration.
 
+`docker_build_context.test.js` validates cold boot's archive build path: current
+source snapshots, Docker ignore exclusions, binary/long-path tar entries, resolved
+Compose image/target/argument settings, development builds and temporary cleanup
+on success/failure. It uses temporary fixtures and simulated Docker calls.
+
 `startup_benchmark.test.js` covers Windows bootstrap selection/failure isolation,
 automatic entrypoint hooks and process startup markers. The AI repository's
 `startup_observer.test.js` covers lifecycle deduplication, restart cancellation,

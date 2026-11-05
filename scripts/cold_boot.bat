@@ -17,7 +17,7 @@ call npm run update:repos -- --confirm-reset-diverged
 if errorlevel 1 goto failed
 
 echo [2/4] Rebuilding the production image (this may take several minutes)...
-docker compose build --progress=plain fracto
+node scripts\build_windows_image.js %cold_boot_mode%
 if errorlevel 1 goto failed
 
 echo [3/4] Tile-index refresh is optional and can take about an hour.
@@ -35,7 +35,7 @@ call scripts\ensure_exclusive.bat %cold_boot_mode%
 if errorlevel 1 goto failed
 if /I "%cold_boot_mode%"=="dev" goto start_dev
 node scripts\windows_host_startup.js --port 3001
-docker compose up -d fracto
+docker compose up -d --no-build fracto
 if errorlevel 1 goto failed
 set "cold_boot_log_service=fracto"
 set "cold_boot_log_compose=docker compose"
@@ -43,7 +43,7 @@ goto stream_logs
 
 :start_dev
 node scripts\windows_host_startup.js --port 3101
-docker compose -f compose.yaml -f compose.dev.yaml up -d fracto-dev
+docker compose -f compose.yaml -f compose.dev.yaml up -d --no-build fracto-dev
 if errorlevel 1 goto failed
 set "cold_boot_log_service=fracto-dev"
 set "cold_boot_log_compose=docker compose -f compose.yaml -f compose.dev.yaml"
