@@ -1,5 +1,34 @@
 # Fracto scripts
 
+## Knowledge bundle preparation
+
+`build_knowledge_bundle.js` runs source drift checks, reads the approved UI catalog
+and generates seven area documents with a deterministic manifest. Run
+`npm run knowledge:bundle` to generate the ignored AI build artifact or
+`npm run knowledge:bundle:check` to verify it without writing. UI npm prebuild and
+Docker preparation invoke generation automatically. No knowledge database,
+selection, skill activation, model or peer is touched. See
+`servers/fracto-ai-server/subject_providers/BUNDLES.md` for schema and provenance.
+
+`npm run knowledge:reconcile` explicitly imports the generated UI bundle into the
+configured AI knowledge store atomically, preserving operator overrides and
+retirements. `npm run knowledge:bundle:status` reads its selected manifest. These
+are local administration commands, separate from build preparation and skill
+activation. See `servers/fracto-ai-server/subject_providers/RECONCILIATION.md`.
+
+After staging, `npm run knowledge:bundle:publish -- DIGEST EXPECTED_DIGEST` selects
+a complete snapshot (`none` for the first expectation).
+`knowledge:bundle:publication` inspects its metadata; `knowledge:bundle:read`
+returns its whole artifact. Publication is local and leaves skill/chat activation
+separate. See `servers/fracto-ai-server/subject_providers/SNAPSHOTS.md`.
+
+AI startup and a minute poll now automatically consume prepared bundles, with
+atomic publication and persistent operator ownership. Vite development also
+rebuilds on relevant UI/catalog changes. `FRACTO_AI_APP_REFERENCE_REFRESH=false`
+keeps manual control. `npm run check:app-reference` generates/checks the artifact
+and runs the complete catalog-to-chat regression gate used by main/AI/UI CI.
+See `servers/fracto-ai-server/subject_providers/REFRESH.md` for lifecycle and handoff.
+
 `windows_host_startup.js` is the standard launcher bridge for Windows host
 facilities: automatic startup benchmarks and the independent local Ollama engine.
 Both skip Windows setup inside Linux containers. Ollama installation/startup is

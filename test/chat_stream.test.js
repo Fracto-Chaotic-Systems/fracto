@@ -126,6 +126,26 @@ test("browser stream adapter distinguishes login failures from generation failur
   }
 });
 
+test("browser stream adapter preserves fixed reference availability and question errors", async () => {
+  for (const [status, error] of [
+    [503, "CHAT_REFERENCE_UNAVAILABLE"],
+    [400, "CHAT_REFERENCE_QUESTION"],
+  ]) {
+    await assert.rejects(
+      collect(
+        stream_chat(
+          "/chat",
+          [],
+          undefined,
+          async () => Response.json({ error }, { status }),
+          "app-reference",
+        ),
+      ),
+      new RegExp(error),
+    );
+  }
+});
+
 test("browser stream adapter preserves allowlisted memory errors", async () => {
   await assert.rejects(
     collect(

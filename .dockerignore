@@ -1,6 +1,7 @@
 /.git
 **/.git
 **/node_modules
+**/generated/knowledge/
 **/.env
 **/.env.*
 !**/.env.example

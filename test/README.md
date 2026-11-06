@@ -1,5 +1,47 @@
 # Fracto tests
 
+`servers/fracto-ai-server/knowledge_bundle.test.js` covers deterministic artifacts,
+source/provenance changes, invalid manifests, bounded source reads, path/link
+rejection, scoped Git metadata, check-only behavior and atomic publication failure.
+`servers/fracto-ui/test/knowledge_documents.test.js` covers complete area rendering,
+feature states/configuration, determinism, cancellation and inert Markdown text.
+Run both with `npm run test:knowledge-bundle`; neither uses models or live stores.
+
+`npm run test:knowledge-reconcile` runs the AI bundle persistence tests in
+disposable stores: atomic import/rollback, immutable history, unchanged replay,
+provider ownership, local overrides, removal/restoration, source collisions,
+schema migration, disk/capacity admission and generated-bundle CLI adoption.
+It does not modify a running deployment or activate skills.
+
+`npm run test:knowledge-publication` verifies complete immutable snapshot selection,
+reader pinning across writers, publication races, overrides/retirement, unchanged
+database bytes/timestamps, late import/publication failures, corruption, migration
+and generated-artifact CLI publication in disposable storage.
+
+`npm run test:app-reference` verifies the read-only application skill's exact
+snapshot citations, concurrent publication pinning, unavailable/disabled data,
+strict schemas/permissions, inert reference instructions, isolated evaluations,
+bootstrap persistence and real UI bundle retrieval through the registry CLI.
+
+`npm run test:chat-reference` checks the App reference mode through browser
+streaming, the administrator bridge, the AI service and active skill in disposable
+stores, including exact citations, no model/database writes, strict routing,
+unavailable references, literal Markdown, cancellation and bounded concurrency.
+
+`npm run check:app-reference` is the full cross-repository regression gate: fresh
+bundle generation, canonical unchanged verification and provider/catalog/storage/
+publication/refresh/skill/chat tests in disposable stores. Main/AI/UI CI prepare
+the full sibling workspace and dependencies before running it.
+`npm run test:knowledge-refresh` focuses on automatic startup/periodic updates,
+restart, failure atomicity/recovery, local overrides, operator handoff, retention
+bounds, configuration, shutdown and serialized development rebuilds.
+
+`servers/fracto-ui/test/feature_catalog.test.js` validates the structured UI
+catalog, exact navigation/title/settings coverage, permission/configuration
+references, incomplete panel states and the inactive UI subject-provider
+declaration. In-memory source edits verify drift detection without executing JSX
+or mutating the checkout. UI npm builds also run the catalog source check.
+
 `chat_stream.test.js` covers incremental UTF-8/NDJSON framing, completion/error
 semantics, size limits, backpressure, browser accumulation, and streaming through
 both HTTP hops. Delayed fixtures verify first text arrives before completion;
