@@ -714,3 +714,21 @@ rewriter: per-world refinements remain deliberate editorial changes. Existing
 formatted notes and notes without the historical suggestion marker are untouched.
 
 The AI service participates in repository updates, first-run checks, Docker smoke tests, formatting and milestone tags.
+
+## Managed production cold boot
+
+When `.fracto-production.json` is registered, production launch/cold boot uses
+`managed_production.js` and the installed `.fracto-managed` controller. These local
+files are excluded from Git and image contexts. Production is selected by its
+recorded Docker identity, preserving effective configuration, model selection and
+external data volumes, rather than assuming the default Compose project owns it.
+A new image receives AI-only preflight, then in-place replacement and full service/
+inference acceptance. The previous container/image and a consistent stopped AI
+store archive are retained; failed acceptance restarts the previous container.
+`node scripts/managed_production.js rollback` restores the latest retained version.
+Shutdown and development exclusivity use the same managed identity.
+
+Cold boot now regenerates build metadata before building, and its repository
+refresh stops on divergence rather than preauthorizing a reset of local commits.
+Commit local launcher changes before cold boot; the installer does this explicitly.
+Unregistered installations retain the ordinary Compose launch path.

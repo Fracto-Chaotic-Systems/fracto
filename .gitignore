@@ -153,3 +153,7 @@ codex.txt
 
 # Local deployment credentials (legacy filename without a leading dot)
 /env
+
+# Installed managed production controller and local runtime selection
+/.fracto-managed/
+/.fracto-production.json

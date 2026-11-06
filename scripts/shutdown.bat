@@ -14,7 +14,13 @@ exit /b 2
 :detect
 set "prod_running="
 set "dev_running="
-for /f "delims=" %%I in ('docker compose ps --status running -q fracto 2^>nul') do set "prod_running=1"
+if exist ".fracto-production.json" (
+  node scripts\managed_production.js is-running
+  if errorlevel 2 goto failed
+  if not errorlevel 1 set "prod_running=1"
+) else (
+  for /f "delims=" %%I in ('docker compose ps --status running -q fracto 2^>nul') do set "prod_running=1"
+)
 for /f "delims=" %%I in ('docker compose -f compose.yaml -f compose.dev.yaml ps --status running -q fracto-dev 2^>nul') do set "dev_running=1"
 if /I "%target%"=="prod" set "dev_running="
 if /I "%target%"=="dev" set "prod_running="
@@ -33,10 +39,14 @@ if errorlevel 2 (
   popd
   exit /b 0
 )
-if defined prod_running docker compose stop fracto
-if errorlevel 1 goto failed
-if defined dev_running docker compose -f compose.yaml -f compose.dev.yaml stop fracto-dev
-if errorlevel 1 goto failed
+if defined prod_running (
+  if exist ".fracto-production.json" (node scripts\managed_production.js stop) else (docker compose stop fracto)
+  if errorlevel 1 goto failed
+)
+if defined dev_running (
+  docker compose -f compose.yaml -f compose.dev.yaml stop fracto-dev
+  if errorlevel 1 goto failed
+)
 echo Requested Fracto server(s) stopped.
 popd
 exit /b 0

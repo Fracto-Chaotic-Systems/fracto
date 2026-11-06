@@ -13,10 +13,12 @@ exit /b 2
 :mode_valid
 
 echo [1/4] Refreshing the root and service repositories...
-call npm run update:repos -- --confirm-reset-diverged
+call npm run update:repos
 if errorlevel 1 goto failed
 
 echo [2/4] Rebuilding the production image (this may take several minutes)...
+node scripts\write_build_info.js
+if errorlevel 1 goto failed
 node scripts\build_windows_image.js %cold_boot_mode%
 if errorlevel 1 goto failed
 
@@ -35,11 +37,20 @@ call scripts\ensure_exclusive.bat %cold_boot_mode%
 if errorlevel 1 goto failed
 if /I "%cold_boot_mode%"=="dev" goto start_dev
 node scripts\windows_host_startup.js --port 3001
+if exist ".fracto-production.json" goto start_managed
 docker compose up -d --no-build fracto
 if errorlevel 1 goto failed
 set "cold_boot_log_service=fracto"
 set "cold_boot_log_compose=docker compose"
 goto stream_logs
+
+:start_managed
+node scripts\managed_production.js upgrade
+if errorlevel 1 goto failed
+echo Managed production is running; prior containers and backups are retained.
+node scripts\managed_production.js logs
+popd
+exit /b %ERRORLEVEL%
 
 :start_dev
 node scripts\windows_host_startup.js --port 3101

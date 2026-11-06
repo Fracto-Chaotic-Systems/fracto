@@ -17,10 +17,20 @@ docker compose -f compose.yaml -f compose.dev.yaml stop fracto-dev
 exit /b %ERRORLEVEL%
 
 :check_prod
+if exist ".fracto-production.json" goto check_managed_prod
 set "other="
 for /f "delims=" %%I in ('docker compose ps --status running -q fracto 2^>nul') do set "other=%%I"
 if not defined other exit /b 0
 choice /C YN /N /M "Production server is running. Stop it gracefully before launching development? [Y/N] "
 if errorlevel 2 exit /b 1
 docker compose stop fracto
+exit /b %ERRORLEVEL%
+
+:check_managed_prod
+node scripts\managed_production.js is-running
+if errorlevel 2 exit /b 1
+if errorlevel 1 exit /b 0
+choice /C YN /N /M "Production server is running. Stop it gracefully before launching development? [Y/N] "
+if errorlevel 2 exit /b 1
+node scripts\managed_production.js stop
 exit /b %ERRORLEVEL%

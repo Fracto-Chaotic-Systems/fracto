@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict'
 import {EventEmitter} from 'node:events'
 import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+import {managed_production_plan, run_managed_production} from '../scripts/managed_production.js'
 import test from 'node:test'
 import {start_windows_startup_benchmark} from '../utils/startup_benchmark.js'
 import {create_health_handler} from '../handlers/health.js'
@@ -44,4 +47,22 @@ test('Windows startup entrypoints include the nonblocking benchmark hook', () =>
       const source = fs.readFileSync(new URL(`../scripts/${file}`, import.meta.url), 'utf8')
       assert.match(source, /node scripts\\windows_host_startup\.js --port 3[01]01/)
    }
+})
+
+test('managed launch uses the installed controller with a non-shell process', t => {
+   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fracto-managed-test-'))
+   t.after(() => {assert.equal(path.dirname(root), path.resolve(os.tmpdir())); assert.ok(path.basename(root).startsWith('fracto-managed-test-')); fs.rmSync(root, {recursive: true, force: true})})
+   fs.mkdirSync(path.join(root, '.fracto-managed'))
+   fs.writeFileSync(path.join(root, '.fracto-managed', 'manage-production.mjs'), '')
+   fs.writeFileSync(path.join(root, '.fracto-production.json'), JSON.stringify({schema_version: 1}))
+   let called
+   assert.equal(run_managed_production({root, action: 'upgrade', run: (...args) => {called = args; return {status: 0}}}), 0)
+   assert.equal(called[0], process.execPath)
+   assert.equal(called[1][1], 'upgrade')
+   assert.equal(called[2].cwd, root)
+   assert.equal(called[2].shell, false)
+   assert.equal(called[2].windowsHide, true)
+   assert.equal(run_managed_production({root, action: 'is-running', run: () => ({status: 1})}), 1)
+   assert.throws(() => run_managed_production({root, action: 'is-running', run: () => ({error: new Error('unavailable')})}), /unavailable/)
+   assert.throws(() => managed_production_plan({root, action: 'delete'}), /Unknown/)
 })
