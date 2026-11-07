@@ -5,7 +5,7 @@ import path from 'node:path'
 import {gunzipSync} from 'node:zlib'
 import test from 'node:test'
 import {context_files, create_context_archive, context_filter} from '../scripts/docker_build_context.js'
-import {build_windows_image, image_build_plan} from '../scripts/build_windows_image.js'
+import {build_windows_image, image_build_plan, retain_managed_image} from '../scripts/build_windows_image.js'
 
 const fixture = t => {
    const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'fracto-context-test-'))
@@ -138,4 +138,29 @@ test('cold boot uses archive builds and prevents Compose from implicitly rebuild
    assert.doesNotMatch(source, /docker compose build/)
    assert.match(source, /up -d --no-build fracto\r?\n/)
    assert.match(source, /up -d --no-build fracto-dev/)
+})
+
+
+test('managed rebuild retains and verifies the exact active image before replacing its tag', t => {
+   const {root, write} = fixture(t)
+   const id = 'a'.repeat(64), image = 'sha256:' + 'b'.repeat(64)
+   write('.fracto-production.json', JSON.stringify({schema_version: 1, current: {container_id: id, image_id: image}}))
+   const calls = []
+   const run_sync = (exe, args) => { calls.push(args); return {status: 0, stdout: image} }
+   assert.equal(retain_managed_image({root, run_sync, log() {}}), 'fracto:retained-' + 'b'.repeat(64))
+   assert.deepEqual(calls[2], ['image', 'tag', image, 'fracto:retained-' + 'b'.repeat(64)])
+   assert.deepEqual(calls[3], ['image', 'inspect', '--format', '{{.Id}}', 'fracto:retained-' + 'b'.repeat(64)])
+})
+
+test('missing managed image or changed container identity prevents build execution', async t => {
+   const {root, write} = fixture(t)
+   const image = 'sha256:' + 'b'.repeat(64)
+   write('.fracto-production.json', JSON.stringify({schema_version: 1, current: {container_id: 'a'.repeat(64), image_id: image}}))
+   for (const missing of [false, true]) {
+      let built = false
+      const run_sync = (exe, args) => args[0] === 'compose' ? {status: 0, stdout: JSON.stringify(configuration(root))} :
+         args[0] === 'container' ? {status: 0, stdout: missing ? image : 'sha256:' + 'c'.repeat(64)} : {status: 1, stdout: ''}
+      await assert.rejects(build_windows_image({root, run_sync, log() {}, run_build: async () => {built = true}}), /refusing image rebuild|restore its retained archive/)
+      assert.equal(built, false)
+   }
 })
