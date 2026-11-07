@@ -45,6 +45,11 @@ const data_routes = readFileSync(new URL("../servers/fracto-data-server/index.js
 const route_source = data_routes.slice(data_routes.indexOf('app.get("/",'));
 const route_globals = {
   app: data_app,
+  create_orbital_data_router: () => {
+    const router = express.Router();
+    router.get("/", (req, res) => res.json({ handler: "orbital_data" }));
+    return router;
+  },
   require_data_editor,
   require_world_notes_origin,
   require_administrator,
@@ -328,7 +333,7 @@ describe("authentication endpoint contract", () => {
   });
 
   test("general data APIs require an enabled user but do not require an admin role", async () => {
-    const routes = ["/fracto_calc", "/assets", "/automation"];
+    const routes = ["/fracto_calc", "/assets", "/automation", "/orbital-data"];
     for (const route of routes) {
       const url = `http://127.0.0.1:${data_server.address().port}${route}`;
       assert.equal((await fetch(url)).status, 401, route);
