@@ -200,3 +200,12 @@ sources and reference checks. Do not regenerate 006 after application.
 It records the shared Seed Surveys scan's rank, confidence, discovery counts,
 seed and numerical settings. Older rows remain null; no backfill, coordinate
 replacement or source-table change occurs. Apply before running v2 discovery.
+
+## Migration 010: resumable orbital jobs
+
+`010_orbital-resume-checkpoints.sql` adds nullable execution_token and a
+resume_count to discovery runs and creates orbital_discovery_checkpoints with
+a compressed, versioned payload. Definitions are replay-safe. Existing points,
+ratios and run history are preserved; no checkpoint/data backfill occurs. Apply
+before deploying the resumable worker coordinator. Legacy stopped runs cannot
+reconstruct work that was never checkpointed and must restart once.

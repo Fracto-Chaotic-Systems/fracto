@@ -780,3 +780,10 @@ Seed Surveys scan and direct MySQL reads. It verifies that historical points,
 source rows, and the focal-point set remain unchanged. The manifest records
 progress and permits resuming the same jobs. Landing-ray stages retain the
 normal accuracy budgets and can take substantially longer than discovery.
+
+`verify_orbital_resume.js` reads core point 65 and writes only a disposable
+verification schema. It proves canceled-scan and hard-crash recovery, unchanged
+discovery counts/rankings, preserved ray families, skipped finished orbitals,
+single-owner concurrent resumes, stale-owner fencing, and finalization recovery.
+It removes its own schema and writes logs/orbital_resume_verification.json. It
+performs no application-data recalculation or backfill.

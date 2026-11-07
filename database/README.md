@@ -36,3 +36,8 @@ before adopting a name. The original bulk proposal remains historical context.
 Migration 009 adds nullable survey discovery metadata to orbital headers and
 run memberships. Apply it before deploying `orbital-discovery-v2`. It performs
 no backfill; existing coordinates, ratios and source references are preserved.
+
+Migration 010 adds durable orbital-job checkpoints, an execution ownership token,
+and resume counters. Apply before the resumable coordinator. Existing runs and
+orbital data are retained without checkpoint backfill. New jobs checkpoint work
+units and can resume with the same UUID after cancellation or interruption.

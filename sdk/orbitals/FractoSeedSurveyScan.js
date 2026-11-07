@@ -174,6 +174,7 @@ export const scan_orbitals = async (
     on_result = () => {},
     on_progress = () => {},
     refine = refine_seed,
+    max_samples = Infinity,
     pause = () => new Promise((resolve) => setTimeout(resolve, 0)),
     state = { found: [], tested_pixels: new Set() },
   } = {},
@@ -191,9 +192,12 @@ export const scan_orbitals = async (
           b.discovery_count - a.discovery_count || a.orbital_id - b.orbital_id,
       )
       .slice(0, MAX_SCAN_ORBITALS);
+  let processed_this_call = 0;
   for (const { seed, row, column } of non_escape_seeds(survey)) {
     const pixel = row * survey.canvas_buffer.length + column;
     if (tested_pixels.has(pixel)) continue;
+    if (processed_this_call >= max_samples) break;
+    processed_this_call++;
     await pause();
     if (cancelled()) return ranked();
     tested_pixels.add(pixel);

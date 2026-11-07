@@ -221,3 +221,12 @@ configuration grouping, and 100 results ranked by discovery count. The scan
 also preserves Decimal coordinate strings for storage. The persistent pipeline
 has no independent period sweep or period-4 filter. See the data service's
 `ORBITAL_DATA.md` for storage identity, progress, time limits and verification.
+
+The persistent coordinator checkpoints bounded SDK work without changing the
+normal Seed Surveys calculation. `scan_orbitals` accepts `max_samples` and
+its existing mutable state; persist all found groups and tested pixels to retain
+counts/rankings. `find_dynamic_rays` accepts `max_work_units` and its returned
+checkpoint state. One work unit is a complete doubling family. Assessment,
+accepted families, and exact cursors survive JSON round trips; completed families
+are skipped on resume. Default calls still finish the whole configured search.
+The storage wrapper retains compact ray descriptors rather than renderer paths.

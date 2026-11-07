@@ -132,6 +132,17 @@ const verify = async () => {
           "utf8",
         )
       ).replace(/^--.*$/gm, "");
+    migration +=
+      "\n" +
+      (
+        await readFile(
+          new URL(
+            "../database/migrations/010_orbital-resume-checkpoints.sql",
+            import.meta.url,
+          ),
+          "utf8",
+        )
+      ).replace(/^--.*$/gm, "");
     for (const statement of migration.split(";").filter((sql) => sql.trim()))
       await admin.query(statement);
     // A second application tests safe recovery/replay against the disposable schema.

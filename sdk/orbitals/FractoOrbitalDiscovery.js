@@ -201,7 +201,7 @@ export const validate_landing_families = (ratios, period) => {
 
 /** Return compact ratios, not renderer polylines; indices refer to the stored cycle. */
 export const calculate_orbital_landing_ratios = async (
-  { parameter, orbital, settings },
+  { parameter, orbital, settings, checkpoint, work_limit },
   report = () => {},
 ) => {
   const points = orbital.points.map((p) => ({
@@ -213,6 +213,9 @@ export const calculate_orbital_landing_ratios = async (
     { points },
     {
       ...SEED_SURVEY_RAY_OPTIONS,
+      state: checkpoint || undefined,
+      max_work_units: work_limit,
+      retain_geometry: false,
       max_angle_period: settings.max_angle_period,
       max_families: settings.max_families,
       on_progress: (progress) =>
@@ -223,6 +226,8 @@ export const calculate_orbital_landing_ratios = async (
         }),
     },
   );
+  if (result.status === "checkpoint")
+    return { checkpoint: result.state, progress: result.progress };
   const ratios = (result.rays || []).map((ray) => {
     const target = result.points[ray.point_index];
     const point_index = points.reduce(
