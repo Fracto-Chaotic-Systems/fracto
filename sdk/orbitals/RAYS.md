@@ -372,3 +372,14 @@ reduction, cancellation, unsupported classifications, and general family
 validation across focal parameters and cyclic reorderings. Enumeration tests
 cover period-five examples, composite-period exclusion, and duplicate avoidance. These examples follow
 the dynamic-ray/orbit-portrait framework of the published works cited above.
+
+## Shared survey accuracy profile
+
+Seed Surveys and persistent orbital calculations both use exported
+`SEED_SURVEY_RAY_OPTIONS`: tolerance 1e-6, depth 128–512, at most 16,000
+trace points, 256-digit terminal precision verification, maximum angle period
+24 and maximum 1,024 doubling families. General SDK defaults remain unchanged
+for other callers. Ray geometry still uses native arithmetic; the Decimal
+terminal verification checks its accuracy rather than making every step a
+256-digit calculation. Landing requires the existing complete-family and
+forward-dynamics checks. Discovery results do not depend on ray success.

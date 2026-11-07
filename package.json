@@ -41,6 +41,7 @@
     "tiles:benchmark:heat-map": "node scripts/benchmark_heat_map.js",
     "data:circuitry": "node scripts/circuitry_harness.js",
     "data:orbital:newton": "node scripts/orbital_newton_harness.js",
+    "data:orbital:verify": "node scripts/verify_orbital_discovery.js",
     "data:orbital:newton:benchmark": "node scripts/benchmark_orbital_newton.js",
     "data:orbital:detector:benchmark": "node scripts/benchmark_orbital_detector.js",
     "data:orbital:pyramid:benchmark": "node scripts/benchmark_orbital_detector.js --mode pyramid_only",

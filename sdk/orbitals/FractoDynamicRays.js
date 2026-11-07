@@ -5,6 +5,17 @@ import {
 } from "./FractoRayFamilies.js";
 import { assess_ray_orbital } from "./FractoRayEligibility.js";
 
+/** Common high-accuracy profile for the Seed Surveys and stored-orbital views. */
+export const SEED_SURVEY_RAY_OPTIONS = Object.freeze({
+  tolerance: 1e-6,
+  max_angle_period: 24,
+  max_families: 1024,
+  minimum_depth: 128,
+  maximum_depth: 512,
+  max_points: 16000,
+  precision_digits: 256,
+});
+
 /** General exact angle-cycle enumeration, followed by numerical landing checks.
  * Basis: Milnor, Astérisque 261 (2000), §2/Appendix A,
  * https://numdam.org/item/AST_2000__261__277_0/ ; Benini–Lyubich,
@@ -66,6 +77,10 @@ export const find_dynamic_rays = async (parameter, orbital, options = {}) => {
         max_period,
         cancelled,
         align_to_orbit: true,
+        minimum_depth: options.minimum_depth,
+        maximum_depth: options.maximum_depth,
+        max_points: options.max_points,
+        precision_digits: options.precision_digits,
       });
       if (result.status === "cancelled") return result;
       processed++;

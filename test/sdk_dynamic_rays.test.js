@@ -18,7 +18,14 @@ import {
   connectedness_evidence,
 } from "../sdk/orbitals/FractoRayEligibility.js";
 import { trace_dynamic_ray } from "../sdk/orbitals/FractoDynamicRayTrace.js";
-import { find_dynamic_rays } from "../sdk/orbitals/FractoDynamicRays.js";
+import { find_dynamic_rays, SEED_SURVEY_RAY_OPTIONS } from "../sdk/orbitals/FractoDynamicRays.js";
+
+test("shared high-accuracy survey profile resolves the analytic unit-circle landing", async () => {
+  const result = await find_dynamic_rays({ x: 0, y: 0 }, { points: [{ x: 1, y: 0 }] }, SEED_SURVEY_RAY_OPTIONS);
+  assert.equal(result.status, "rays_found");
+  assert.ok(result.rays.some(ray => ray.angle.key === "0/1"));
+  assert.ok(result.rays.every(ray => ray.landing_error <= SEED_SURVEY_RAY_OPTIONS.tolerance / 4));
+});
 
 // Analytic examples and orbit portraits: Milnor, Astérisque 261 (2000), §2/Appendix A.
 // https://numdam.org/item/AST_2000__261__277_0/

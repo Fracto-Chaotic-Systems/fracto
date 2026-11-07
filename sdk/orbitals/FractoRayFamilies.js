@@ -65,11 +65,15 @@ export const trace_ray_family = (c, assessment, initial, options = {}) => {
     max_period = 24,
     cancelled = () => false,
     align_to_orbit = false,
+    minimum_depth = 96,
+    maximum_depth = 384,
+    max_points = 6000,
+    precision_digits = 128,
   } = options;
   const depth = Math.min(
-    384,
+    maximum_depth,
     Math.max(
-      96,
+      minimum_depth,
       Math.ceil(
         (assessment.period * Math.log(1e10)) /
           assessment.multiplier.log_modulus,
@@ -86,7 +90,8 @@ export const trace_ray_family = (c, assessment, initial, options = {}) => {
     const ray = trace_dynamic_ray(c, angle, {
       tolerance,
       minimum_potential: 2 ** -depth,
-      max_points: 6000,
+      max_points,
+      precision_digits,
       verify_precision: true,
       cancelled,
     });

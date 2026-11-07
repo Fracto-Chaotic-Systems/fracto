@@ -1,5 +1,26 @@
 # Fracto scripts
 
+## Single-core orbital verification
+
+After migration 007 is applied, the explicit application-data command
+`node scripts/verify_application_orbitals.js 55` starts/reuses one discovery job
+through the running data server using its existing service authorization. It
+retains the discovered records in the configured application database and
+checks closure, landing families, API/direct database retrieval, idempotency,
+and source-row preservation. It performs no backfill or destructive SQL and
+writes `logs/application_orbital_verification.json`. Repeating this command
+reuses its fixed request key for that source and settings. The command does not
+apply migrations itself.
+
+`node scripts/verify_orbital_discovery.js 55` reads that freeform bailiwick's
+`core_point`, applies migrations 007 and 008 to a newly created disposable MySQL schema,
+and runs actual SDK workers through the HTTP discovery/storage/read cycle.
+It checks rollback, retry conflicts, deduplication, cancellation, leases, and
+retrieval across a service-process restart. It drops only its generated test
+schema and writes `logs/orbital_discovery_verification.json`. The source and
+application schema are unchanged; no backfill runs. See
+`servers/fracto-data-server/ORBITAL_DATA.md` for permissions and container usage.
+
 ## Knowledge bundle preparation
 
 `build_knowledge_bundle.js` runs source drift checks, reads the approved UI catalog
@@ -743,3 +764,19 @@ rewriter: per-world refinements remain deliberate editorial changes. Existing
 formatted notes and notes without the historical suggestion marker are untouched.
 
 The AI service participates in repository updates, first-run checks, Docker smoke tests, formatting and milestone tags.
+
+`verify_seed_survey_orbitals.js [source_id=65] [report_path] [existing_run_uuid]`
+verifies one explicit application discovery against Seed Surveys and retrieves
+its stored cycles and validated landing ratios. Optional UUID verifies a prior
+run without starting work. It requires migrations 007–009 and a running data
+service. No backfill or source edits occur. `benchmark_orbital_survey.js 65 250 1`
+read-only benchmarks the full scan and optional zero-based orbital ray search.
+
+`recalculate_stored_orbitals.js [manifest_path]` is opt-in maintenance for the
+focal points already represented in orbital storage, not the bailiwick catalog.
+It freezes that inventory, validates source coordinates, starts idempotent
+100-result jobs through the data service, and compares ranked results with the
+Seed Surveys scan and direct MySQL reads. It verifies that historical points,
+source rows, and the focal-point set remain unchanged. The manifest records
+progress and permits resuming the same jobs. Landing-ray stages retain the
+normal accuracy budgets and can take substantially longer than discovery.
