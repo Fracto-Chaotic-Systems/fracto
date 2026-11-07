@@ -7,6 +7,14 @@ tested independently. Application code should normally use the public SDK interf
 survey and dynamic-ray tools also use the low-level Newton helper explicitly
 to retain their chosen starting seed and refinement budget.
 
+`FractoOrbitalDiscovery.js` retains the legacy seeded/explicit-period and
+ray-endpoint diagnostic helpers, and calculates selected-cycle dynamic rays.
+The persistent workflow now uses the shared Seed Surveys scan below.
+`FractoOrbitalIdentity.js`
+supplies decimal-preserving closure/primitive-period checks and complete-cycle
+identity under cyclic rotation. They do not use the UI scan's display grouping
+as persistent identity. See [the storage and worker contract](../../servers/fracto-data-server/ORBITAL_DATA.md).
+
 Both public SDK entry points are scoped to the main cardioid. When a valid
 parameter is outside that domain, `FractoCardinality` and
 `FractoOrbitalPoints` return `FractoFastCalc.calc(re, im)` directly. The
@@ -202,3 +210,23 @@ Parameter-ray geometry now supports shared per-minibrot persistence through
 identity, per-group accuracy reuse, incremental saves, transactional merge,
 compressed storage, migration rollout and verification. Cached geometry keeps
 the published numerical/theoretical distinctions described in these guides.
+
+## Shared Seed Surveys discovery
+
+`FractoSeedSurveyScan.js` and `FractoSeedSurveyConfirmation.js` own the scan
+used by Seed Surveys Detect and the persistent orbital worker. The UI files
+re-export these SDK modules. Common defaults are 250×250 bounds samples,
+half-span 1.5, 100,000 iterations, Newton 80/64 digits, closure 1e-7, 0.01
+configuration grouping, and 100 results ranked by discovery count. The scan
+also preserves Decimal coordinate strings for storage. The persistent pipeline
+has no independent period sweep or period-4 filter. See the data service's
+`ORBITAL_DATA.md` for storage identity, progress, time limits and verification.
+
+The persistent coordinator checkpoints bounded SDK work without changing the
+normal Seed Surveys calculation. `scan_orbitals` accepts `max_samples` and
+its existing mutable state; persist all found groups and tested pixels to retain
+counts/rankings. `find_dynamic_rays` accepts `max_work_units` and its returned
+checkpoint state. One work unit is a complete doubling family. Assessment,
+accepted families, and exact cursors survive JSON round trips; completed families
+are skipped on resume. Default calls still finish the whole configured search.
+The storage wrapper retains compact ray descriptors rather than renderer paths.

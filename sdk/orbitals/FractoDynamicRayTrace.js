@@ -52,6 +52,10 @@ const inverse_point = (c, angle, potential, previous) => {
 };
 
 export const trace_dynamic_ray = (c, angle, options = {}) => {
+  const precision_digits = Math.min(
+    512,
+    Math.max(64, Math.floor(options.precision_digits || 128)),
+  );
   const tolerance = options.tolerance ?? 0.001;
   const minimum = options.minimum_potential ?? 2 ** -80;
   const limit = options.max_points ?? 2500;
@@ -123,7 +127,7 @@ export const trace_dynamic_ray = (c, angle, options = {}) => {
   if (options.verify_precision && reason === "potential_limit") {
     // Re-evaluate the terminal inverse chain with exact rational phase and 128 digits.
     const depth = previous.chain.length - 1;
-    const unit = new BigComplex(0, 0, 128),
+    const unit = new BigComplex(0, 0, precision_digits),
       D = unit.Decimal;
     const transported =
       (BigInt(angle.numerator) * (1n << BigInt(depth))) %
@@ -136,9 +140,9 @@ export const trace_dynamic_ray = (c, angle, options = {}) => {
     const w = new BigComplex(
       radius.mul(phase.cos()),
       radius.mul(phase.sin()),
-      128,
+      precision_digits,
     );
-    const parameter = new BigComplex(c.x, c.y, 128);
+    const parameter = new BigComplex(c.x, c.y, precision_digits);
     let z = w.add(parameter.divide(w).scale(-0.5));
     for (let level = depth - 1; level >= 0; level--) {
       z = z.offset(-c.x, -c.y).sqrt();

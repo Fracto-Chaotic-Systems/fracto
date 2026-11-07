@@ -1,5 +1,55 @@
 # Fracto scripts
 
+## Single-core orbital verification
+
+After migration 007 is applied, the explicit application-data command
+`node scripts/verify_application_orbitals.js 55` starts/reuses one discovery job
+through the running data server using its existing service authorization. It
+retains the discovered records in the configured application database and
+checks closure, landing families, API/direct database retrieval, idempotency,
+and source-row preservation. It performs no backfill or destructive SQL and
+writes `logs/application_orbital_verification.json`. Repeating this command
+reuses its fixed request key for that source and settings. The command does not
+apply migrations itself.
+
+`node scripts/verify_orbital_discovery.js 55` reads that freeform bailiwick's
+`core_point`, applies migrations 007 and 008 to a newly created disposable MySQL schema,
+and runs actual SDK workers through the HTTP discovery/storage/read cycle.
+It checks rollback, retry conflicts, deduplication, cancellation, leases, and
+retrieval across a service-process restart. It drops only its generated test
+schema and writes `logs/orbital_discovery_verification.json`. The source and
+application schema are unchanged; no backfill runs. See
+`servers/fracto-data-server/ORBITAL_DATA.md` for permissions and container usage.
+
+## Knowledge bundle preparation
+
+`build_knowledge_bundle.js` runs source drift checks, reads the approved UI catalog
+and generates seven area documents with a deterministic manifest. Run
+`npm run knowledge:bundle` to generate the ignored AI build artifact or
+`npm run knowledge:bundle:check` to verify it without writing. UI npm prebuild and
+Docker preparation invoke generation automatically. No knowledge database,
+selection, skill activation, model or peer is touched. See
+`servers/fracto-ai-server/subject_providers/BUNDLES.md` for schema and provenance.
+
+`npm run knowledge:reconcile` explicitly imports the generated UI bundle into the
+configured AI knowledge store atomically, preserving operator overrides and
+retirements. `npm run knowledge:bundle:status` reads its selected manifest. These
+are local administration commands, separate from build preparation and skill
+activation. See `servers/fracto-ai-server/subject_providers/RECONCILIATION.md`.
+
+After staging, `npm run knowledge:bundle:publish -- DIGEST EXPECTED_DIGEST` selects
+a complete snapshot (`none` for the first expectation).
+`knowledge:bundle:publication` inspects its metadata; `knowledge:bundle:read`
+returns its whole artifact. Publication is local and leaves skill/chat activation
+separate. See `servers/fracto-ai-server/subject_providers/SNAPSHOTS.md`.
+
+AI startup and a minute poll now automatically consume prepared bundles, with
+atomic publication and persistent operator ownership. Vite development also
+rebuilds on relevant UI/catalog changes. `FRACTO_AI_APP_REFERENCE_REFRESH=false`
+keeps manual control. `npm run check:app-reference` generates/checks the artifact
+and runs the complete catalog-to-chat regression gate used by main/AI/UI CI.
+See `servers/fracto-ai-server/subject_providers/REFRESH.md` for lifecycle and handoff.
+
 `windows_host_startup.js` is the standard launcher bridge for Windows host
 facilities: automatic startup benchmarks and the independent local Ollama engine.
 Both skip Windows setup inside Linux containers. Ollama installation/startup is
@@ -715,20 +765,25 @@ formatted notes and notes without the historical suggestion marker are untouched
 
 The AI service participates in repository updates, first-run checks, Docker smoke tests, formatting and milestone tags.
 
-## Managed production cold boot
+`verify_seed_survey_orbitals.js [source_id=65] [report_path] [existing_run_uuid]`
+verifies one explicit application discovery against Seed Surveys and retrieves
+its stored cycles and validated landing ratios. Optional UUID verifies a prior
+run without starting work. It requires migrations 007–009 and a running data
+service. No backfill or source edits occur. `benchmark_orbital_survey.js 65 250 1`
+read-only benchmarks the full scan and optional zero-based orbital ray search.
 
-When `.fracto-production.json` is registered, production launch/cold boot uses
-`managed_production.js` and the installed `.fracto-managed` controller. These local
-files are excluded from Git and image contexts. Production is selected by its
-recorded Docker identity, preserving effective configuration, model selection and
-external data volumes, rather than assuming the default Compose project owns it.
-A new image receives AI-only preflight, then in-place replacement and full service/
-inference acceptance. The previous container/image and a consistent stopped AI
-store archive are retained; failed acceptance restarts the previous container.
-`node scripts/managed_production.js rollback` restores the latest retained version.
-Shutdown and development exclusivity use the same managed identity.
+`recalculate_stored_orbitals.js [manifest_path]` is opt-in maintenance for the
+focal points already represented in orbital storage, not the bailiwick catalog.
+It freezes that inventory, validates source coordinates, starts idempotent
+100-result jobs through the data service, and compares ranked results with the
+Seed Surveys scan and direct MySQL reads. It verifies that historical points,
+source rows, and the focal-point set remain unchanged. The manifest records
+progress and permits resuming the same jobs. Landing-ray stages retain the
+normal accuracy budgets and can take substantially longer than discovery.
 
-Cold boot now regenerates build metadata before building, and its repository
-refresh stops on divergence rather than preauthorizing a reset of local commits.
-Commit local launcher changes before cold boot; the installer does this explicitly.
-Unregistered installations retain the ordinary Compose launch path.
+`verify_orbital_resume.js` reads core point 65 and writes only a disposable
+verification schema. It proves canceled-scan and hard-crash recovery, unchanged
+discovery counts/rankings, preserved ray families, skipped finished orbitals,
+single-owner concurrent resumes, stale-owner fencing, and finalization recovery.
+It removes its own schema and writes logs/orbital_resume_verification.json. It
+performs no application-data recalculation or backfill.

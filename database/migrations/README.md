@@ -1,5 +1,18 @@
 # Database migrations
 
+`008_orbital-bailiwick-source.sql` adds nullable, indexed
+`orbital_progressions.free_bailiwick_id`. New saves include the selected table ID;
+rediscovery fills a previously missing ID without replacing a primary source.
+It performs no orbital calculations or bulk metadata backfill. Both its column
+and index definitions are guarded for replay/recovery.
+
+`007_orbital-progressions.sql` creates five InnoDB tables for persistent orbital
+discovery runs, independent cycles, ordered points, exact Julia landing ratios,
+and run-to-orbital provenance. It is additive and replay-safe and does not perform
+a backfill. Apply through the normal runner; missing tables produce an explicit
+503 from the new service routes. See
+[the orbital data contract](../../servers/fracto-data-server/ORBITAL_DATA.md).
+
 The initializer has two modes:
 
 1. An empty database is bootstrapped from the read-only SQL dumps in `backup/`.
@@ -179,3 +192,20 @@ reason. Existing notes are retained before the appended section. Rows match both
 cardinality and synset, and a marker prevents repeated additions. No names,
 cardinalities, senses or associations change. See ../seeds/README.md for proposal
 sources and reference checks. Do not regenerate 006 after application.
+
+## Migration 009: survey discovery evidence
+
+`009_orbital-survey-metadata.sql` adds nullable JSON `discovery_metadata` to
+`orbital_progressions` and `orbital_discovery_results` with replay guards.
+It records the shared Seed Surveys scan's rank, confidence, discovery counts,
+seed and numerical settings. Older rows remain null; no backfill, coordinate
+replacement or source-table change occurs. Apply before running v2 discovery.
+
+## Migration 010: resumable orbital jobs
+
+`010_orbital-resume-checkpoints.sql` adds nullable execution_token and a
+resume_count to discovery runs and creates orbital_discovery_checkpoints with
+a compressed, versioned payload. Definitions are replay-safe. Existing points,
+ratios and run history are preserved; no checkpoint/data backfill occurs. Apply
+before deploying the resumable worker coordinator. Legacy stopped runs cannot
+reconstruct work that was never checkpointed and must restart once.

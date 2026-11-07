@@ -4,7 +4,7 @@ import os from 'node:os'
 import path from 'node:path'
 import {gunzipSync} from 'node:zlib'
 import test from 'node:test'
-import {context_files, create_context_archive} from '../scripts/docker_build_context.js'
+import {context_files, create_context_archive, context_filter} from '../scripts/docker_build_context.js'
 import {build_windows_image, image_build_plan} from '../scripts/build_windows_image.js'
 
 const fixture = t => {
@@ -25,6 +25,13 @@ const fixture = t => {
    })
    return {root, directory, write}
 }
+
+test('actual Docker context excludes host knowledge artifacts but retains reviewed inputs', () => {
+   const included = context_filter(fs.readFileSync(new URL('../.dockerignore', import.meta.url), 'utf8'))
+   assert.equal(included('servers/fracto-ai-server/generated/knowledge/ui-features.bundle.json'), false)
+   assert.equal(included('servers/fracto-ai-server/subject_providers/ui.json'), true)
+   assert.equal(included('servers/fracto-ui/src/features/catalog.json'), true)
+})
 
 // Decode independently, checking each USTAR checksum and payload boundary.
 const unpack = archive => {

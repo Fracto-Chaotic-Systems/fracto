@@ -56,6 +56,8 @@ ENV NODE_ENV=development \
     FRACTO_TILE_MIN_FREE_BYTES=1073741824
 
 COPY --chown=node:node . .
+RUN node scripts/build_knowledge_bundle.js \
+    && chown -R node:node /app/servers/fracto-ai-server/generated
 RUN mkdir -p /var/lib/fracto/tiles /var/lib/fracto/index /var/lib/fracto/ai /var/lib/fracto/data-corrections /app/assets /app/logs /app/videos \
     && chown -R node:node /var/lib/fracto /app/assets /app/logs /app/videos \
     && chmod +x /app/docker-entrypoint.sh
