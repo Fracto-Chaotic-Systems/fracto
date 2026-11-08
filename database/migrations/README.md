@@ -231,3 +231,11 @@ a compressed, versioned payload. Definitions are replay-safe. Existing points,
 ratios and run history are preserved; no checkpoint/data backfill occurs. Apply
 before deploying the resumable worker coordinator. Legacy stopped runs cannot
 reconstruct work that was never checkpointed and must restart once.
+
+## Migration 012: persistent Julia ray paths
+
+`012_orbital-ray-paths.sql` creates `orbital_ray_paths`, keyed by orbital ID with
+a foreign key to `orbital_progressions`. Its JSON document stores versioned,
+validated dynamic-ray geometry and accuracy metadata, optionally compressed by
+the existing ray codec. Loading is lazy and successful traces populate the cache;
+there is no backfill. This table is independent of minibrot parameter-ray paths.
