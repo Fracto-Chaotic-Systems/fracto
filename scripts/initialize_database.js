@@ -5,6 +5,7 @@ import mysql from "mysql2/promise";
 
 import config from "../config/mysql.json" with { type: "json" };
 import { ROOT_DIR } from "../constants.js";
+import { migration_checksum_matches } from "./database_migration_checksums.js";
 import { backup_insert_columns } from "./database_backup_columns.js";
 import { normalize_backup_collations } from "./database_collation_compatibility.js";
 
@@ -170,7 +171,7 @@ const apply_migrations = async (connection, existing_database) => {
     const is_forced =
       force_argument && filename.startsWith(`${force_argument}_`);
     if (applied.has(filename) && !is_forced) {
-      if (applied.get(filename) !== file_checksum)
+      if (!migration_checksum_matches(fs.readFileSync(filepath), applied.get(filename)))
         throw new Error(
           `Migration ${filename} was changed after it was applied`,
         );
