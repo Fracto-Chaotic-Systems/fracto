@@ -6,10 +6,12 @@ import { load_mapping_rows } from "../scripts/wordnet_mapping_seed.js";
 import { compatible_migration_sql } from "../scripts/database_migration_compatibility.js";
 
 test(
-  "006 executes across UTF-8 collation defaults, preserves existing notes and names, and retries without duplicates",
+  "006 and 011 execute across collation defaults, preserve existing rows, and retry safely",
   { skip: process.env.FRACTO_TEST_MYSQL_MIGRATIONS !== "1" },
   async () => {
     const { default: mysql } = await import("mysql2/promise");
+    const { normalize_backup_collations } =
+      await import("../scripts/database_collation_compatibility.js");
     const config = JSON.parse(
       await readFile(new URL("../config/mysql.json", import.meta.url), "utf8"),
     );
@@ -20,6 +22,7 @@ test(
       port: Number(process.env.FRACTO_MYSQL_PORT || config.port || 3306),
       charset: "utf8mb4_unicode_ci",
       dateStrings: true,
+      multipleStatements: true,
     });
     try {
       assert.match(schema, /^fracto_migration_verify_[a-f0-9]{12}$/);
@@ -80,6 +83,47 @@ test(
         );
         assert.deepEqual(replayed, rows);
       }
+      await db.query(
+        "CREATE TABLE videos (id INT PRIMARY KEY,archived TINYINT(1) NOT NULL DEFAULT 0,script_version INT NOT NULL) ENGINE=InnoDB",
+      );
+      await db.query("INSERT INTO videos VALUES (1,1,3)");
+      const [before] = await db.query(
+        "SELECT id,archived,script_version FROM videos",
+      );
+      const baseline = await readFile(
+        new URL(
+          "../database/migrations/011_sync-baseline-tables.sql",
+          import.meta.url,
+        ),
+        "utf8",
+      );
+      const prepared_baseline = normalize_backup_collations(
+        compatible_migration_sql("011_sync-baseline-tables.sql", baseline),
+        new Set(["utf8mb4_unicode_520_ci"]),
+      );
+      for (let attempt = 0; attempt < 2; attempt++)
+        await db.query(prepared_baseline);
+      const [after] = await db.query(
+        "SELECT id,archived,script_version FROM videos",
+      );
+      assert.deepEqual(
+        after,
+        before,
+        "011 fallback and retry preserve existing video rows",
+      );
+      const [tables] = await db.query(
+        "SELECT TABLE_NAME AS name,TABLE_COLLATION AS collation FROM information_schema.TABLES WHERE TABLE_SCHEMA=? AND TABLE_NAME IN ('lore_category','lore_content') ORDER BY TABLE_NAME",
+        [schema],
+      );
+      assert.equal(tables.length, 2);
+      assert.ok(
+        tables.every((table) => table.collation === "utf8mb4_unicode_520_ci"),
+      );
+      const [columns] = await db.query("SHOW COLUMNS FROM videos");
+      assert.deepEqual(
+        columns.map((column) => column.Field),
+        ["id", "script_version", "archived"],
+      );
     } finally {
       try {
         if (/^fracto_migration_verify_[a-f0-9]{12}$/.test(schema))

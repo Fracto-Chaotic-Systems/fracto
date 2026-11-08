@@ -12,6 +12,34 @@ import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { compatible_migration_sql } from "../scripts/database_migration_compatibility.js";
+import { normalize_backup_collations } from "../scripts/database_collation_compatibility.js";
+
+test("011 uses the supported fallback collation while preserving the immutable migration", async () => {
+  const original = await readFile(
+    new URL(
+      "../database/migrations/011_sync-baseline-tables.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const prepared = normalize_backup_collations(
+    compatible_migration_sql("011_sync-baseline-tables.sql", original),
+    new Set(["utf8mb4_unicode_520_ci"]),
+  );
+  assert.doesNotMatch(prepared, /utf8mb4_0900_ai_ci/);
+  assert.equal(
+    prepared.replaceAll("utf8mb4_unicode_520_ci", "utf8mb4_0900_ai_ci"),
+    original,
+  );
+  assert.equal(
+    normalize_backup_collations(original, new Set(["utf8mb4_0900_ai_ci"])),
+    original,
+  );
+  assert.throws(
+    () => normalize_backup_collations(original, new Set()),
+    /does not support/,
+  );
+});
 
 test("disabled MySQL integration test skips in a build without private config or database dependencies", async () => {
   const directory = await mkdtemp(

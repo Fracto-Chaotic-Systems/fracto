@@ -201,7 +201,12 @@ const apply_migrations = async (connection, existing_database) => {
       migration_sql,
     );
     if (!is_backup_refresh)
-      await connection.query(compatible_migration_sql(filename, migration_sql));
+      await connection.query(
+        normalize_backup_collations(
+          compatible_migration_sql(filename, migration_sql),
+          supported_collations,
+        ),
+      );
     if (applied.has(filename))
       await update_migration(connection, filename, file_checksum);
     else await record_migration(connection, filename, file_checksum);

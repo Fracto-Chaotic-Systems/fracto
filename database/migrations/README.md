@@ -32,6 +32,11 @@ applied-migration guard and require a new migration.
 `011_sync-baseline-tables.sql` adds empty lore tables missing in some legacy
 databases and places `videos.archived` after `script_version`, matching the
 shared baseline. It preserves existing rows, is replay-safe, and loads no content.
+The runner applies the same server-capability collation fallback to pending
+migrations as to backup imports. Where MySQL 8's `utf8mb4_0900_ai_ci` is absent,
+011's execution copy uses the supported `utf8mb4_unicode_520_ci` collation.
+The file and its checksum stay unchanged. Retry the normal migration command;
+successful migrations 006–010 are skipped and 011 can safely retry partial DDL.
 
 ## Create a migration
 

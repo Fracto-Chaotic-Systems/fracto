@@ -5,6 +5,10 @@ the execution copy of migration 006's marker comparison with explicit Unicode
 collation. Its immutable SQL file and recorded checksum remain unchanged.
 This permits a normal migration retry on servers whose generated UTF-8
 expressions otherwise default to `utf8mb4_general_ci`.
+Both backup loading and pending migration execution use the detected server
+collation support: unsupported `utf8mb4_0900_ai_ci` is mapped to the existing
+`utf8mb4_unicode_520_ci` fallback in the execution copy. Original SQL files and
+their checksums remain unchanged; successful migrations are not replayed.
 
 ## Single-core orbital verification
 
