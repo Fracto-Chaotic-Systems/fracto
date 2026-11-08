@@ -28,6 +28,143 @@ import {
   require_internal_service,
   internal_service_headers,
 } from "../utils/service_authorization.js";
+import { acquire_mesh_session } from "../servers/fracto-admin-server/handlers/mesh_sync_session.js";
+
+test("inventory acquisition polls past the old four-minute request deadline and reports scan progress", async () => {
+  let time = 0,
+    polls = 0;
+  const progress = [];
+  const result = await acquire_mesh_session(
+    async (route) => {
+      if (route === "/sessions/start")
+        return { id: "scan", status: "checking" };
+      assert.equal(route, "/sessions/scan/status");
+      return ++polls < 3
+        ? { status: "checking", files_checked: polls * 64 }
+        : { status: "ready", catalog: { version: 1 } };
+    },
+    (state) => progress.push(state.files_checked),
+    {
+      now: () => time,
+      sleep: async () => {
+        time += 240001;
+      },
+    },
+  );
+  assert.equal(time, 480002);
+  assert.deepEqual(progress, [64, 128, 0]);
+  assert.equal(result.catalog.version, 1);
+});
+
+test("failed acquisitions close their reservation and old peers fall back only when start is absent", async () => {
+  const calls = [];
+  await assert.rejects(
+    acquire_mesh_session(async (route) => {
+      calls.push(route);
+      if (route === "/sessions/start") return { id: "scan" };
+      if (route.endsWith("/status"))
+        return { status: "failed", error: "mesh_sync_storage_failed" };
+      return { closed: true };
+    }),
+    /mesh_sync_storage_failed/,
+  );
+  assert.equal(calls.at(-1), "/sessions/scan/close");
+  const legacy = await acquire_mesh_session(async (route) => {
+    if (route === "/sessions/start")
+      throw Object.assign(Error("missing"), { status: 404 });
+    assert.equal(route, "/sessions");
+    return { id: "legacy", catalog: { version: 1 } };
+  });
+  assert.equal(legacy.id, "legacy");
+  const origin_fallback = await acquire_mesh_session(async (route) => {
+    if (route === "/sessions/start")
+      throw Object.assign(Error("unknown route reached browser origin guard"), {
+        status: 403,
+        code: "Untrusted request origin",
+      });
+    assert.equal(route, "/sessions");
+    return { id: "legacy-origin", catalog: { version: 1 } };
+  });
+  assert.equal(origin_fallback.id, "legacy-origin");
+  let denied_calls = 0;
+  await assert.rejects(
+    acquire_mesh_session(async () => {
+      denied_calls++;
+      throw Object.assign(Error("sync_peer_unauthorized"), {
+        status: 403,
+        code: "sync_peer_unauthorized",
+      });
+    }),
+    /sync_peer_unauthorized/,
+  );
+  assert.equal(
+    denied_calls,
+    1,
+    "authentication failures never trigger a legacy retry",
+  );
+});
+
+test("a scanning store reports progress and releases an abandoned reservation when its scan finishes", async () => {
+  let finish, notify;
+  const gate = new Promise((resolve) => {
+    finish = resolve;
+  });
+  const store = {
+    journal: { pending: new Set() },
+    inventory: { namespace: "0".repeat(32), snapshot: () => ({ records: [] }) },
+    reconcile: async ({ on_progress }) => {
+      notify = on_progress;
+      await gate;
+    },
+  };
+  const sync = new MeshFileSync({ inventory_store: store });
+  const opened = sync.start();
+  const completion = sync.sessions.get(opened.id).completion;
+  notify({ files_checked: 64 });
+  assert.equal(sync.status(opened.id).files_checked, 64);
+  assert.equal(sync.status(opened.id).status, "checking");
+  assert.throws(() => sync.start(), /mesh_jobs_active/);
+  sync.close(opened.id);
+  assert.ok(
+    store.sync_owner,
+    "scan owns the store until its outstanding reads finish",
+  );
+  finish();
+  await completion;
+  assert.equal(store.sync_owner, null);
+});
+
+test("incompatible mesh identities fail before scanning the local volume and release the remote reservation", async () => {
+  const local_calls = [],
+    remote_calls = [];
+  const jobs = new MeshSyncJobs({
+    peers: () => new Map([["http://lab.example", {}]]),
+    local: async (route) => {
+      local_calls.push(route);
+      assert.equal(route, "/identity");
+      return { version: 1, namespace: "a".repeat(32), profile: { version: 1 } };
+    },
+    remote: async (_peer, route) => {
+      remote_calls.push(route);
+      return route === "/sessions"
+        ? {
+            id: "remote",
+            catalog: {
+              version: 1,
+              namespace: "b".repeat(32),
+              profile: { version: 1 },
+              records: [],
+            },
+          }
+        : { closed: true };
+    },
+  });
+  const job = jobs.create("http://lab.example");
+  await jobs.jobs.get(job.id).completion;
+  assert.equal(jobs.get(job.id).error, "mesh_source_mismatch");
+  assert.deepEqual(local_calls, ["/identity"]);
+  assert.equal(remote_calls.at(-1), "/sessions/remote/close");
+});
 
 const identity = { generation: "mesh-sync-fixture" };
 const geometry = build_terrain_tile(

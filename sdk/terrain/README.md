@@ -10,6 +10,9 @@ loads and validates a complete compressed file, optionally decoding its typed
 attributes for runtime use. Importing these modules creates no directories.
 `Inventory.js` provides the independent, in-memory mesh availability index used
 as the foundation for heat-map queries. It performs no filesystem access.
+`InventoryStore.reconcile()` optionally reports `on_progress({files_checked})`
+while checking mesh files, allowing sync to poll progress without a long HTTP
+request. The callback does not change validation or durable journal semantics.
 
 Mesh X/Z coordinates span 0–1; Z runs from complex-plane top toward bottom.
 Heights are normalized log1p(iteration)/log1p(1000000), capped at 1 and smoothed

@@ -148,7 +148,7 @@ export class MeshInventoryStore {
       await this.journal.checkpoint();
     });
   }
-  reconcile({ force = false } = {}) {
+  reconcile({ force = false, on_progress = () => {} } = {}) {
     return this.enqueue(async () => {
       const seen = new Set();
       const visit = async (directory) => {
@@ -171,12 +171,14 @@ export class MeshInventoryStore {
             )
               continue;
             seen.add(code);
+            if (seen.size % 64 === 0) on_progress({ files_checked: seen.size });
             if (!this.journal.pending.has(code))
               await this.observe_file(code, false, force);
           }
         }
       };
       await visit(this.root);
+      on_progress({ files_checked: seen.size });
       for (const record of this.inventory.snapshot().records) {
         if (
           !seen.has(record.short_code) &&
