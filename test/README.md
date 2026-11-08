@@ -5,6 +5,8 @@ For a real MySQL check, run
 `FRACTO_TEST_MYSQL_MIGRATIONS=1 node --test test/database_migration_compatibility.integration.test.js`.
 It creates and removes only its own disposable schema, exercising migration 006
 under general and Unicode collation defaults, note preservation and safe retries.
+The database configuration is read only after the opt-in test is enabled, so
+ordinary builds can skip it without a private `config/mysql.json` file.
 
 `servers/fracto-ai-server/knowledge_bundle.test.js` covers deterministic artifacts,
 source/provenance changes, invalid manifests, bounded source reads, path/link

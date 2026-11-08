@@ -2,8 +2,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { randomBytes } from "node:crypto";
 import { readFile } from "node:fs/promises";
-import mysql from "mysql2/promise";
-import config from "../config/mysql.json" with { type: "json" };
 import { load_mapping_rows } from "../scripts/wordnet_mapping_seed.js";
 import { compatible_migration_sql } from "../scripts/database_migration_compatibility.js";
 
@@ -11,6 +9,10 @@ test(
   "006 executes across UTF-8 collation defaults, preserves existing notes and names, and retries without duplicates",
   { skip: process.env.FRACTO_TEST_MYSQL_MIGRATIONS !== "1" },
   async () => {
+    const { default: mysql } = await import("mysql2/promise");
+    const config = JSON.parse(
+      await readFile(new URL("../config/mysql.json", import.meta.url), "utf8"),
+    );
     const schema = `fracto_migration_verify_${randomBytes(6).toString("hex")}`;
     const db = await mysql.createConnection({
       ...config,
