@@ -1,5 +1,11 @@
 # Fracto scripts
 
+`initialize_database.js` uses `database_migration_compatibility.js` to prepare
+the execution copy of migration 006's marker comparison with explicit Unicode
+collation. Its immutable SQL file and recorded checksum remain unchanged.
+This permits a normal migration retry on servers whose generated UTF-8
+expressions otherwise default to `utf8mb4_general_ci`.
+
 ## Single-core orbital verification
 
 After migration 007 is applied, the explicit application-data command

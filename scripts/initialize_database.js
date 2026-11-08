@@ -8,6 +8,7 @@ import { ROOT_DIR } from "../constants.js";
 import { backup_insert_columns } from "./database_backup_columns.js";
 import { normalize_backup_collations } from "./database_collation_compatibility.js";
 import { migration_checksums } from "../utils/migration_checksums.js";
+import { compatible_migration_sql } from "./database_migration_compatibility.js";
 
 const database = process.env.FRACTO_MYSQL_DATABASE || config.database;
 const backup_directory = path.resolve(
@@ -199,7 +200,8 @@ const apply_migrations = async (connection, existing_database) => {
       connection,
       migration_sql,
     );
-    if (!is_backup_refresh) await connection.query(migration_sql);
+    if (!is_backup_refresh)
+      await connection.query(compatible_migration_sql(filename, migration_sql));
     if (applied.has(filename))
       await update_migration(connection, filename, file_checksum);
     else await record_migration(connection, filename, file_checksum);

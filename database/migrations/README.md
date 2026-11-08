@@ -203,6 +203,13 @@ cardinality and synset, and a marker prevents repeated additions. No names,
 cardinalities, senses or associations change. See ../seeds/README.md for proposal
 sources and reference checks. Do not regenerate 006 after application.
 
+The migration runner explicitly collates both operands of 006's `LOCATE`
+marker check to `utf8mb4_unicode_ci` in its execution copy. This avoids mixed
+implicit collations on servers that default generated UTF-8 expressions to
+`utf8mb4_general_ci`. The migration file, seed data and checksum are unchanged.
+After updating the runner, retry `npm run db:migrate` normally; do not force
+reapply successful migrations or edit their recorded checksums.
+
 ## Migration 009: survey discovery evidence
 
 `009_orbital-survey-metadata.sql` adds nullable JSON `discovery_metadata` to

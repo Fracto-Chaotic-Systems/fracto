@@ -1,5 +1,11 @@
 # Fracto tests
 
+`database_migration_compatibility.test.js` checks immutable migration SQL handling.
+For a real MySQL check, run
+`FRACTO_TEST_MYSQL_MIGRATIONS=1 node --test test/database_migration_compatibility.integration.test.js`.
+It creates and removes only its own disposable schema, exercising migration 006
+under general and Unicode collation defaults, note preservation and safe retries.
+
 `servers/fracto-ai-server/knowledge_bundle.test.js` covers deterministic artifacts,
 source/provenance changes, invalid manifests, bounded source reads, path/link
 rejection, scoped Git metadata, check-only behavior and atomic publication failure.
