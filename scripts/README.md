@@ -1,5 +1,16 @@
 # Fracto scripts
 
+`free_ec2_port_3007.sh --inspect` identifies an nginx listener that conflicts with
+the AI container and lists the loaded configuration files containing `listen
+3007`. Run with `sudo`. `--edit` lets the operator select a file, backs it up
+under `/var/backups/fracto-nginx`, and opens `${EDITOR:-vi}` for review. Remove
+the dedicated legacy server block, or only its 3007 listener when other ports
+share the block. It tests the configuration before gracefully reloading nginx,
+restores the original file if editing/validation/reload fails, and verifies that
+the IPv4 loopback port is free. It never stops/disables nginx or removes public
+proxy routes automatically. `FRACTO_NGINX_BACKUP_DIR` can select another backup
+directory outside nginx's include trees.
+
 `validate_ec2_deployment.js` checks the host tile root's `meshes` bind directory
 before the deployment workflow stops production. Create that directory for the
 container's UID/GID 1000 first; see `deploy/README.md`. Validation does not create

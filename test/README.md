@@ -1,5 +1,9 @@
 # Fracto tests
 
+`free_ec2_port_3007.test.js` uses mocked Linux commands and temporary nginx files
+to verify inspection, backup/edit/reload, invalid-edit rollback, and refusal to
+touch non-nginx listeners. It runs as root on Linux; no real service is touched.
+
 `database_migration_compatibility.test.js` checks immutable migration SQL handling.
 For a real MySQL check, run
 `FRACTO_TEST_MYSQL_MIGRATIONS=1 node --test test/database_migration_compatibility.integration.test.js`.

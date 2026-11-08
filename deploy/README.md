@@ -1,5 +1,13 @@
 # Deployment examples
 
+If Docker cannot bind loopback port 3007 and `ss` identifies nginx as the owner,
+run `sudo bash scripts/free_ec2_port_3007.sh --inspect` to locate the legacy
+listener configuration. `--edit` backs up a selected file, opens it for review,
+tests the edit, gracefully reloads nginx, and verifies the port is free. Remove
+the dedicated legacy server block or just its 3007 listener if the block serves
+other ports. Keep public site/TLS/API proxy routes intact. The helper restores
+the original file on an unsuccessful edit and never stops nginx itself.
+
 This directory contains deployment-facing examples for the main Fracto
 repository. Keep real hostnames, certificates, secrets, and machine-specific
 paths in the deployment environment; do not commit them.
