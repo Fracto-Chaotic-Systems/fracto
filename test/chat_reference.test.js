@@ -16,6 +16,15 @@ import { create_app } from "../servers/fracto-ai-server/app.js";
 import { create_chat_router } from "../servers/fracto-admin-server/handlers/chat.js";
 import { stream_chat } from "../servers/fracto-ui/src/backend/ChatStream.js";
 
+
+// Fixture mutations perform synchronous durable writes between HTTP requests.
+// Fresh connections avoid reusing idle sockets whose close events were delayed.
+const fixture_fetch = (url, options = {}) => {
+  const headers = new Headers(options.headers);
+  headers.set("Connection", "close");
+  return fetch(url, { ...options, headers });
+};
+
 const token = "a".repeat(64);
 const body = (content = "chat navigation") => ({
   contract_version: 1,
@@ -92,6 +101,7 @@ const fixture = async (
       "/chat",
       create_chat_router({
         environment: { FRACTO_AI_PORT: String(ai.address().port) },
+        fetch_ai: fixture_fetch,
         authorize: (req, res, next) =>
           req.headers.cookie === "session=admin"
             ? next()
@@ -132,7 +142,7 @@ const fixture = async (
       return { models, writes, reads, credential_reads };
     },
     request: (value = body(), headers = {}) =>
-      fetch(url, {
+      fixture_fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -157,7 +167,7 @@ test("reference mode traverses browser stream, admin bridge and active skill wit
       body().messages,
       undefined,
       (url, options) =>
-        fetch(url, {
+        fixture_fetch(url, {
           ...options,
           headers: { ...options.headers, cookie: "session=admin" },
         }),
