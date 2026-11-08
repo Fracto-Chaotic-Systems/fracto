@@ -15,6 +15,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
+    "test:mesh-sync": "node --test test/mesh_sync.integration.test.js servers/fracto-ui/test/admin_database_sync.test.js",
     "start": "node --max-old-space-size=16384 index.js",
     "start:tiles-local-source": "node scripts/start_tiles_local_source.js",
     "check": "npm run check:syntax && npm run db:validate && npm test",
