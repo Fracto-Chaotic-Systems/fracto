@@ -5,9 +5,9 @@ import mysql from "mysql2/promise";
 
 import config from "../config/mysql.json" with { type: "json" };
 import { ROOT_DIR } from "../constants.js";
-import { migration_checksum_matches } from "./database_migration_checksums.js";
 import { backup_insert_columns } from "./database_backup_columns.js";
 import { normalize_backup_collations } from "./database_collation_compatibility.js";
+import { migration_checksums } from "../utils/migration_checksums.js";
 
 const database = process.env.FRACTO_MYSQL_DATABASE || config.database;
 const backup_directory = path.resolve(
@@ -81,7 +81,7 @@ if (
 }
 
 const checksum = (filepath) =>
-  crypto.createHash("sha256").update(fs.readFileSync(filepath)).digest("hex");
+  migration_checksums(fs.readFileSync(filepath)).canonical;
 
 const ensure_migrations_table = async (connection) => {
   await connection.query(`CREATE TABLE IF NOT EXISTS ${identifier(migrations_table)} (
@@ -171,7 +171,11 @@ const apply_migrations = async (connection, existing_database) => {
     const is_forced =
       force_argument && filename.startsWith(`${force_argument}_`);
     if (applied.has(filename) && !is_forced) {
-      if (!migration_checksum_matches(fs.readFileSync(filepath), applied.get(filename)))
+      if (
+        !migration_checksums(fs.readFileSync(filepath)).accepted.has(
+          applied.get(filename),
+        )
+      )
         throw new Error(
           `Migration ${filename} was changed after it was applied`,
         );

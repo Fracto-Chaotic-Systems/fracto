@@ -23,6 +23,16 @@ Applied migrations are recorded in the MySQL table
 `fracto_schema_migrations`, including a SHA-256 checksum. Existing installations
 are recorded at `001_baseline.sql` without replaying the original dumps.
 
+New checksums normalize CRLF to LF. Existing LF or CRLF fingerprints are accepted
+only when they match a byte-for-byte line-ending variant of the current SQL file.
+This permits Windows/Linux checkouts to agree without replaying migrations or
+rewriting old history. SQL, comments, and other whitespace changes still fail the
+applied-migration guard and require a new migration.
+
+`011_sync-baseline-tables.sql` adds empty lore tables missing in some legacy
+databases and places `videos.archived` after `script_version`, matching the
+shared baseline. It preserves existing rows, is replay-safe, and loads no content.
+
 ## Create a migration
 
 Choose the next unused, zero-padded number and a short description. The filename
