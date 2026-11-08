@@ -8,6 +8,7 @@ import {
    REQUIRED_LOCAL_TILE_LISTINGS,
    validate_ec2_compose_model,
    validate_local_tile_listings,
+   validate_local_mesh_directory,
 } from '../scripts/validate_ec2_deployment.js'
 
 const valid_model = () => ({
@@ -63,6 +64,23 @@ test('EC2 Compose validation rejects a writable tile mount and an invalid genera
    const invalid_generation = valid_model()
    invalid_generation.services.fracto.environment.FRACTO_TILE_SOURCE_GENERATION = '../dataset'
    assert.throws(() => validate_ec2_compose_model(invalid_generation), /stable 1-128 character identifier/)
+})
+
+test('mesh bind preflight rejects missing paths and files without creating or changing them', () => {
+   const source_root = fs.mkdtempSync(path.join(os.tmpdir(), 'fracto-mesh-bind-'))
+   try {
+      const meshes = path.join(source_root, 'meshes')
+      assert.throws(() => validate_local_mesh_directory(source_root), /mesh bind source must already exist/)
+      assert.equal(fs.existsSync(meshes), false)
+      fs.writeFileSync(meshes, 'keep')
+      assert.throws(() => validate_local_mesh_directory(source_root), /ownership UID\/GID 1000/)
+      assert.equal(fs.readFileSync(meshes, 'utf8'), 'keep')
+      fs.unlinkSync(meshes)
+      fs.mkdirSync(meshes)
+      assert.equal(validate_local_mesh_directory(source_root), undefined)
+   } finally {
+      fs.rmSync(source_root, {recursive: true, force: true})
+   }
 })
 
 test('local tile source preflight requires all listings consumed during index refresh', () => {

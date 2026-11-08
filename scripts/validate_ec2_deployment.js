@@ -5,6 +5,16 @@ import {spawnSync} from 'node:child_process'
 const ROOT_DIRECTORY = path.resolve(import.meta.dirname, '..')
 const SOURCE_TARGET = '/mnt/fracto-tile-source'
 export const REQUIRED_LOCAL_TILE_LISTINGS = ['indexed', 'blank', 'interior', 'needs_update']
+export const validate_local_mesh_directory = source_directory => {
+   const directory = path.join(source_directory, 'meshes')
+   try {
+      if (!fs.statSync(directory).isDirectory()) throw new Error('not a directory')
+   } catch {
+      throw new Error(
+         `The mesh bind source must already exist as a directory: ${directory}. Create it with ownership UID/GID 1000 and mode 0755 before deployment; the numerical tile corpus remains read-only`,
+      )
+   }
+}
 export const validate_local_tile_listings = source_directory => {
    for (const listing_name of REQUIRED_LOCAL_TILE_LISTINGS) {
       const listing_path = path.join(source_directory, 'manifest', `${listing_name}.csv`)
@@ -201,6 +211,7 @@ const validate_host_source = source_directory => {
       throw new Error('FRACTO_TILE_SOURCE_HOST_DIR must name an existing readable/searchable corpus with LNN directories')
    }
    validate_local_tile_listings(source_directory)
+   validate_local_mesh_directory(source_directory)
 }
 
 const main = () => {

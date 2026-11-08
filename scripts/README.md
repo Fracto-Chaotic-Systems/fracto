@@ -1,5 +1,10 @@
 # Fracto scripts
 
+`validate_ec2_deployment.js` checks the host tile root's `meshes` bind directory
+before the deployment workflow stops production. Create that directory for the
+container's UID/GID 1000 first; see `deploy/README.md`. Validation does not create
+directories or change numerical tile permissions.
+
 `initialize_database.js` uses `database_migration_compatibility.js` to prepare
 the execution copy of migration 006's marker comparison with explicit Unicode
 collation. Its immutable SQL file and recorded checksum remain unchanged.

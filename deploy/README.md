@@ -123,6 +123,20 @@ be configured through SSH or Git's credential helper. Existing checkouts are
 fast-forwarded only, and tracked local changes or divergent histories stop the
 workflow.
 
+Before first install (or upgrading an older installation), create the writable
+`meshes` directory inside the configured host tile root. Docker cannot create
+this nested bind source because `create_host_path` is deliberately disabled.
+For `FRACTO_TILE_SOURCE_HOST_DIR=/var/www/html`, run:
+
+```sh
+sudo install -d -o 1000 -g 1000 -m 0755 /var/www/html/meshes
+```
+
+UID/GID 1000 is the container's `node` account. Only the mesh subtree is writable;
+leave the numerical tile directories and their permissions unchanged. The
+tiles service initializes its mesh storage marker on startup. Deployment
+validation checks that the bind directory exists before stopping production.
+
 On first install, the workflow builds the production image and runs the
 non-destructive database bootstrap/migration command. The index refresh reads
 trusted short-code listings directly from
