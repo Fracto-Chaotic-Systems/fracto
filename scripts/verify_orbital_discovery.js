@@ -143,6 +143,17 @@ const verify = async () => {
           "utf8",
         )
       ).replace(/^--.*$/gm, "");
+    migration +=
+      "\n" +
+      (
+        await readFile(
+          new URL(
+            "../database/migrations/016_orbital-lifecycle-state.sql",
+            import.meta.url,
+          ),
+          "utf8",
+        )
+      ).replace(/^\s*--.*$/gm, "");
     for (const statement of migration.split(";").filter((sql) => sql.trim()))
       await admin.query(statement);
     // A second application tests safe recovery/replay against the disposable schema.
@@ -153,6 +164,7 @@ const verify = async () => {
       grid_size: 31,
       max_angle_period: 4,
       max_families: 16,
+      catalog_max_denominator: 0,
     };
     const open_target = async () => {
       const db = await open_orbital_database();

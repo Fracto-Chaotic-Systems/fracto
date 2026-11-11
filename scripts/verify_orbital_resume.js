@@ -80,7 +80,10 @@ const request = async (path, body, status = 200) => {
         },
   );
   const data = await response.json();
-  assert.ok([status].flat().includes(response.status), `${response.status}: ${JSON.stringify(data)}`);
+  assert.ok(
+    [status].flat().includes(response.status),
+    `${response.status}: ${JSON.stringify(data)}`,
+  );
   if (response.status === 409) {
     assert.equal(data.error, "bailiwick_busy");
     return null;
@@ -107,7 +110,11 @@ try {
   const source = await source_store.source("65");
   const settings = discovery_request({
     free_bailiwick_id: source.id,
-    settings: { max_angle_period: 7, max_families: 18 },
+    settings: {
+      max_angle_period: 7,
+      max_families: 18,
+      catalog_max_denominator: 0,
+    },
   }).settings;
   const baseline = await calculate_orbital_survey_discovery({
     parameter: source.parameter,
@@ -122,6 +129,7 @@ try {
     "008_orbital-bailiwick-source.sql",
     "009_orbital-survey-metadata.sql",
     "010_orbital-resume-checkpoints.sql",
+    "016_orbital-lifecycle-state.sql",
   ]) {
     const sql = (
       await readFile(
@@ -139,11 +147,25 @@ try {
   };
   await start();
   const initial = await request("/discovery-jobs", body, 202);
-  await request("/discovery-jobs", { ...body, request_key: "competing", settings: { ...settings, max_families: 19 } }, 409);
+  await request(
+    "/discovery-jobs",
+    {
+      ...body,
+      request_key: "competing",
+      settings: { ...settings, max_families: 19 },
+    },
+    409,
+  );
   await request(`/discovery-jobs/${initial.id}/resume`, {}, 409);
   // A different bailiwick can use the other worker concurrently.
-  const independent = await request("/discovery-jobs", { free_bailiwick_id: "55", request_key: "independent" }, 202);
-  await wait_event((e) => e.event === "worker" && e.affinity.includes(independent.id));
+  const independent = await request(
+    "/discovery-jobs",
+    { free_bailiwick_id: "55", request_key: "independent" },
+    202,
+  );
+  await wait_event(
+    (e) => e.event === "worker" && e.affinity.includes(independent.id),
+  );
   await request(`/discovery-jobs/${independent.id}/cancel`, {});
   await wait_event(
     (e) => e.event === "checkpoint" && e.stage === "scan" && e.scan_count > 0,
@@ -262,9 +284,15 @@ try {
     run = await request(`/discovery-jobs/${initial.id}`);
   }
   assert.equal(run.status, "completed", JSON.stringify(run));
-  const assigned_workers = events().filter((e) => e.event === "worker" && e.affinity.includes(initial.id));
+  const assigned_workers = events().filter(
+    (e) => e.event === "worker" && e.affinity.includes(initial.id),
+  );
   assert.ok(assigned_workers.length > 1);
-  assert.equal(new Set(assigned_workers.map((e) => e.thread_id)).size, 1, "all batches in an execution use one physical worker");
+  assert.equal(
+    new Set(assigned_workers.map((e) => e.thread_id)).size,
+    1,
+    "all batches in an execution use one physical worker",
+  );
   assert.equal(run.error_code, null);
   assert.ok(
     !events().some(

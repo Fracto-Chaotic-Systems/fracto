@@ -10,7 +10,9 @@ import {
 import { SEED_SURVEY_RAY_OPTIONS } from "./FractoDynamicRays.js";
 
 export const ORBITAL_RAY_CACHE_VERSION = "orbital-julia-rays-v1";
-export const MAX_ORBITAL_RAY_WRITE_BYTES = 20 * 1024 * 1024;
+// Match the bounded, chunk-backed persistent cache; catalog families can exceed
+// the old 20 MiB upload limit even though no paths are generated in discovery.
+export const MAX_ORBITAL_RAY_WRITE_BYTES = 96 * 1024 * 1024;
 const canonical = (value) => {
   if (
     !["string", "number"].includes(typeof value) ||

@@ -155,7 +155,10 @@ const angle_family = (angle, max_period) => {
 };
 
 /** Check that only complete, exact doubling families can enter persistent storage. */
-export const validate_landing_families = (ratios, period) => {
+export const validate_landing_families = (ratios, period, options = {}) => {
+  const max_angle_period = options.max_angle_period ?? 24;
+  if (!Number.isSafeInteger(max_angle_period) || max_angle_period < 1)
+    throw Error("invalid_angle_period_limit");
   const groups = new Map();
   for (const ratio of ratios) {
     if (
@@ -175,7 +178,7 @@ export const validate_landing_families = (ratios, period) => {
       ratio.landing_error > 1e-6
     )
       throw Error("invalid_landing_ratio");
-    const family = angle_family(angle, 24);
+    const family = angle_family(angle, max_angle_period);
     if (
       family.key !== ratio.family_key ||
       family.angles.length !== ratio.angle_period

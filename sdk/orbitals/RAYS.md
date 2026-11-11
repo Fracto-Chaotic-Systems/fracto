@@ -21,7 +21,7 @@ not algorithms or correctness guarantees claimed by either publication.
 
 ## Reading the flowcharts
 
-The two flowcharts below distinguish the proposed `c,n`-only discovery workflow
+The two flowcharts below distinguish the original proposed `c,n`-only discovery workflow
 from the existing numerical ray tracer. The theoretical basis is the published
 Milnor and Benini–Lyubich works cited above; the implementation thresholds and
 stopping rules are engineering choices, not rigorous landing certificates.
@@ -40,6 +40,20 @@ distinct spatial cycles or attracting cycles.
 - [Result interpretation and limits](#results-and-limitations)
 
 ## Current selected-orbital functionality
+
+The denominator-based ray-first SDK route is now implemented separately as
+`discover_catalog_orbitals(parameter, {catalog, ...options})`. It starts from
+representative rays, refines divisor-period candidates, and validates complete
+families without survey seeds or a supplied orbit. It is not yet part of the
+persistent application discovery jobs. See [representative-ray discovery](README.md#representative-ray-orbital-discovery)
+for the current API, reuse, deduplication, checkpoints, and numerical limits.
+
+`find_dynamic_rays` also accepts `options.catalog` for the denominator-bounded
+route. This validates and visits every eligible catalog family within explicit
+work budgets, including angle periods above 24 and multiples of the selected
+orbital's primitive period. It does not use the first-matching-period stopping
+rule in the legacy table below. See [catalog-driven family tracing](README.md#catalog-driven-family-tracing)
+for checkpoints, limits, result metadata, and remaining discovery integration.
 
 The existing public operation is `find_dynamic_rays(c, {points}, options)`,
 not `find_dynamic_rays(c, n)`. Missing points return `no_selection`. The detect

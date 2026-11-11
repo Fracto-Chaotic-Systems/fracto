@@ -4,6 +4,7 @@ import {
   trace_ray_family,
 } from "./FractoRayFamilies.js";
 import { assess_ray_orbital } from "./FractoRayEligibility.js";
+import { find_catalog_dynamic_rays } from "./FractoCatalogDynamicRays.js";
 
 /** Common high-accuracy profile for the Seed Surveys and stored-orbital views. */
 export const SEED_SURVEY_RAY_OPTIONS = Object.freeze({
@@ -23,6 +24,8 @@ export const SEED_SURVEY_RAY_OPTIONS = Object.freeze({
  * Distinct angle cycles need not represent distinct or attracting spatial cycles.
  */
 export const find_dynamic_rays = async (parameter, orbital, options = {}) => {
+  if (options.catalog !== undefined)
+    return find_catalog_dynamic_rays(parameter, orbital, options);
   const report = options.on_progress || (() => {}),
     cancelled = options.cancelled || (() => false);
   if (!options.state?.assessment)

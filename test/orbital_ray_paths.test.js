@@ -205,6 +205,10 @@ function database() {
             if (sql.startsWith("SELECT id")) return [[{ id: "42" }]];
             if (sql.startsWith("SELECT paths"))
               return [paths ? [{ paths }] : []];
+            if (
+              sql.startsWith("UPDATE orbital_progressions SET lifecycle_state")
+            )
+              return [{ affectedRows: 1 }];
             paths = values[1];
             return [{ affectedRows: 1 }];
           },

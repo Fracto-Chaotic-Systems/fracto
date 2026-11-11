@@ -62,9 +62,25 @@ const newton_big_complex_candidate = (
   for (const N of cardinalities) {
     let z0 = new BigComplex(seed_re, seed_im, precision_digits);
     for (let i = 1; i <= limit; i++) {
+      if (options.cancelled?.())
+        return {
+          status: "cancelled",
+          point_list: [],
+          cardinality: 0,
+          cycles: i - 1,
+          cardinality_supplied,
+        };
       let current = new BigComplex(z0.re, z0.im, precision_digits);
       let derivative = new BigComplex(1, 0, precision_digits);
       for (let k = 0; k < N; k++) {
+        if (k % 16 === 0 && options.cancelled?.())
+          return {
+            status: "cancelled",
+            point_list: [],
+            cardinality: 0,
+            cycles: i - 1,
+            cardinality_supplied,
+          };
         const doubled = current.scale(2);
         derivative = derivative.mul(doubled);
         const current_squared = current.mul(current);
@@ -106,11 +122,7 @@ const newton_big_complex_candidate = (
         least_magnitude = step_magnitude;
         least_magnitude_N = N;
         least_magnitude_point_list = [];
-        let next_current = new BigComplex(
-          z0.re,
-          z0.im,
-          precision_digits,
-        );
+        let next_current = new BigComplex(z0.re, z0.im, precision_digits);
         for (let k = 0; k < N; k++) {
           const next_current_squared = next_current.mul(next_current);
           next_current = next_current_squared.add(P);
@@ -133,8 +145,16 @@ const newton_big_complex_candidate = (
   };
 };
 
-export const newton_big_complex = (point, limit, known_cardinality = null, options = {}) =>
-  validate_newton_closure(newton_big_complex_candidate(point, limit, known_cardinality, options), point);
+export const newton_big_complex = (
+  point,
+  limit,
+  known_cardinality = null,
+  options = {},
+) =>
+  validate_newton_closure(
+    newton_big_complex_candidate(point, limit, known_cardinality, options),
+    point,
+  );
 
 // TEST
 // const point = {x: -0.7498264222691475, y: 0.015174810956388776}

@@ -22,3 +22,22 @@ export { default as Complex } from "./math/Complex.js";
 export { default as HyperComplex } from "./math/HyperComplex.js";
 export { farey_sequence } from "./math/utils.js";
 export { stream_json } from "./utils/StreamJson.js";
+export {
+  validate_representative_assignments,
+  discover_validated_representative_orbital,
+  LANDING_ASSIGNMENT_VERSION,
+  landing_assignment_profile,
+} from "./orbitals/FractoLandingAssignments.js";
+export {
+  discover_representative_orbital,
+  representative_ray_profile,
+  REPRESENTATIVE_RAY_SOLVER_VERSION,
+  REPRESENTATIVE_CONFIRMATION_REVISION,
+} from "./orbitals/FractoRepresentativeRaySolver.js";
+export {
+  ORBITAL_LIFECYCLE_VERSION,
+  ORBITAL_DISCOVERY_STRATEGIES,
+  catalog_only_strategy,
+  normalize_orbital_lifecycle,
+  orbital_is_selectable,
+} from "./orbitals/FractoOrbitalLifecycle.js";

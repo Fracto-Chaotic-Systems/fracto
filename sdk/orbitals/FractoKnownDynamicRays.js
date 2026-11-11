@@ -1,4 +1,8 @@
-import { assess_ray_orbital } from "./FractoRayEligibility.js";
+import {
+  assess_ray_orbital,
+  connectedness_evidence,
+} from "./FractoRayEligibility.js";
+import { canonical_orbital } from "./FractoOrbitalIdentity.js";
 import { trace_ray_family } from "./FractoRayFamilies.js";
 import { SEED_SURVEY_RAY_OPTIONS } from "./FractoDynamicRays.js";
 import {
@@ -10,7 +14,19 @@ import {
 
 /** Trace supplied accesses only. A whole known doubling family must validate. */
 export const trace_known_dynamic_rays = async (request, options = {}) => {
-  const profile = { ...SEED_SURVEY_RAY_OPTIONS, ...options };
+  // Known accesses are explicit input, so they do not need the legacy
+  // period-24 enumeration cap. Bound work by the supplied family instead.
+  const profile = {
+    ...SEED_SURVEY_RAY_OPTIONS,
+    max_angle_period: 4096,
+    ...options,
+  };
+  if (
+    !Number.isSafeInteger(profile.max_angle_period) ||
+    profile.max_angle_period < 1 ||
+    profile.max_angle_period > 4096
+  )
+    throw Error("invalid_known_family_limit");
   const cancelled = options.cancelled || (() => false);
   const report = options.on_progress || (() => {});
   const rays = [],
@@ -33,7 +49,37 @@ export const trace_known_dynamic_rays = async (request, options = {}) => {
   };
   if (points.length !== request.period || !points.every(finite) || !finite(c))
     return { status: "invalid_input", rays, unresolved };
-  const assessment = assess_ray_orbital(request.focal_point, { points });
+  // Catalog coordinates already describe the closed cycle. Recheck them in
+  // Decimal arithmetic instead of moving a long repelling cycle through a
+  // second Newton solve seeded from rounded native coordinates.
+  let exact;
+  try {
+    exact = canonical_orbital(request.focal_point, request.orbital_points);
+  } catch {
+    /* Legacy approximate rows use refinement below. */
+  }
+  let assessment;
+  if (exact?.period === request.period) {
+    const log_modulus = points.reduce(
+      (sum, p) => sum + Math.log(2 * Math.hypot(p.x, p.y)),
+      0,
+    );
+    const connectedness = connectedness_evidence(c);
+    assessment = {
+      period: request.period,
+      points,
+      multiplier: { log_modulus },
+      connectedness,
+      status:
+        log_modulus < Math.log(1 - 1e-6)
+          ? "attracting"
+          : !(log_modulus > Math.log(1 + 1e-6))
+            ? "neutral"
+            : connectedness.status === "connected"
+              ? "ready"
+              : connectedness.status,
+    };
+  } else assessment = assess_ray_orbital(request.focal_point, { points });
   if (assessment.status !== "ready")
     return { status: assessment.status, rays, unresolved };
   const known = new Map();
@@ -66,7 +112,11 @@ export const trace_known_dynamic_rays = async (request, options = {}) => {
     const closed = angle.key === access.angle.key;
     let accepted = [];
     let reason = "incomplete_family";
-    if (closed) {
+    if (
+      closed &&
+      family.length % request.period === 0 &&
+      family.length + 40 <= profile.maximum_depth
+    ) {
       // Yield between families; browser workers can also be terminated mid-trace.
       await new Promise((resolve) => setTimeout(resolve, 0));
       const result = trace_ray_family(
@@ -76,8 +126,19 @@ export const trace_known_dynamic_rays = async (request, options = {}) => {
         {
           ...profile,
           max_period: profile.max_angle_period,
+          minimum_depth: Math.max(profile.minimum_depth, family.length + 40),
           align_to_orbit: true,
+          exact_parameter: request.focal_point,
           cancelled,
+          // Progress within a family must not repeatedly clone earlier geometry
+          // into worker messages. Only publish this family after validation.
+          on_ray: (count) =>
+            report({
+              stage: "tracing",
+              processed: processed + count,
+              total,
+              rays: [],
+            }),
         },
       );
       if (result.status === "cancelled")
@@ -113,7 +174,7 @@ export const trace_known_dynamic_rays = async (request, options = {}) => {
         if (valid) accepted = checked;
         else reason = "landing_mismatch";
       }
-    }
+    } else if (closed) reason = "family_depth_or_period_limit";
     for (const member of family) {
       visited.add(member.angle.key);
       processed++;

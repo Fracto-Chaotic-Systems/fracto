@@ -55,6 +55,17 @@ export const doubling_family_count = (period) => {
   return exact(period) / period;
 };
 
+const finite_ray = (ray, tolerance, depth) =>
+  Number.isFinite(ray.endpoint?.x) &&
+  Number.isFinite(ray.endpoint?.y) &&
+  Number.isFinite(ray.precision_error) &&
+  ray.precision_error <= tolerance * 0.25 &&
+  Number.isFinite(ray.potential) &&
+  ray.potential > 0 &&
+  ray.potential <= 2 ** -depth &&
+  ray.points?.length > 1 &&
+  distance(ray.points.at(-1), ray.endpoint) <= Number.EPSILON;
+
 /** Trace one entire doubling cycle, optionally aligning its first ray with any
  * selected orbit point. Closure of both the angle cycle and endpoint dynamics
  * must hold before any member of the family is accepted.
@@ -70,6 +81,17 @@ export const trace_ray_family = (c, assessment, initial, options = {}) => {
     max_points = 6000,
     precision_digits = 128,
   } = options;
+  if (
+    options.initial_point_index !== undefined &&
+    (!Number.isInteger(options.initial_point_index) ||
+      options.initial_point_index < 0 ||
+      options.initial_point_index >= assessment.period)
+  )
+    return {
+      status: "family_mismatch",
+      reason: "invalid_point_index",
+      rays: [],
+    };
   const depth = Math.min(
     maximum_depth,
     Math.max(
@@ -81,22 +103,34 @@ export const trace_ray_family = (c, assessment, initial, options = {}) => {
     ),
   );
   let angle = rational_angle(initial.numerator, initial.denominator),
-    offset = 0;
+    offset = options.initial_point_index ?? 0;
   const family = [],
     visited = new Set();
   while (!visited.has(angle.key) && family.length < max_period) {
     if (cancelled()) return { status: "cancelled", rays: [] };
     visited.add(angle.key);
-    const ray = trace_dynamic_ray(c, angle, {
-      tolerance,
-      minimum_potential: 2 ** -depth,
-      max_points,
-      precision_digits,
-      verify_precision: true,
-      cancelled,
-    });
+    const reusable = family.length === 0 && options.initial_ray;
+    const ray =
+      reusable &&
+      reusable.angle?.key === angle.key &&
+      reusable.reason === "potential_limit" &&
+      finite_ray(reusable, tolerance, depth)
+        ? reusable
+        : trace_dynamic_ray(c, angle, {
+            tolerance,
+            minimum_potential: 2 ** -depth,
+            max_points,
+            precision_digits,
+            verify_precision: true,
+            exact_parameter: options.exact_parameter,
+            cancelled,
+          });
     if (cancelled()) return { status: "cancelled", rays: [] };
-    if (align_to_orbit && family.length === 0) {
+    if (
+      align_to_orbit &&
+      family.length === 0 &&
+      options.initial_point_index === undefined
+    ) {
       offset = assessment.points.reduce(
         (best, point, index) =>
           distance(ray.endpoint, point) <
@@ -115,15 +149,25 @@ export const trace_ray_family = (c, assessment, initial, options = {}) => {
       error > Math.min(tolerance * 0.25, 1e-6) ||
       distance(earlier, landing) < error * 0.8
     )
-      return { status: "family_mismatch", rays: [] };
+      return {
+        status: "family_mismatch",
+        reason:
+          ray.reason === "potential_limit" ? "landing_mismatch" : ray.reason,
+        rays: [],
+      };
     family.push({ ...ray, point_index, landing_error: error });
+    options.on_ray?.(family.length);
     angle = doubled_angle(angle);
   }
   if (
     angle.key !== rational_angle(initial.numerator, initial.denominator).key ||
     family.length % assessment.period !== 0
   )
-    return { status: "family_mismatch", rays: [] };
+    return {
+      status: "family_mismatch",
+      reason: "angle_cycle_mismatch",
+      rays: [],
+    };
   if (
     !family.every(
       (ray, index) =>
@@ -134,6 +178,10 @@ export const trace_ray_family = (c, assessment, initial, options = {}) => {
         tolerance * 0.5,
     )
   )
-    return { status: "family_mismatch", rays: [] };
+    return {
+      status: "family_mismatch",
+      reason: "endpoint_dynamics_mismatch",
+      rays: [],
+    };
   return { status: "rays_found", rays: family };
 };

@@ -1,5 +1,125 @@
 # Fracto scripts
 
+`verify_catalog_confirmation.js [--full]` checks the ten previously unresolved
+confirmation-depth families, or all 412 bundled families with `--full`, using
+catalog-only discovery and compact assignment validation. Every published angle
+must match its analytic unit-circle point within 1e-12; no sibling rays, full
+paths or database writes are allowed. It records per-family precision, depth,
+retry counts, sample statistics and result size. Evidence is saved to
+`logs/catalog_confirmation_repair_verification.json` or
+`logs/catalog_confirmation_full_verification.json`. The full repaired run verified
+all 412 families and 13,231 ratios with no unresolved cases. Timings are diagnostic
+observations rather than an isolated performance benchmark.
+
+`benchmark_catalog_only_jobs.js [--max-denominator 31] [--case all|unit_circle|basilica|stored_core]
+[--source-id 65] [--reference full|none] [--output logs/catalog_only_jobs_benchmark.json]`
+benchmarks the current catalog-only coordinator. It reads application focal
+points but performs all writes in a uniquely owned disposable database. Each
+cold job cancels after two committed families and resumes with a new coordinator;
+every family must run once. A fresh warm job must use zero solver tasks and
+preserve membership, verified ratios, unresolved counts and denominator coverage.
+Discovery must leave path storage empty. Selecting the orbital containing `1/7`
+(or another verified orbital) then times path generation, persistence and cache
+reload; only that orbital may acquire geometry.
+
+The full reference traces all families and independently compares every shared
+ratio's target and orbital cycle. Differences in numerical resolution are recorded
+explicitly, not counted as parity. Profiles, environment, cold/resumed/warm times,
+compact result bytes, coverage and selection times are saved in the JSON report.
+These are single observations: cold includes worker/SQL overhead, warm includes
+evidence rechecking and SQL publication, and selection excludes browser transfer
+and canvas painting. No interval certificate or exhaustive-discovery claim is made.
+
+For a full bundled-catalog durability run, use `--max-denominator 255 --case
+unit_circle --reference none --output logs/catalog_only_full_catalog_benchmark.json`.
+This investigates all 412 families, then verifies cached reuse. The general
+benchmark and numerical reference should run sequentially to avoid CPU contention.
+
+`FRACTO_DB_INTEGRATION=1 FRACTO_RAY_BENCHMARK_OUTPUT=logs/selected_catalog_path_benchmark.json
+node --test test/orbital_selected_paths.integration.test.js` records a separate
+162-ray selection benchmark. It uses connection-local temporary tables and
+measures tracing, saving, and reading/decompressing/validating the full geometry.
+Without the output variable this remains the usual database regression test.
+
+`benchmark_representative_orbitals.js [--full-reference] [--assignments]` is a read-only numerical
+benchmark of the adaptive single-ray solver on a unit-circle family, a basilica
+divisor family, period 58, and the former 162-ray blocker. No database is used.
+`--full-reference` additionally computes full family paths and checks the same
+candidate orbit/representative target. The new solver leaves ratio associations
+pending, so its timings measure less work than complete path validation. Profiles,
+timings, sample counts and serialized result sizes are saved to
+`logs/representative_orbital_benchmark.json`.
+
+`--assignments` also runs independent compact landing validation, recording its
+time, result size, trace/transport counters and verified ratio count. Combined
+with `--full-reference`, it checks every angle's target against full-family
+tracing. This mode writes `logs/landing_assignment_benchmark.json`; it does not
+change application data or populate caches.
+
+`verify_orbital_catalog_recovery.js RUN_ID [WORKER_FIXTURE.gz]` reads a stopped
+catalog checkpoint and clones its cursor/settings into a disposable schema.
+It verifies that two more families commit, the cursor advances, large geometry
+uses bounded chunks, and all rays reload through the Julia cache store. Original
+application rows are read only. The optional gzip fixture contains a previously
+traced `{context,result}` for the blocked family; otherwise the real worker
+calculates it. Evidence is saved to `logs/orbital_catalog_recovery_verification.json`.
+This diagnostic requires the project's MySQL configuration, schema-creation
+privileges and migrations through 015 available to its disposable setup.
+
+`benchmark_orbital_catalog.js [--max-denominator 31] [--grid-size 31]
+[--source-id 65] [--output logs/orbital_catalog_benchmark.json]` verifies and times
+the complete persisted catalog workflow for c=0, c=-1, and one stored core point.
+The selected application source is read only. All survey jobs, orbitals, leases,
+paths and cancellation/resume operations use a unique disposable MySQL schema,
+which is removed in cleanup. It requires database schema-creation privileges.
+
+Each cold job is canceled after two committed families and resumed by a new
+coordinator. Every family must be computed exactly once. A fresh warm job must
+use only cached family outcomes, preserve ranked orbital membership and counts,
+and return identical saved coverage. An uninterrupted SDK calculation supplies
+a reference for candidate cycles and validated/unresolved families. Stored
+landing families are independently revalidated. Reports include profile, CPU,
+Node version, timings, worker-task counts, coverage and compressed path storage.
+These are single development-machine observations; cold includes worker startup
+and resume overhead, and warm still performs the survey and SQL publication.
+The diagnostic grid/bound are explicit and do not establish completeness.
+
+`FRACTO_DB_INTEGRATION=1 npm run test:orbital-catalog-jobs` also exercises an
+actual process killed after committing a family outcome, along with owner
+replacement, stale-token fencing, path publication and coverage reload.
+
+`benchmark_orbital_catalog.js [--max-denominator 31] [--grid-size 31]
+[--source-id 65] [--output logs/orbital_catalog_benchmark.json]` verifies and times
+the complete persisted catalog workflow for c=0, c=-1, and one stored core point.
+The selected application source is read only. All survey jobs, orbitals, leases,
+paths and cancellation/resume operations use a unique disposable MySQL schema,
+which is removed in cleanup. It requires database schema-creation privileges.
+
+Each cold job is canceled after two committed families and resumed by a new
+coordinator. Every family must be computed exactly once. A fresh warm job must
+use only cached family outcomes, preserve ranked orbital membership and counts,
+and return identical saved coverage. An uninterrupted SDK calculation supplies
+a reference for candidate cycles and validated/unresolved families. Stored
+landing families are independently revalidated. Reports include profile, CPU,
+Node version, timings, worker-task counts, coverage and compressed path storage.
+These are single development-machine observations; cold includes worker startup
+and resume overhead, and warm still performs the survey and SQL publication.
+The diagnostic grid/bound are explicit and do not establish completeness.
+
+`FRACTO_DB_INTEGRATION=1 npm run test:orbital-catalog-jobs` also exercises an
+actual process killed after committing a family outcome, along with owner
+replacement, stale-token fencing, path publication and coverage reload.
+
+`build_orbital_denominator_catalog.js [--max-denominator N] [--out FILE]
+[--angle-budget N] [--check]` builds the periodic ray-family preprocessing catalog.
+Its default output is `sdk/orbitals/data/denominator-catalog.json`, initially
+covering denominators through 255. Increasing the bound validates and retains
+all prior entries, then adds only new denominators. `--check` verifies an existing
+file without writing it. With no bound argument an existing larger catalog is
+preserved. Invalid existing files and explicit shrink requests fail without
+replacing the file; successful writes use a temporary file and atomic rename.
+See [the catalog format and API](../sdk/orbitals/README.md#denominator-based-preprocessing-catalog).
+
 `free_ec2_port_3007.sh --inspect` identifies an nginx listener that conflicts with
 the AI container and lists the loaded configuration files containing `listen
 3007`. Run with `sudo`. `--edit` lets the operator select a file, backs it up

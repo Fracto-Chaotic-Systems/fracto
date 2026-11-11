@@ -25,7 +25,7 @@ test(
       const [columns] = await db.query("SHOW COLUMNS FROM orbital_ray_paths");
       assert.ok(columns.some((c) => c.Field === "paths" && c.Type === "json"));
       await db.query(
-        "CREATE TEMPORARY TABLE orbital_progressions (id BIGINT UNSIGNED PRIMARY KEY)",
+        "CREATE TEMPORARY TABLE orbital_progressions (id BIGINT UNSIGNED PRIMARY KEY,lifecycle_state JSON NULL)",
       );
       await db.query(
         "CREATE TEMPORARY TABLE orbital_ray_paths (orbital_id BIGINT UNSIGNED PRIMARY KEY, paths JSON NOT NULL)",
@@ -61,6 +61,15 @@ test(
         cached_orbital_rays(await store.get("42"), request).length,
         1,
       );
+      const [states] = await db.query(
+        "SELECT lifecycle_state FROM orbital_progressions WHERE id=42",
+      );
+      const lifecycle =
+        typeof states[0].lifecycle_state === "string"
+          ? JSON.parse(states[0].lifecycle_state)
+          : states[0].lifecycle_state;
+      assert.equal(lifecycle.paths.status, "cached");
+      assert.equal(lifecycle.assignments, "verified");
     } finally {
       db_disconnect(connection);
     }

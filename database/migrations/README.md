@@ -1,5 +1,30 @@
 # Database migrations
 
+`016_orbital-lifecycle-state.sql` adds nullable JSON lifecycle state to
+`orbital_progressions`, separating orbital validation, ratio assignments and path
+availability. It is guarded for replay and performs no backfill. Old rows normalize
+on read; existing coordinates, ratios, caches and resumable work are retained.
+
+`015_orbital-ray-cache-chunks.sql` adds immutable content-addressed binary chunks
+for catalog outcomes and Julia caches that exceed the inline 20 MiB envelope.
+Each chunk is at most 8 MiB; existing JSON columns retain small verified manifests.
+Old inline/gzip cache rows remain compatible. Apply before the updated orbital
+codec; no backfill, coordinate change or recalculation occurs.
+
+`014_orbital-family-job-owners.sql` adds nullable run/execution owner fields to
+catalog family leases. A resumed job can reclaim its previous execution's
+abandoned work immediately; stale executions remain fenced from publication.
+It is replay-safe and performs no recalculation or backfill. Apply after 013
+before deploying the catalog job coordinator.
+
+`013_orbital-family-investigations.sql` adds the denominator-catalog investigation
+ledger and append-only attempt history. Identity binds exact focal coordinates,
+family, catalog/solver versions, and numerical settings. Rows track pending,
+investigating, validated, and unresolved outcomes, with fenced expiring leases.
+Validated points, ratios, and compressed geometry survive process restarts;
+optional orbital links use `ON DELETE SET NULL`. It performs no backfill and
+does not change existing orbital or ray-cache rows.
+
 `008_orbital-bailiwick-source.sql` adds nullable, indexed
 `orbital_progressions.free_bailiwick_id`. New saves include the selected table ID;
 rediscovery fills a previously missing ID without replacing a primary source.
