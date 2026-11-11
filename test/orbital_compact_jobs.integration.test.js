@@ -449,6 +449,42 @@ test(
         5,
       );
       assert.equal(calls.length, after_repair);
+      const stopped = await store.create_run(source, {
+        ...request,
+        request_key: "before-rediscovery",
+      });
+      await store.cancel(stopped.id);
+      assert.equal((await store.latest_job(source)).id, stopped.id);
+      const rediscovery = await store.create_run(source, {
+        ...request,
+        request_key: "rediscovery",
+        settings: { ...request.settings, catalog_retry_unresolved: 1 },
+        rediscover: true,
+      });
+      assert.equal(
+        (await store.get_run(stopped.id)).progress.superseded_by,
+        rediscovery.id,
+      );
+      await jobs.resume(rediscovery.id);
+      await wait();
+      const regenerated = await store.get_run(rediscovery.id);
+      assert.equal(regenerated.status, "completed", regenerated.error_code);
+      assert.equal(regenerated.results.length, 5);
+      assert.equal(regenerated.progress.catalog_cache_hits, 5);
+      assert.equal(
+        calls.length,
+        after_repair,
+        "rediscovery reuses verified compact evidence",
+      );
+      assert.equal(
+        await store.latest_job(source),
+        null,
+        "superseded stopped jobs do not shadow the completed list",
+      );
+      assert.equal(
+        (await store.get(selected.orbital_id)).lifecycle_state.paths.status,
+        "cached",
+      );
     } finally {
       await pool?.close();
       if (jobs)
