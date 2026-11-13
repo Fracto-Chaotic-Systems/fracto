@@ -110,7 +110,7 @@ test(
       const request = discovery_request({
         free_bailiwick_id: "55",
         request_key: "compact-resume",
-        settings: { catalog_max_denominator: 7 },
+        settings: { catalog_pattern_periods: 0, catalog_max_denominator: 7 },
       });
       assert.equal(
         request.settings.discovery_strategy,
@@ -171,7 +171,11 @@ test(
       const crash_request = discovery_request({
         free_bailiwick_id: "55",
         request_key: "hard-crash",
-        settings: { catalog_max_denominator: 7, precision_digits: 144 },
+        settings: {
+          catalog_pattern_periods: 0,
+          catalog_max_denominator: 7,
+          precision_digits: 144,
+        },
       });
       const crash_run = await store.create_run(source, crash_request);
       const child = fork(
@@ -233,7 +237,11 @@ test(
       const pending_request = discovery_request({
         free_bailiwick_id: "55",
         request_key: "pending",
-        settings: { catalog_max_denominator: 7, precision_digits: 160 },
+        settings: {
+          catalog_pattern_periods: 0,
+          catalog_max_denominator: 7,
+          precision_digits: 160,
+        },
       });
       const pending_run = await store.create_run(source, pending_request);
       await jobs.resume(pending_run.id);
@@ -258,7 +266,7 @@ test(
       const fresh_request = discovery_request({
         free_bailiwick_id: "56",
         request_key: "fresh-pending",
-        settings: { catalog_max_denominator: 7 },
+        settings: { catalog_pattern_periods: 0, catalog_max_denominator: 7 },
       });
       const fresh_run = await store.create_run(
         await store.source("56"),
@@ -352,7 +360,11 @@ test(
       const repair_request = discovery_request({
         free_bailiwick_id: "55",
         request_key: "confirmation-repair",
-        settings: { catalog_max_denominator: 7, precision_digits: 192 },
+        settings: {
+          catalog_pattern_periods: 0,
+          catalog_max_denominator: 7,
+          precision_digits: 192,
+        },
       });
       const old_run = await store.create_run(source, repair_request);
       await jobs.resume(old_run.id);
@@ -485,6 +497,69 @@ test(
         (await store.get(selected.orbital_id)).lifecycle_state.paths.status,
         "cached",
       );
+      // Default scoped discovery keeps all ray families but publishes only
+      // periods dividing the source pattern (one for this unit-circle fixture).
+      const scoped = discovery_request({
+        free_bailiwick_id: "55",
+        request_key: "pattern-scoped",
+        settings: { catalog_max_denominator: 3 },
+      });
+      const scopedRun = await store.create_run(source, scoped);
+      await jobs.resume(scopedRun.id);
+      await wait();
+      const scopedResult = await store.get_run(scopedRun.id);
+      assert.equal(scopedResult.status, "partial", scopedResult.error_code);
+      assert.equal(scopedResult.progress.catalog_processed, 2);
+      assert.deepEqual(scopedResult.progress.allowed_orbital_periods, [1]);
+      assert.deepEqual(
+        scopedResult.progress.catalog_coverage.allowed_orbital_periods,
+        [1],
+      );
+      assert.equal(scopedResult.results.length, 1);
+      for (const result of scopedResult.results)
+        assert.equal((await store.get(result.orbital_id)).period, 1);
+
+      await admin.execute("UPDATE free_bailiwicks SET pattern=4 WHERE id=55");
+      const fourSource = await store.source("55");
+      const four = discovery_request({
+        free_bailiwick_id: "55",
+        request_key: "pattern-four-divisors",
+        settings: { catalog_max_denominator: 15, catalog_pattern_angles: 1 },
+      });
+      const fourRun = await store.create_run(fourSource, four);
+      await jobs.resume(fourRun.id);
+      await wait();
+      const fourResult = await store.get_run(fourRun.id);
+      assert.equal(fourResult.status, "completed", fourResult.error_code);
+      assert.equal(fourResult.progress.catalog_total, 5);
+      assert.equal(fourResult.progress.catalog_processed, 5);
+      assert.deepEqual(fourResult.progress.allowed_angle_periods, [1, 2, 4]);
+      assert.deepEqual(fourResult.progress.allowed_orbital_periods, [1, 2, 4]);
+
+      const multiples = discovery_request({
+        free_bailiwick_id: "55",
+        request_key: "pattern-four-multiples",
+        settings: { catalog_max_denominator: 15 },
+      });
+      const multiplesRun = await store.create_run(fourSource, multiples);
+      await jobs.resume(multiplesRun.id);
+      await wait();
+      const multiplesResult = await store.get_run(multiplesRun.id);
+      assert.equal(
+        multiplesResult.status,
+        "partial",
+        multiplesResult.error_code,
+      );
+      assert.equal(multiplesResult.progress.catalog_total, 6);
+      assert.deepEqual(
+        multiplesResult.progress.allowed_angle_periods,
+        [1, 2, 4, 12],
+      );
+      assert.equal(multiplesResult.progress.catalog_cache_hits, 5);
+      for (const result of multiplesResult.results)
+        assert.ok(
+          [1, 2, 4].includes((await store.get(result.orbital_id)).period),
+        );
     } finally {
       await pool?.close();
       if (jobs)

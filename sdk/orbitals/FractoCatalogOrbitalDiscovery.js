@@ -4,6 +4,10 @@ import {
   catalog_doubling_families,
 } from "./FractoDenominatorCatalog.js";
 import {
+  orbital_period_profile,
+  orbital_period_allowed,
+} from "./FractoOrbitalPeriodScope.js";
+import {
   validate_catalog_ray_family,
   trace_catalog_ray_family,
 } from "./FractoCatalogDynamicRays.js";
@@ -69,7 +73,7 @@ export const catalog_discovery_profile = (options = {}) => {
     profile.max_refinement_period > 4096
   )
     throw Error("invalid_discovery_options");
-  return profile;
+  return { ...profile, ...orbital_period_profile(options) };
 };
 const known_orbitals = (parameter, inputs = []) => {
   if (!Array.isArray(inputs)) throw Error("invalid_existing_orbitals");
@@ -165,6 +169,7 @@ const discover_family = (
   let reason = "refinement_failed";
   for (let period = 1; period <= family.angle_period; period++) {
     if (family.angle_period % period) continue;
+    if (!orbital_period_allowed(profile, period)) continue;
     if (cancelled()) return { status: "cancelled" };
     for (const precision_digits of new Set([
       profile.precision_digits,
@@ -197,7 +202,11 @@ const discover_family = (
         attempts.push({ period, precision_digits, reason });
         continue;
       }
-      if (!candidate || family.angle_period % candidate.period !== 0) {
+      if (
+        !candidate ||
+        family.angle_period % candidate.period !== 0 ||
+        !orbital_period_allowed(profile, candidate.period)
+      ) {
         reason = "closure_failed";
         attempts.push({ period, precision_digits, reason });
         continue;

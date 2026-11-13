@@ -110,6 +110,42 @@ The diagnostic grid/bound are explicit and do not establish completeness.
 actual process killed after committing a family outcome, along with owner
 replacement, stale-token fencing, path publication and coverage reload.
 
+`build_database_orbital_catalog.js [--max-denominator N] [--numerator-limit 256] [--max-angle-period 32]
+[--out FILE] [--export-only]` incrementally populates the complete database angle
+catalog, then exports its small-numerator families into the SDK. Apply migration
+017 first with `node scripts/initialize_database.js`. Run:
+
+```sh
+node scripts/build_database_orbital_catalog.js --max-denominator 32767
+node scripts/build_database_orbital_catalog.js --max-denominator 65535
+node scripts/build_database_orbital_catalog.js --max-denominator 131071
+node scripts/build_database_orbital_catalog.js --max-denominator 524287
+```
+
+The default bound is 524287. Every odd denominator is calculated, including all
+families regardless of numerator. Transactions commit one complete denominator
+at a time; interrupted builds resume by skipping committed denominators. A named
+database lock prevents concurrent builders. There is no full-catalog angle array
+or million-angle allocation budget in this route; generation uses one denominator
+at a time, and total computation still grows roughly quadratically with the bound.
+
+The default export is `sdk/orbitals/data/denominator-catalog-small-numerators.json`.
+It selects canonical numerators strictly below 256 and angle periods at most 32
+from the database, preserving complete cycles implicitly in the compact v2 SDK
+format. The period limit affects only the export; the database retains all angle
+periods and numerators. `--max-angle-period N` changes the export's inclusive
+period ceiling. Ineligible denominator entries are omitted from JSON, and
+`max_angle_period` records this scope for SDK validation. `--export-only` performs
+no catalog writes. Exports use a consistent database snapshot, check coverage and
+family counts, validate exact families, and atomically replace the output file.
+The original `denominator-catalog.json` is preserved for historical checkpoints.
+New data-service jobs use the filtered export by default, with a denominator
+bound of 524287 and family budget of 65536. `FRACTO_ORBITAL_CATALOG_FILE` can
+override the file before service startup. After updating a running service,
+restart it and select Rediscover to start with the expanded catalog; resuming
+an existing job retains its saved catalog and work budgets. Family descriptors stay compact
+until the current family is processed.
+
 `build_orbital_denominator_catalog.js [--max-denominator N] [--out FILE]
 [--angle-budget N] [--check]` builds the periodic ray-family preprocessing catalog.
 Its default output is `sdk/orbitals/data/denominator-catalog.json`, initially

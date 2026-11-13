@@ -51,6 +51,41 @@ explicit seed is provided.
 
 ## Denominator-based preprocessing catalog
 
+### Database-backed expansion and compact SDK exports
+
+The complete focal-independent catalog can now be extended in MySQL using
+`scripts/build_database_orbital_catalog.js`. Migration 017 adds denominator
+metadata and canonical family representatives, including families with large
+numerators. The database build covers every odd denominator through
+524287. Increasing the requested bound resumes from committed entries.
+
+`data/denominator-catalog-small-numerators.json` is a separate database-derived
+SDK projection with `version: "fracto-denominator-catalog-v2"` and
+`numerator_limit: 256` (exclusive) and `max_angle_period: 32` (inclusive).
+Only eligible denominator entries appear in the export; the full database
+retains all periods and numerators. It has the same denominator/period hierarchy
+as v1, but each family stores only `{ "key": "1/257" }`. A key's numerator is
+the minimum numerator in that complete doubling cycle. Selecting it below 256
+is equivalent to selecting every family containing any numerator below 256.
+Other family members can exceed 255 and remain part of the cycle. `angle_count`
+counts all angles in selected families, including those larger numerators.
+
+`validate_denominator_catalog()` supports both versions and verifies that every
+eligible canonical family is present. `catalog_doubling_families()` reconstructs
+exact complete member angles on demand. Pass `{expand_angles: false}` to iterate
+compact descriptors; `expand_catalog_family(descriptor)` expands just one family.
+Avoid collecting expanded families for large catalogs. The SDK export through
+denominator 524287 contains 16308 families after both filters are applied.
+Database storage and export perform no numerical landing investigations.
+
+Exact angle period 13 first occurs at denominator 8191, period 16 at 257, and
+period 17 at 131071. Candidate *orbital* periods divide angle periods; candidates
+13, 16 and 17 already occur at denominators 53, 97 and 103 respectively. Neither
+catalog membership nor a divisor candidate establishes an orbital's landing or
+existence for a particular focal point.
+
+### Original complete JSON format
+
 `FractoDenominatorCatalog.js` builds a focal-point-independent catalog of every
 reduced periodic external angle with denominator at most a requested bound.
 The bundled `data/denominator-catalog.json` covers denominators through 255:
@@ -156,6 +191,20 @@ overridden by catalog membership. For ray-first discovery without a supplied
 spatial orbit, use the following entry point.
 
 ## Representative-ray orbital discovery
+
+Both discovery solvers accept optional `allowed_orbital_periods` in their
+numerical profile. `FractoOrbitalPeriodScope.js` derives the sorted positive
+divisors of a core-point `pattern`, validates/normalizes explicit period lists,
+and checks primitive candidates. Disallowed Newton solve periods are skipped;
+closed candidates must also have an allowed primitive period. Ray angle periods
+remain unrestricted by this option, preserving higher-angle accesses to lower
+allowed orbital periods. Omitting the option preserves the standalone SDK's
+unrestricted behavior. Application discovery enables the source-pattern scope
+by default for new runs and separately selects catalog angle periods that divide
+the pattern or are multiples of the pattern itself. The shared
+`pattern_angle_period_allowed()` predicate supports divisors-only selection too.
+Application selection changes only the runtime search view; the SDK JSON and
+full database are preserved. Old resumable jobs retain their saved scope.
 
 ### Adaptive solver for catalog-only jobs
 

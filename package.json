@@ -16,9 +16,11 @@
   "main": "index.js",
   "scripts": {
     "orbitals:catalog": "node scripts/build_orbital_denominator_catalog.js",
+    "orbitals:catalog:database": "node scripts/build_database_orbital_catalog.js",
+    "test:orbital-catalog-database": "node --test test/orbital_denominator_catalog_store.test.js",
     "test:orbital-catalog": "node --test test/sdk_denominator_catalog.test.js test/sdk_catalog_dynamic_rays.test.js test/sdk_catalog_orbital_discovery.test.js",
     "test:orbital-investigations": "node --test test/orbital_family_investigations.test.js test/orbital_family_investigations.integration.test.js",
-    "test:orbital-catalog-jobs": "node --test test/orbital_ray_cache_codec.test.js test/orbital_catalog_coverage.test.js test/orbital_catalog_jobs.test.js test/orbital_compact_contract.test.js test/orbital_compact_jobs.integration.test.js test/orbital_catalog_jobs.integration.test.js",
+    "test:orbital-catalog-jobs": "node --test test/orbital_period_scope.test.js test/orbital_catalog_defaults.test.js test/orbital_ray_cache_codec.test.js test/orbital_catalog_coverage.test.js test/orbital_catalog_jobs.test.js test/orbital_compact_contract.test.js test/orbital_compact_jobs.integration.test.js test/orbital_catalog_jobs.integration.test.js",
     "test:orbital-lifecycle": "node --test test/orbital_lifecycle.test.js test/orbital_catalog_jobs.integration.test.js",
     "test:orbital-representative": "node --test test/sdk_representative_ray_solver.test.js test/sdk_catalog_orbital_discovery.test.js test/sdk_known_dynamic_rays.test.js",
     "test:orbital-confirmation": "node --test test/sdk_confirmation_precision.test.js test/orbital_confirmation_repair.test.js test/orbital_compact_contract.test.js test/orbital_compact_jobs.integration.test.js",

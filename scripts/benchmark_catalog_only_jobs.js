@@ -204,7 +204,8 @@ try {
     const request = discovery_request({
       free_bailiwick_id: fixture.id,
       request_key: `cold-${fixture.name}`,
-      settings: { catalog_max_denominator: maximum },
+      // Exercise the full bounded catalog for the durability benchmark.
+      settings: { catalog_max_denominator: maximum, catalog_pattern_angles: 0 },
     });
     const checkpoint = store.save_checkpoint.bind(store);
     let stopped = false;
@@ -332,7 +333,7 @@ try {
       parameter: fixture.parameter,
       pattern: fixture.pattern,
       settings: request.settings,
-      profile: job_compact_profile(request.settings),
+      profile: job_compact_profile(request.settings, fixture.pattern),
       timings: {
         cold_resumed_ms: cold_ms,
         before_cancel_ms,
@@ -359,7 +360,7 @@ try {
       event({ phase: "full_reference", name: fixture.name });
       const measured_reference = await measured(() =>
         discover_catalog_orbitals(fixture.parameter, {
-          ...job_catalog_profile(request.settings),
+          ...job_catalog_profile(request.settings, fixture.pattern),
           catalog,
           retain_geometry: false,
         }),

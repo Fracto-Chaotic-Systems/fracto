@@ -18,6 +18,7 @@ import { build_orbital_trace_request } from "../sdk/orbitals/FractoOrbitalTraceR
 import {
   job_catalog_profile,
   load_job_catalog,
+  select_pattern_catalog,
 } from "../servers/fracto-data-server/handlers/orbital_catalog_jobs.js";
 import { catalog_doubling_families } from "../sdk/orbitals/FractoDenominatorCatalog.js";
 import { orbital_parameter } from "../sdk/orbitals/FractoOrbitalIdentity.js";
@@ -47,7 +48,17 @@ try {
   const start_index = checkpoint.catalog.family_index;
   const blocked_family = [
     ...catalog_doubling_families(
-      await load_job_catalog(original.settings.catalog_max_denominator),
+      select_pattern_catalog(
+        await load_job_catalog(original.settings.catalog_max_denominator, {
+          version:
+            checkpoint.catalog.catalog_version ||
+            checkpoint.progress?.catalog_coverage?.catalog_version,
+        }),
+        original.source_pattern,
+        original.settings.catalog_pattern_periods
+          ? original.settings.catalog_pattern_angles || 0
+          : 0,
+      ),
     ),
   ][start_index];
   assert.equal(checkpoint.stage, "catalog");
@@ -94,7 +105,11 @@ try {
   const store = new OrbitalDataStore({ open: () => database.getConnection() });
   const request = discovery_request({
     free_bailiwick_id: "1",
-    settings: original.settings,
+    settings: {
+      ...original.settings,
+      catalog_pattern_periods: original.settings.catalog_pattern_periods ?? 0,
+      catalog_pattern_angles: original.settings.catalog_pattern_angles ?? 0,
+    },
   });
   const source = await store.source("1"),
     run = await store.create_run(source, request),
@@ -162,7 +177,7 @@ try {
     const rays = cached_orbital_rays(
       cache,
       trace_request,
-      job_catalog_profile(request.settings),
+      job_catalog_profile(request.settings, source.pattern),
     );
     assert.equal(rays.length, blocked_family.angle_period);
     Object.assign(evidence, {

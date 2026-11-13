@@ -1,4 +1,8 @@
 import BigComplex from "../math/BigComplex.js";
+import {
+  orbital_period_profile,
+  orbital_period_allowed,
+} from "./FractoOrbitalPeriodScope.js";
 import { create_dynamic_ray_tracer } from "./FractoDynamicRayTrace.js";
 import { validate_catalog_ray_family } from "./FractoCatalogDynamicRays.js";
 import { newton_big_complex } from "./FractoNewtonBigComplex.js";
@@ -72,7 +76,7 @@ export const representative_ray_profile = (options = {}) => {
     profile.max_refinement_period > 4096
   )
     throw Error("invalid_representative_profile");
-  return profile;
+  return { ...profile, ...orbital_period_profile(options) };
 };
 
 const decimal_distance = (a, b, precision) => {
@@ -124,6 +128,7 @@ export const discover_representative_orbital = (
     depth_probes: 0,
     precision_raises: 0,
     newton_attempts: 0,
+    newton_periods: [],
     sample_count: 0,
     retained_points: 0,
   };
@@ -197,6 +202,8 @@ export const discover_representative_orbital = (
   };
   const refine = (period, seed, digits, iterations) => {
     statistics.newton_attempts++;
+    if (!statistics.newton_periods.includes(period))
+      statistics.newton_periods.push(period);
     try {
       const result = newton_big_complex(exact, iterations, period, {
         seed,
@@ -207,7 +214,9 @@ export const discover_representative_orbital = (
       const candidate =
         result.closure_reached &&
         canonical_orbital(exact, result.point_list, digits);
-      return candidate && family.angle_period % candidate.period === 0
+      return candidate &&
+        family.angle_period % candidate.period === 0 &&
+        orbital_period_allowed(profile, candidate.period)
         ? candidate
         : null;
     } catch {
@@ -236,6 +245,7 @@ export const discover_representative_orbital = (
       if (family.angle_period % period === 0 && period + 8 <= depth)
         periods.push(period);
     for (const period of periods) {
+      if (!orbital_period_allowed(profile, period)) continue;
       if (cancelled()) return { ...base, status: "cancelled" };
       const candidate = refine(
         period,

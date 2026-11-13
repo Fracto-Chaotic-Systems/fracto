@@ -1,5 +1,13 @@
 # Database migrations
 
+`017_orbital-denominator-catalog.sql` creates the focal-independent exact angle
+catalog. `orbital_catalog_denominators` stores period, divisor candidates and
+coverage counts; `orbital_catalog_families` stores every canonical numerator,
+indexed by numerator and denominator. The representative and denominator encode
+the entire doubling cycle exactly, without per-angle rows or ray geometry.
+Each denominator is published transactionally by the database catalog builder.
+This migration is additive, replay-safe, and performs no calculations or backfill.
+
 `016_orbital-lifecycle-state.sql` adds nullable JSON lifecycle state to
 `orbital_progressions`, separating orbital validation, ratio assignments and path
 availability. It is guarded for replay and performs no backfill. Old rows normalize

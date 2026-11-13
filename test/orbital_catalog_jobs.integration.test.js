@@ -87,6 +87,7 @@ test(
           grid_size: 3,
           max_orbitals: 2,
           catalog_max_denominator: 7,
+          catalog_pattern_periods: 0,
           discovery_strategy: "survey-catalog-full-rays-v1",
         },
       });
@@ -279,6 +280,7 @@ test(
       });
       const legacy_claim = await store.claim_run(legacy.id);
       assert.equal(legacy_claim.owned, true);
+      assert.equal(legacy_claim.settings.catalog_pattern_angles, 0);
       assert.equal(
         legacy_claim.settings.catalog_max_denominator,
         0,
@@ -291,6 +293,7 @@ test(
         settings: {
           grid_size: 3,
           catalog_max_denominator: 7,
+          catalog_pattern_periods: 0,
           precision_digits: 160,
           discovery_strategy: "survey-catalog-full-rays-v1",
         },

@@ -199,6 +199,7 @@ try {
       settings: {
         grid_size,
         catalog_max_denominator: maximum,
+        catalog_pattern_angles: 0, // Benchmark every bounded family.
         discovery_strategy: "survey-catalog-full-rays-v1",
       },
     });
@@ -274,7 +275,7 @@ try {
     );
     const reference_start = performance.now();
     const reference = await discover_catalog_orbitals(fixture.parameter, {
-      ...job_catalog_profile(request.settings),
+      ...job_catalog_profile(request.settings, fixture.pattern),
       catalog,
       retain_geometry: false,
     });

@@ -35,6 +35,7 @@ const harness = (compact = false) => {
     free_bailiwick_id: 55,
     settings: {
       catalog_max_denominator: 7,
+      catalog_pattern_periods: 0, // Exercise the historical unrestricted job route.
       max_orbitals: 1,
       discovery_strategy: compact
         ? "catalog-representative-rays-v1"

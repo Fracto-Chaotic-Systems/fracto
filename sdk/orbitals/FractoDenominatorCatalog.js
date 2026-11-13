@@ -1,6 +1,7 @@
 import { rational_angle } from "./FractoRayGeometry.js";
 
 export const DENOMINATOR_CATALOG_VERSION = "fracto-denominator-catalog-v1";
+export const COMPACT_CATALOG_VERSION = "fracto-denominator-catalog-v2";
 export const DEFAULT_CATALOG_DENOMINATOR = 255;
 export const DEFAULT_CATALOG_ANGLE_BUDGET = 1_000_000;
 // Allocation/arithmetic guard, not an angle-period or orbital-period filter.
@@ -34,14 +35,14 @@ const totients = (maximum) => {
   }
   return phi;
 };
-const angle_period = (denominator) => {
+const angle_period = (denominator, maximum = Infinity) => {
   if (denominator === 1) return 1;
   let value = 1,
     period = 0;
   do {
     value = (value * 2) % denominator;
     period++;
-  } while (value !== 1);
+  } while (value !== 1 && period <= maximum);
   return period;
 };
 const denominator_entry = (denominator) => {
@@ -74,8 +75,129 @@ const denominator_entry = (denominator) => {
   };
 };
 
+/** Lossless family representatives; memory is bounded to one denominator. */
+export const compact_denominator_entry = (denominator) => {
+  check_bound(denominator);
+  if (denominator % 2 !== 1) throw Error("Periodic denominators must be odd");
+  if (denominator === 1)
+    return {
+      denominator: "1",
+      angle_period: 1,
+      candidate_orbital_periods: [1],
+      angle_count: 1,
+      families: [{ key: "0/1" }],
+    };
+  const seen = new Uint8Array(denominator);
+  // Mark non-reduced numerators once per prime factor, rather than repeatedly
+  // calculating a gcd for each non-unit as the denominator grows.
+  let remaining = denominator;
+  for (let prime = 3; prime * prime <= remaining; prime += 2) {
+    if (remaining % prime) continue;
+    for (let numerator = prime; numerator < denominator; numerator += prime)
+      seen[numerator] = 1;
+    do {
+      remaining /= prime;
+    } while (remaining % prime === 0);
+  }
+  if (remaining > 1)
+    for (
+      let numerator = remaining;
+      numerator < denominator;
+      numerator += remaining
+    )
+      seen[numerator] = 1;
+  const families = [];
+  let count = 0,
+    period = 0;
+  for (let start = 1; start < denominator; start++) {
+    if (seen[start]) continue;
+    const before = count;
+    let value = start;
+    do {
+      seen[value] = 1;
+      count++;
+      value += value;
+      if (value >= denominator) value -= denominator;
+    } while (value !== start);
+    if (!period) period = count - before;
+    families.push({ key: `${start}/${denominator}` });
+  }
+  return {
+    denominator: String(denominator),
+    angle_period: period,
+    candidate_orbital_periods: divisors(period),
+    angle_count: count,
+    families,
+  };
+};
+
+export const compact_family_numerators = (family, entry) => {
+  const denominator = Number(entry.denominator);
+  let value = Number(family.key.split("/")[0]);
+  return Array.from({ length: entry.angle_period }, () => {
+    const numerator = String(value);
+    value = (value * 2) % denominator;
+    return numerator;
+  });
+};
+
+const validate_compact_catalog = (catalog) => {
+  check_bound(catalog.max_denominator);
+  if (
+    catalog.denominator_policy !== "reduced_odd" ||
+    !Number.isSafeInteger(catalog.numerator_limit) ||
+    catalog.numerator_limit < 1 ||
+    (catalog.max_angle_period !== undefined &&
+      (!Number.isSafeInteger(catalog.max_angle_period) ||
+        catalog.max_angle_period < 1)) ||
+    !Array.isArray(catalog.denominators)
+  )
+    throw Error("Invalid compact catalog coverage");
+  let families = 0,
+    angles = 0;
+  let index = 0;
+  for (
+    let denominator = 1;
+    denominator <= catalog.max_denominator;
+    denominator += 2
+  ) {
+    if (
+      catalog.max_angle_period !== undefined &&
+      angle_period(denominator, catalog.max_angle_period) >
+        catalog.max_angle_period
+    )
+      continue;
+    const entry = catalog.denominators[index++];
+    const expected = compact_denominator_entry(denominator);
+    expected.families = expected.families.filter(
+      (family) => Number(family.key.split("/")[0]) < catalog.numerator_limit,
+    );
+    delete expected.angle_count;
+    if (
+      entry?.denominator !== expected.denominator ||
+      entry.angle_period !== expected.angle_period ||
+      JSON.stringify(entry.candidate_orbital_periods) !==
+        JSON.stringify(expected.candidate_orbital_periods) ||
+      JSON.stringify(entry.families?.map((family) => family.key)) !==
+        JSON.stringify(expected.families.map((family) => family.key))
+    )
+      throw Error(`Invalid compact catalog at denominator ${denominator}`);
+    families += entry.families.length;
+    angles += entry.families.length * entry.angle_period;
+  }
+  if (
+    index !== catalog.denominators.length ||
+    families !== catalog.family_count ||
+    angles !== catalog.angle_count
+  )
+    throw Error("Invalid compact catalog totals");
+  return catalog;
+};
+
 /** Validate coverage and exact cycles without regenerating the stored families. */
 export const validate_denominator_catalog = (catalog) => {
+  if (catalog?.version === COMPACT_CATALOG_VERSION)
+    return validate_compact_catalog(catalog);
   if (catalog?.version !== DENOMINATOR_CATALOG_VERSION)
     throw Error("Unsupported denominator catalog version");
   check_bound(catalog.max_denominator);
@@ -173,6 +295,8 @@ export const build_denominator_catalog = ({
     );
   if (previous) {
     validate_denominator_catalog(previous);
+    if (previous.version !== DENOMINATOR_CATALOG_VERSION)
+      throw Error("Expand compact catalogs through the database builder");
     if (previous.max_denominator > max_denominator)
       throw new RangeError("Cannot shrink an existing denominator catalog");
     if (previous.max_denominator === max_denominator) return previous;
@@ -202,7 +326,19 @@ export const build_denominator_catalog = ({
 };
 
 /** Adapt catalog records to the existing ray-family shape without tracing rays. */
-export function* catalog_doubling_families(catalog, { orbital_period } = {}) {
+export const expand_catalog_family = (family) => ({
+  ...family,
+  angles:
+    family.angles ||
+    compact_family_numerators(family, family).map((numerator) =>
+      rational_angle(numerator, family.denominator),
+    ),
+});
+
+export function* catalog_doubling_families(
+  catalog,
+  { orbital_period, expand_angles = true } = {},
+) {
   if (
     orbital_period !== undefined &&
     (!Number.isSafeInteger(orbital_period) || orbital_period < 1)
@@ -214,17 +350,16 @@ export function* catalog_doubling_families(catalog, { orbital_period } = {}) {
       !entry.candidate_orbital_periods.includes(orbital_period)
     )
       continue;
-    for (const family of entry.families)
-      yield {
+    for (const family of entry.families) {
+      const record = {
         key: family.key,
-        numerator: family.numerators[0],
+        numerator: family.key.split("/")[0],
         denominator: entry.denominator,
         period: entry.angle_period,
         angle_period: entry.angle_period,
         candidate_orbital_periods: [...entry.candidate_orbital_periods],
-        angles: family.numerators.map((numerator) =>
-          rational_angle(numerator, entry.denominator),
-        ),
       };
+      yield expand_angles ? expand_catalog_family(record) : record;
+    }
   }
 }
