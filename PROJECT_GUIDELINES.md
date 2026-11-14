@@ -63,6 +63,11 @@ in the README for that feature or service.
 
 ## UI and text
 
+- After UI-only changes, refresh the active Vite development server and verify
+  that it serves the updated UI. Keep unrelated services running.
+  For the `fracto-dev` container, trigger its watcher with
+  `docker compose -f compose.yaml -f compose.dev.yaml exec -T fracto-dev touch /app/servers/fracto-ui/vite.config.js`.
+  Touching the file from Windows may not notify the container's watcher.
 - Follow established component and styling patterns unless there is a clear
   reason to introduce a new one.
 - Register every user-visible string in the appropriate AppText catalog;
