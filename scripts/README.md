@@ -639,6 +639,25 @@ starting the service. The normal `npm start` path is unchanged.
 
 ### `build_tile_index.js` and `refresh_tile_index.js`
 
+To populate the MySQL `tiles` table from the current indexed tiles, run from
+the root repository:
+
+```powershell
+npm run tiles:sync-db
+```
+
+For the development container, use `npm run tiles:sync-db:dev`. These commands
+execute `servers/fracto-tiles-server/manifest_to_db.js` inside the running
+`fracto` or `fracto-dev` Compose service, with `/app` as its working directory.
+The existing container supplies the tile-index volumes, data-service port and
+internal service token. The container and its data service must already be running;
+the commands do not start or rebuild them. Production must have an image containing
+the script; development uses its existing source bind mount.
+
+The sync inserts missing tile metadata (short code, parent, level, folder and
+bounds), skips existing rows and reports counts per level. It does not rewrite
+existing rows, refresh the compiled index or download tile files.
+
 `build_tile_index.js` compiles source packets into a fingerprinted binary cache:
 
 ```powershell

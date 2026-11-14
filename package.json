@@ -43,6 +43,8 @@
     "tiles:index": "node --max-old-space-size=16384 scripts/build_tile_index.js",
     "tiles:source-release": "node scripts/create_tile_source_release_manifest.js",
     "tiles:refresh": "node --max-old-space-size=16384 scripts/refresh_tile_index.js",
+    "tiles:sync-db": "docker compose -f compose.yaml exec -T --workdir /app fracto node --max-old-space-size=16384 servers/fracto-tiles-server/manifest_to_db.js",
+    "tiles:sync-db:dev": "docker compose -f compose.yaml -f compose.dev.yaml exec -T --workdir /app fracto-dev node --max-old-space-size=16384 servers/fracto-tiles-server/manifest_to_db.js",
     "tiles:select-generation": "node scripts/select_tile_index_generation.js",
     "tiles:backup": "node --max-old-space-size=16384 servers/fracto-tiles-server/backup.js",
     "tiles:migrate:index": "node scripts/migrate_tile_cache_index.js",
