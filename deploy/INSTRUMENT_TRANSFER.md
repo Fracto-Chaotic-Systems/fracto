@@ -7,9 +7,10 @@ Local results are recorded in [INSTRUMENT_TRANSFER_VERIFICATION.md](INSTRUMENT_T
 
 ## Release contents
 
-Four independent repositories must be published and checked out together:
+Publish the coordinated root and service revisions. Five repositories contain
+feature or build-test changes:
 
-The coordinated local milestone is `milestone/instrument-transfer-v1`, annotated
+The coordinated local milestone is `milestone/instrument-transfer-v2`, annotated
 in the root and every service repository, including unchanged services. Publish
 the required branches and explicitly push this tag in all seven repositories
 when releasing remotely.
@@ -20,21 +21,22 @@ when releasing remotely.
 | `servers/fracto-admin-server` | Authenticated inventory, jobs, streaming sender/receiver, publication receipt checks and isolated-lab route authorization |
 | `servers/fracto-asset-server` | Package inventory, private staging, validation, durable publication/recovery and storage bootstrap |
 | `servers/fracto-ui` | Servers-page preview, explicit export, progress, cancellation, recovery and receipt display |
+| `servers/fracto-ai-server` | Bounded build-test concurrency and explicit real-adapter completion assertions |
 
-Publish the three service repositories before the root integration release.
-Record all four final commit IDs and the previous image ID. Source changes must
+Publish the four changed service repositories before the root integration release.
+Record the coordinated commit IDs and the previous image ID. Source changes must
 be committed, pushed and present on the deployed tracking branches before the
 normal repository updater can use them. The local working copies are not a
 published release. Do not include ignored audio, journals, `.env`, tokens or
 database configuration in source commits. The transfer carries audio separately.
 No database migration is introduced by this feature.
 
-The prepared source ZIP in `logs/instrument-transfer-source-20261114.zip` contains
-the changed files from these four repositories, baseline commit IDs, per-file
-SHA-256 hashes and verification evidence. It excludes audio and credentials.
-It is an unpublished source snapshot for review/handoff, not a complete checkout
-or an automatic installer. Inspect it separately and reconcile each baseline
-before committing/publishing through the host's normal deployment workflow.
+The original source ZIP in `logs/instrument-transfer-source-20261114.zip` captures
+the pre-commit v1 feature files from root, Admin, Asset and UI, baseline commit IDs,
+per-file hashes and verification evidence. It excludes audio, credentials and the
+subsequent v2 AI build-test correction. Use the v2 tagged Git revisions for current
+deployment. The ZIP remains a historical review snapshot, not a complete checkout
+or an automatic installer.
 
 ## Configuration on both hosts
 

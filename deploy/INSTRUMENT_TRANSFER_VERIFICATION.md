@@ -79,10 +79,32 @@ and isolated-lab sync access is enabled, but it predates the new persistence
 environment flag. Rebuild/recreate both ends through their normal workflows to
 activate the updated configuration. Keep the same persistent mounts and Compose
 project identity. The coordinated local release is
-`milestone/instrument-transfer-v1` across the root and all six service repositories.
-Remote publication remains pending. The original handoff ZIP is the pre-commit
+`milestone/instrument-transfer-v1` across the root and all six service repositories,
+with the build-test correction below recorded as `milestone/instrument-transfer-v2`.
+Local commits/tags must be published separately. The original handoff ZIP is the pre-commit
 source snapshot and records its baseline commits and file hashes; use the tagged
 Git release for the committed source state.
 
 The candidate image is local only. Production deployment, actual peer transfer,
 container-recreation acceptance on that host and listening remain operator work.
+
+## Build-test follow-up: milestone/instrument-transfer-v2
+
+A subsequent builder reported `RESULT_NOT_READY` in the real-adapter inference
+test. That test waited for the worker slot to become idle, which can also mean a
+failed or undispatched job, then tried to read its result. The original failing
+job state was not included in that log. The failure did not reproduce in isolation.
+
+The AI test now awaits the dispatched task and asserts persisted completion before
+reading its result, exposing the actual job state/error on failure. AI `test` and
+`check` scripts limit execution to two test files at once, reducing competing
+HTTP/mTLS, SQLite and cryptographic fixture work on small build hosts. Runtime
+inference code, admission rules, transport deadlines and token/thread assertions
+are unchanged.
+
+Validation passed: 27 focused inference/adapter tests; syntax checks for 102 AI
+JavaScript files; and the complete AI suite in a build-style container with Git,
+one CPU, 2 GB memory, network isolation and a read-only source mount (191 passed,
+9 platform-specific tests skipped). The reported case passed as test 95. The
+existing production candidate image above records v1; rebuild with the v2 AI and
+root revisions to consume this correction. The original v1 tag is preserved.
