@@ -2,6 +2,9 @@
 
 Main server for the Fracto mediaplex.
 
+Instrument-library export between trusted servers is documented in the
+[deployment and acceptance guide](deploy/INSTRUMENT_TRANSFER.md).
+
 Controlled corrections for explicitly registered local environment/asset snapshots
 are owned by the data service; see [its workflow](servers/fracto-data-server/corrections/README.md).
 Compose persists this optional store in separate production/development correction
@@ -135,6 +138,11 @@ Stop the root process with Ctrl+C to forward shutdown to every child service.
 The production image runs the root supervisor and all six internal services in one
 container. Downloaded tiles, generated index generations, assets, and logs use named
 volumes and survive ordinary container replacement and `docker compose down`.
+Instrument data uses `fracto-instruments` at `/var/lib/fracto/instruments`, separate
+from asset-service code. First startup seeds only catalog-owned data available in
+the image; missing audio can be supplied by the trusted-peer transfer API. Existing
+catalogs and interrupted transfer journals prevent image bootstrap from replacing
+the installed library. See the [instrument transfer setup and recovery contract](servers/fracto-admin-server/INSTRUMENT_TRANSFER.md).
 Docker sets `FORCE_COLOR=1` so supervisor and service health messages retain Chalk
 colors in Compose logs.
 The container health check uses the supervisor readiness endpoint (`/readyz`),

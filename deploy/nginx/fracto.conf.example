@@ -36,6 +36,14 @@ server {
         proxy_pass http://127.0.0.1:3004/;
         include snippets/fracto-proxy-headers.conf;
     }
+    # Stream instrument uploads rather than spooling each file to proxy disk.
+    location ^~ /api/admin/instrument-transfer/ {
+        client_max_body_size 512m;
+        proxy_request_buffering off;
+        proxy_buffering off;
+        proxy_pass http://127.0.0.1:3005/instrument-transfer/;
+        include snippets/fracto-proxy-headers.conf;
+    }
     location ^~ /api/admin/ {
         proxy_pass http://127.0.0.1:3005/;
         include snippets/fracto-proxy-headers.conf;

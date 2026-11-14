@@ -15,6 +15,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
+    "test:instrument-transfer": "node --test servers/fracto-asset-server/test/instrument_transfer.test.js servers/fracto-asset-server/test/instrument_transfer_stream.test.js servers/fracto-asset-server/test/instrument_publication.test.js servers/fracto-admin-server/test/instrument_transfer.test.js",
     "orbitals:catalog": "node scripts/build_orbital_denominator_catalog.js",
     "orbitals:catalog:database": "node scripts/build_database_orbital_catalog.js",
     "test:orbital-catalog-database": "node --test test/orbital_denominator_catalog_store.test.js",

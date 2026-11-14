@@ -11,6 +11,11 @@ and terminal output formatting.
 
 ## Files
 
+- `instrument_transfer.js` defines protocol-1 bounds, canonical manifest identity,
+  strict control-body checks and safe error codes shared by admin and asset preview.
+- `instrument_transfer_stream.js` validates binary body headers and provides shared
+  idle/absolute transfer deadlines for the streaming admin/asset hops.
+
 - `admin_authorization.js` provides `require_administrator`, middleware for
   admin-service routes. It forwards the request cookie to the main server's
   `/auth/session` endpoint and allows only an authenticated, enabled user with

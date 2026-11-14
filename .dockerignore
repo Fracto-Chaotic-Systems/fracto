@@ -8,6 +8,7 @@
 **/dist
 **/archive
 **/.archive
+**/.instrument-transfer
 /.idea
 /backup
 /config

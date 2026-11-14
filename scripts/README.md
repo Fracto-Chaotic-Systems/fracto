@@ -1,5 +1,12 @@
 # Fracto scripts
 
+`verify_instrument_transfer.js --source <instrument directory> --midi <MIDI file>`
+performs a full-data transfer between loopback services into an owned temporary
+receiver, verifies publication/restart/repair and the MIDI's original sample
+assignments, and saves `logs/instrument_transfer_verification.json`. It never
+contacts configured peers. See `instrument_transfer/README.md` and the deployment
+guide in `deploy/INSTRUMENT_TRANSFER.md`; production export remains explicit.
+
 `verify_catalog_confirmation.js [--full]` checks the ten previously unresolved
 confirmation-depth families, or all 412 bundled families with `--full`, using
 catalog-only discovery and compact assignment validation. Every published angle

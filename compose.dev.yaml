@@ -44,6 +44,9 @@ services:
       FRACTO_SERVER_PORT: 3101
       FRACTO_DATA_PORT: 3102
       FRACTO_ASSET_PORT: 3103
+      # This directory is persistently bind-mounted below; production must configure its own store.
+      FRACTO_INSTRUMENT_DIR: /app/servers/fracto-asset-server/instruments
+      FRACTO_INSTRUMENT_TRANSFER_PERSISTENT: "true"
       FRACTO_TILES_PORT: 3104
       FRACTO_ADMIN_PORT: 3105
       FRACTO_UI_PORT: 3106

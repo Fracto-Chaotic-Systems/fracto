@@ -12,3 +12,11 @@ Administrator chat uses `/api/admin/chat`; the protected bridge reaches the loca
 AI service internally. Streaming responses set `X-Accel-Buffering: no`, and the
 examples' existing 600-second proxy timeouts exceed the chat's server deadlines.
 The direct `/api/ai/inference` namespace remains blocked.
+
+Instrument export uses a narrower `/api/admin/instrument-transfer/` location
+with a 512 MiB per-request ceiling and request/response buffering disabled.
+It preserves `/instrument-transfer/` when forwarding to admin. Backend controls
+retain their smaller JSON limits; file PUTs stream with backpressure and their
+own inactivity deadlines. Existing 600-second proxy timeouts allow normal status
+and acknowledgement traffic. Install this location on both peers when their
+configured endpoints use nginx, and test configuration before reloading it.

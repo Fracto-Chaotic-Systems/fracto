@@ -31,6 +31,9 @@ test('actual Docker context excludes host knowledge artifacts but retains review
    assert.equal(included('servers/fracto-ai-server/generated/knowledge/ui-features.bundle.json'), false)
    assert.equal(included('servers/fracto-ai-server/subject_providers/ui.json'), true)
    assert.equal(included('servers/fracto-ui/src/features/catalog.json'), true)
+   assert.equal(included('servers/fracto-asset-server/instruments/.instrument-transfer/sessions/private.json'), false)
+   assert.equal(included('servers/fracto-asset-server/instruments/.instrument-transfer/packages/private.verified'), false)
+   assert.equal(included('servers/fracto-asset-server/instruments/transfer_publication.js'), true)
 })
 
 // Decode independently, checking each USTAR checksum and payload boundary.

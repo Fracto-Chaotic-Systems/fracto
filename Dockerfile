@@ -58,7 +58,7 @@ ENV NODE_ENV=development \
 COPY --chown=node:node . .
 RUN node scripts/build_knowledge_bundle.js \
     && chown -R node:node /app/servers/fracto-ai-server/generated
-RUN mkdir -p /var/lib/fracto/tiles /var/lib/fracto/index /var/lib/fracto/ai /var/lib/fracto/data-corrections /app/assets /app/logs /app/videos \
+RUN mkdir -p /var/lib/fracto/tiles /var/lib/fracto/index /var/lib/fracto/ai /var/lib/fracto/data-corrections /var/lib/fracto/instruments /app/assets /app/logs /app/videos \
     && chown -R node:node /var/lib/fracto /app/assets /app/logs /app/videos \
     && chmod +x /app/docker-entrypoint.sh
 
@@ -93,6 +93,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV NODE_ENV=production \
     FORCE_COLOR=1 \
     FRACTO_UI_MODE=static \
+    FRACTO_INSTRUMENT_DIR=/var/lib/fracto/instruments \
+    FRACTO_INSTRUMENT_TRANSFER_PERSISTENT=true \
     FRACTO_TILE_DATA_DIR=/var/lib/fracto/tiles \
     FRACTO_TILE_INDEX_DIR=/var/lib/fracto/index \
     FRACTO_TILE_INDEX_GENERATIONS_TO_KEEP=2 \
@@ -100,13 +102,13 @@ ENV NODE_ENV=production \
 
 WORKDIR /app
 COPY --from=build --chown=node:node /app /app
-RUN mkdir -p /var/lib/fracto/tiles /var/lib/fracto/index /var/lib/fracto/ai /var/lib/fracto/data-corrections /app/assets /app/logs /app/videos \
+RUN mkdir -p /var/lib/fracto/tiles /var/lib/fracto/index /var/lib/fracto/ai /var/lib/fracto/data-corrections /var/lib/fracto/instruments /app/assets /app/logs /app/videos \
     && chown -R node:node /var/lib/fracto /app/assets /app/logs /app/videos \
     && chmod +x /app/docker-entrypoint.sh
 
 USER node
 EXPOSE 3001 3002 3003 3004 3005 3006 3007 3447 3547
-VOLUME ["/var/lib/fracto/tiles", "/var/lib/fracto/index", "/var/lib/fracto/ai", "/var/lib/fracto/data-corrections", "/app/assets", "/app/logs", "/app/videos"]
+VOLUME ["/var/lib/fracto/tiles", "/var/lib/fracto/index", "/var/lib/fracto/ai", "/var/lib/fracto/data-corrections", "/var/lib/fracto/instruments", "/app/assets", "/app/logs", "/app/videos"]
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5m --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:3001/readyz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"

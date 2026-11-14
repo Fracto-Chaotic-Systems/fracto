@@ -6,6 +6,18 @@ import test from 'node:test'
 const ROOT = path.resolve(import.meta.dirname, '..')
 const read = filepath => fs.readFileSync(path.join(ROOT, filepath), 'utf8')
 
+test('instrument proxy preserves its namespace and streams bounded uploads on both profiles', () => {
+   for (const filename of ['fracto.conf.example', 'fracto-lab.conf.example']) {
+      const proxy = read(`deploy/nginx/${filename}`)
+      const location = proxy.match(/location \^~ \/api\/admin\/instrument-transfer\/ \{([^}]+)\}/)?.[1]
+      assert.ok(location)
+      assert.match(location, /client_max_body_size 512m;/)
+      assert.match(location, /proxy_request_buffering off;/)
+      assert.match(location, /proxy_buffering off;/)
+      assert.match(location, /proxy_pass http:\/\/127\.0\.0\.1:3005\/instrument-transfer\/;/)
+   }
+})
+
 test('production Docker ports stay on loopback for the host nginx proxy', () => {
    const compose = read('compose.yaml')
    for (const port of [3001, 3002, 3003, 3004, 3005, 3006, 3007]) {

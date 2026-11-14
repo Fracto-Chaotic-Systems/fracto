@@ -1,5 +1,8 @@
 # Deployment examples
 
+For instrument export, use the coordinated source, persistent-volume, proxy and
+operator acceptance instructions in [INSTRUMENT_TRANSFER.md](INSTRUMENT_TRANSFER.md).
+
 If Docker cannot bind loopback port 3007 and `ss` identifies nginx as the owner,
 run `sudo bash scripts/free_ec2_port_3007.sh --inspect` to locate the legacy
 listener configuration. `--edit` backs up a selected file, opens it for review,

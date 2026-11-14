@@ -8,6 +8,8 @@ services:
     environment:
       FRACTO_SERVER_NAME: ${FRACTO_SERVER_NAME:-}
       FRACTO_DATABASE_SYNC_PEERS: ${FRACTO_DATABASE_SYNC_PEERS:-}
+      FRACTO_INSTRUMENT_DIR: ${FRACTO_INSTRUMENT_DIR:-/var/lib/fracto/instruments}
+      FRACTO_INSTRUMENT_TRANSFER_PERSISTENT: ${FRACTO_INSTRUMENT_TRANSFER_PERSISTENT:-true}
       FRACTO_AI_ENGINE: ${FRACTO_AI_ENGINE:-ollama}
       FRACTO_AI_DATA_DIR: /var/lib/fracto/ai
       FRACTO_DATA_CORRECTION_DIR: /var/lib/fracto/data-corrections
@@ -56,6 +58,7 @@ services:
       - fracto-data-corrections:/var/lib/fracto/data-corrections
       - fracto-tile-index:/var/lib/fracto/index
       - fracto-assets:/app/assets
+      - fracto-instruments:/var/lib/fracto/instruments
       - fracto-videos:/app/videos
       - fracto-logs:/app/logs
       - ./servers/fracto-tiles-server/benchmarks:/app/servers/fracto-tiles-server/benchmarks
@@ -123,5 +126,6 @@ volumes:
   fracto-tile-data:
   fracto-tile-index:
   fracto-assets:
+  fracto-instruments:
   fracto-logs:
   fracto-videos:
