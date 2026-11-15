@@ -132,3 +132,31 @@ No checksum-equivalence exception, overwrite permission or catalog/audio change
 was introduced. A discovered local peer-configuration scratch file is now excluded
 from Git and Docker contexts; all eight build-context tests pass. Earlier
 milestone tags remain immutable; v3 records the checkout and exclusion fixes.
+
+## LAN HTTP playback follow-up: milestone/instrument-transfer-v4
+
+The UI previously required `crypto.subtle` to verify instrument audio, causing
+"Instrument audio verification requires HTTPS or localhost" on private LAN HTTP
+origins. V4 preserves encoded-size and SHA-256 verification using Web Crypto where
+available and the pinned `@noble/hashes` 2.4.0 implementation otherwise. The fallback
+updates one MiB at a time and yields between updates for cancellation and UI work.
+Corrupt samples still fail before audio decoding or cache admission.
+
+Validation passed: all 139 MIDI/player tests, including four new tests covering
+known digests, padding/view boundaries, multiple chunks, native-path selection,
+cancellation and corrupt/truncated HTTP cache input. Focused ESLint and the
+production UI build with lockfile-installed Linux dependencies also passed.
+
+The browser fixture at `test/midi_integrity_browser.html` passed on a real private
+HTTP origin with `isSecureContext: false` and Web Crypto unavailable. It verified a
+2,097,196-byte synthetic WAV against
+`62067147f1f0e154b75c0a57cbadd0adbc2a45cbc3ccfab7bc6c1513c9286ba7`, decoded
+1,048,576 frames with native Web Audio and rejected modified bytes. It emitted no
+audio and made no instrument-service requests. Production playback/listening is
+still operator acceptance after deploying and reloading the updated UI bundle.
+
+The development dependency volume was aligned with `npm ci --ignore-scripts` and
+Vite was refreshed. No production service, transfer session or instrument data was
+changed. The earlier full application image above remains the v1 candidate; v4
+records the verified UI fix and its deployment instructions. Earlier tags remain
+unchanged.

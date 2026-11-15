@@ -10,7 +10,7 @@ Local results are recorded in [INSTRUMENT_TRANSFER_VERIFICATION.md](INSTRUMENT_T
 Publish the coordinated root and service revisions. Five repositories contain
 feature or build-test changes:
 
-The coordinated local milestone is `milestone/instrument-transfer-v3`, annotated
+The coordinated local milestone is `milestone/instrument-transfer-v4`, annotated
 in the root and every service repository, including unchanged services. Publish
 the required branches and explicitly push this tag in all seven repositories
 when releasing remotely.
@@ -20,7 +20,7 @@ when releasing remotely.
 | `fracto` | Shared transfer contract/streams, Docker/Compose persistent instrument storage, proxy configuration, verification tooling and private scratch-file exclusions |
 | `servers/fracto-admin-server` | Authenticated inventory, jobs, streaming sender/receiver, publication receipt checks and isolated-lab route authorization |
 | `servers/fracto-asset-server` | Package inventory, private staging, validation, durable publication/recovery, storage bootstrap and canonical support-document line endings |
-| `servers/fracto-ui` | Servers-page preview, explicit export, progress, cancellation, recovery and receipt display |
+| `servers/fracto-ui` | Servers-page preview, explicit export, progress, cancellation, receipts and checksummed instrument playback on LAN HTTP origins |
 | `servers/fracto-ai-server` | Bounded build-test concurrency and explicit real-adapter completion assertions |
 
 Publish the four changed service repositories before the root integration release.
@@ -34,7 +34,7 @@ No database migration is introduced by this feature.
 The original source ZIP in `logs/instrument-transfer-source-20261114.zip` captures
 the pre-commit v1 feature files from root, Admin, Asset and UI, baseline commit IDs,
 per-file hashes and verification evidence. It excludes audio, credentials and the
-subsequent v2/v3 corrections. Use the v3 tagged Git revisions for current
+subsequent corrections. Use the v4 tagged Git revisions for current
 deployment. The ZIP remains a historical review snapshot, not a complete checkout
 or an automatic installer.
 
@@ -107,6 +107,13 @@ internal asset routes remain private. Confirm health/readiness and inspect logs
 for instrument-storage errors before exporting.
 
 ## Operator acceptance after deployment
+
+V4 removes the playback dependency on Web Crypto availability. Install the UI's
+locked dependencies (`@noble/hashes` 2.4.0) and rebuild its production bundle;
+the ordinary Docker build performs both steps. After deploying, reload the browser
+to load the updated JavaScript. LAN HTTP playback still checks encoded size and
+SHA-256 before decoding; HTTPS/localhost retains the native digest path. No browser
+security flags, checksum bypass or authentication/CORS changes are required.
 
 1. Open Servers on the host with the complete library. Select the receiving
    connection. Confirm **From this server** and **To selected server**.
