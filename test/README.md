@@ -1,5 +1,9 @@
 # Fracto tests
 
+`data_query_tiles.test.js` verifies that tile previews/listings use the short-code
+primary key, retain bounded results, preserve other tables' ordering, reject
+unlisted tables, and report missing live tables without silently using a seed.
+
 `npm run test:tiles-db` verifies the streaming tile database importer: bounded
 CSV batches, coordinate/folder conventions, duplicate preservation, transactional
 rollback, schema checks, source failures, and restricted LOCAL INFILE streams.
