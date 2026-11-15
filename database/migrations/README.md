@@ -1,5 +1,12 @@
 # Database migrations
 
+`018_tile-seed-checkpoints.sql` adds an InnoDB journal for resumable tile seeds.
+Each target has a source fingerprint, pinned/local CSV descriptor, committed byte
+offset and cumulative counts. Tile batches and checkpoint advances share a
+transaction. The standalone importer may execute this same replay-safe migration
+to initialize its journal; the normal runner records it through the usual history.
+The journal is installation-local and excluded from peer database synchronization.
+
 `017_orbital-denominator-catalog.sql` creates the focal-independent exact angle
 catalog. `orbital_catalog_denominators` stores period, divisor candidates and
 coverage counts; `orbital_catalog_families` stores every canonical numerator,

@@ -646,7 +646,7 @@ starting the service. The normal `npm start` path is unchanged.
 
 ### `build_tile_index.js` and `refresh_tile_index.js`
 
-To populate the MySQL `tiles` table from the current indexed tiles, run from
+To populate the MySQL `tiles` table from the configured indexed CSV, run from
 the root repository:
 
 ```powershell
@@ -656,14 +656,27 @@ npm run tiles:sync-db
 For the development container, use `npm run tiles:sync-db:dev`. These commands
 execute `servers/fracto-tiles-server/manifest_to_db.js` inside the running
 `fracto` or `fracto-dev` Compose service, with `/app` as its working directory.
-The existing container supplies the tile-index volumes, data-service port and
-internal service token. The container and its data service must already be running;
+The existing container supplies the source settings and database configuration.
+The container and MySQL must already be running; the data service is not required;
 the commands do not start or rebuild them. Production must have an image containing
 the script; development uses its existing source bind mount.
 
 The sync inserts missing tile metadata (short code, parent, level, folder and
-bounds), skips existing rows and reports counts per level. It does not rewrite
-existing rows, refresh the compiled index or download tile files.
+bounds), skips existing short codes and reports batch counts and throughput.
+It streams the configured authoritative indexed CSV with one MySQL connection
+and `LOAD DATA LOCAL INFILE`, automatically using multi-row inserts when the
+server disables `local_infile`. `--method load-data` or `--method insert` forces
+a method. It does not
+rewrite existing rows, refresh the compiled index or download tile files.
+Add `-- --seed` to load `tiles_seed` with only the short-code primary key, or
+`-- --seed --table tiles_seed_benchmark --limit 1000000` for a partial benchmark.
+Seed mode checkpoints automatically; rerun the same command to seek directly to
+the last committed byte position. Remote listings are pinned to a persistent
+local snapshot first. Add `--checkpoint` for resumable normal sync, `--restart`
+to reset progress while retaining existing rows, or `--no-checkpoint` to stream
+without a journal. With checkpoints, `--limit` is a cumulative source-row ceiling.
+See the [bulk database seeding guide](../servers/fracto-tiles-server/README.md#bulk-database-seeding)
+for source selection, retries, validation and cutover considerations.
 
 `build_tile_index.js` compiles source packets into a fingerprinted binary cache:
 

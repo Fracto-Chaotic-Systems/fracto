@@ -1,5 +1,17 @@
 # Fracto tests
 
+`npm run test:tiles-db` verifies the streaming tile database importer: bounded
+CSV batches, coordinate/folder conventions, duplicate preservation, transactional
+rollback, schema checks, source failures, and restricted LOCAL INFILE streams.
+Checkpoint tests cover record-boundary seeking (CRLF, multiline fields and UTF-8),
+remote snapshot reuse, and checkpoint failure rollback. The opt-in MySQL tests
+also run the CLI across separate processes, test cumulative limits, atomic tile/
+checkpoint rollback, concurrent-run rejection, source-change refusal and restart.
+Set `FRACTO_TEST_MYSQL_TILE_SEED=1` to include a real MySQL integration test using
+root database configuration and host/port overrides. It tests the automatically
+selected bulk method, needs schema create/drop privileges, and touches only its
+disposable schema.
+
 `docker_build_context.test.js` verifies the deployed source context excludes
 credentials and private runtime state while retaining reviewed source inputs.
 The local `test/test.json` peer-configuration scratch file is excluded by both

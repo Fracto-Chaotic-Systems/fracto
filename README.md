@@ -476,12 +476,18 @@ for configuration and generation-update instructions.
 
 ### Download the latest tiles
 
-To add missing records to the MySQL `tiles` table from the current tile index,
+To add missing records to the MySQL `tiles` table from the configured indexed CSV,
 run `npm run tiles:sync-db` from this repository root. It runs the sync inside
 the running production Docker container; use `npm run tiles:sync-db:dev` for
-the development container. The data service must be running. Existing rows are
-skipped. See [the script guide](scripts/README.md#build_tile_indexjs-and-refresh_tile_indexjs)
-for details.
+the development container. The importer connects directly to MySQL using bounded
+`LOAD DATA LOCAL INFILE` batches, falling back to multi-row inserts when MySQL
+disables `local_infile`. Existing short
+codes are skipped. Add `-- --seed` to load a separate `tiles_seed` table with
+only `PRIMARY KEY(short_code)`, leaving the live table intact. Seed mode saves
+transactional byte checkpoints, so rerunning the same command resumes directly;
+remote CSVs are first cached on the persistent tile volume. See the
+[bulk seeding guide](servers/fracto-tiles-server/README.md#bulk-database-seeding)
+for prerequisites, benchmarking and validation.
 
 The `tiles:backup` action compares the current compiled tile index with the local
 tile files and downloads any indexed tiles that are not already present from
