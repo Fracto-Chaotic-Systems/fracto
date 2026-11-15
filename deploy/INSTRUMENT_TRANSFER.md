@@ -10,7 +10,7 @@ Local results are recorded in [INSTRUMENT_TRANSFER_VERIFICATION.md](INSTRUMENT_T
 Publish the coordinated root and service revisions. Five repositories contain
 feature or build-test changes:
 
-The coordinated local milestone is `milestone/instrument-transfer-v4`, annotated
+The coordinated local milestone is `milestone/instrument-transfer-v5`, annotated
 in the root and every service repository, including unchanged services. Publish
 the required branches and explicitly push this tag in all seven repositories
 when releasing remotely.
@@ -18,9 +18,9 @@ when releasing remotely.
 | Repository | Required change |
 | --- | --- |
 | `fracto` | Shared transfer contract/streams, Docker/Compose persistent instrument storage, proxy configuration, verification tooling and private scratch-file exclusions |
-| `servers/fracto-admin-server` | Authenticated inventory, jobs, streaming sender/receiver, publication receipt checks and isolated-lab route authorization |
-| `servers/fracto-asset-server` | Package inventory, private staging, validation, durable publication/recovery, storage bootstrap and canonical support-document line endings |
-| `servers/fracto-ui` | Servers-page preview, explicit export, progress, cancellation, receipts and checksummed instrument playback on LAN HTTP origins |
+| `servers/fracto-admin-server` | Authenticated inventory, jobs, source-replacement negotiation, streaming sender/receiver and publication receipt checks |
+| `servers/fracto-asset-server` | Package inventory, verified staging/repair, backed-up file/catalog replacement, durable publication/recovery and persistent storage |
+| `servers/fracto-ui` | Servers-page replacement preview, explicit source-authoritative export, progress, receipts and checksummed LAN HTTP playback |
 | `servers/fracto-ai-server` | Bounded build-test concurrency and explicit real-adapter completion assertions |
 
 Publish the four changed service repositories before the root integration release.
@@ -34,7 +34,7 @@ No database migration is introduced by this feature.
 The original source ZIP in `logs/instrument-transfer-source-20261114.zip` captures
 the pre-commit v1 feature files from root, Admin, Asset and UI, baseline commit IDs,
 per-file hashes and verification evidence. It excludes audio, credentials and the
-subsequent corrections. Use the v4 tagged Git revisions for current
+subsequent corrections. Use the v5 tagged Git revisions for current
 deployment. The ZIP remains a historical review snapshot, not a complete checkout
 or an automatic installer.
 
@@ -118,7 +118,9 @@ security flags, checksum bypass or authentication/CORS changes are required.
 1. Open Servers on the host with the complete library. Select the receiving
    connection. Confirm **From this server** and **To selected server**.
 2. Preview. Confirm publication support on both hosts, expected matching/missing
-   counts, zero conflicts, and enough destination space. Preview is read-only.
+   and replacement counts, and enough destination space. Updated receivers
+   negotiate source replacement; reviewed differences do not block export.
+   Preview is read-only.
    Upgrade errors require deploying both ends. Conflicts require comparing the
    catalogs/data; v1 has no force-overwrite action.
 3. Select **Export instruments to this server** once. Monitor progress through
@@ -143,7 +145,50 @@ security flags, checksum bypass or authentication/CORS changes are required.
 
 ## Recovery and rollback
 
-### Single percussion README conflict
+### Lab-wide initialization and repair
+
+Use one complete, verified source as the lab's canonical instrument library.
+Deploy the coordinated release to that source and every destination (root,
+Admin, Asset and UI are required for the replacement flow). Keep each server's
+existing trusted peer credentials and persistent instrument volume. A saved
+server address alone does not establish trust. Recreate services if changing
+environment configuration; rebuild/reload the UI after deployment.
+
+From the canonical source's Servers page, process destinations one at a time:
+
+1. Select the destination and preview. Confirm the direction and the explicit
+   **Export and make destination match source** action. If legacy catalog/file
+   conflict messages remain, check deployed Admin/Asset revisions on both ends
+   and that the browser loaded the new UI. Never normalize notices manually.
+2. Review package count, differing live files, payload bytes and available space.
+   The destination's entire catalog, including defaults and assignments, will
+   match the source; this is not a merge. Pause offline importers and external
+   writers while exporting. Existing unrelated files are retained.
+3. Export. Required source files are validated, received into verified staging,
+   checked as a complete candidate, then installed. Differing old files are
+   backed up at `.instrument-transfer/backups/<session-id>/<relative-path>`.
+   The catalog commits last and also has a checksum-keyed backup. Retain these
+   backups through operator acceptance; do not prune active staging/journals.
+4. Require **Export verified** and a matching durable manifest/catalog receipt.
+   Record its hashes, verified file/byte totals and completion time in the
+   operator's local lab rollout record. Run another preview: require zero
+   missing files and zero differing live files, all package files matching and
+   zero transfer bytes. A repeat explicit export must also finish with zero
+   payload bytes and a verified receipt.
+5. Verify the public instrument inventory, the Bach MIDI assignment and playback
+   on the destination's normal LAN HTTP address. V4's checksum fallback remains
+   included. After acceptance, continue with the next destination from the same
+   canonical source. Do not reverse-export an old destination into the source.
+
+Interrupted jobs may have installed some replacements. A fresh preview reuses
+verified cached/installed bytes and completes convergence; completion is never
+inferred merely from staged files or matching counters. A receipt lost in transit
+is recovered from receiver status. Backups do not imply automatic rollback: a
+manual rollback must restore the previous catalog together with every dependency
+it references. The exporter makes the registered package equivalent, not every
+unreferenced file in the storage directory. No lab export is run by deployment.
+
+### Historical percussion README conflict (v3/v4)
 
 The observed Windows development checkout mixed CRLF/LF in
 `fluidr3-percussion/README.md`. V3 pins its Git checkout to LF. This changes no
@@ -153,7 +198,7 @@ existing conflict in place.
 
 For this specific library revision, the canonical README is 7,619 bytes with
 SHA-256 `dd07e46736e73cbcf204ab04e34841fde0b44b8e3416bc7367068a6557242f5e`.
-On the receiving server, an operator with filesystem access should:
+For older releases only, the former manual repair procedure was:
 
 1. Ensure no transfer/importer is active. Read only
    `<FRACTO_INSTRUMENT_DIR>/fluidr3-percussion/README.md`; reject symlinks.
@@ -167,7 +212,8 @@ On the receiving server, an operator with filesystem access should:
 The normalized development copy still encountered this single destination
 conflict on 2026-11-15. Destination bytes were not readable through the transfer
 API, and no production file was changed by this chat. This procedure is an
-operator-reviewed one-file repair, not a protocol overwrite option.
+operator-reviewed one-file repair. V5 supersedes this procedure with negotiated,
+backed-up source replacement; a CRLF-only difference no longer blocks initialization.
 
 ### General recovery
 

@@ -160,3 +160,38 @@ Vite was refreshed. No production service, transfer session or instrument data w
 changed. The earlier full application image above remains the v1 candidate; v4
 records the verified UI fix and its deployment instructions. Earlier tags remain
 unchanged.
+
+## Lab initialization follow-up: milestone/instrument-transfer-v5
+
+V5 replaces the manual destination-repair requirement with a negotiated
+source-authoritative export. The receiver advertises `replacement_policies:
+["source"]`; the updated coordinator requests that policy and binds it to the
+preview plan. An omitted policy retains legacy preserve/block behavior. Preview
+reports differing live files, pending replacement bytes and required space;
+matching staged bytes can satisfy the payload without hiding a live replacement.
+
+Source bytes still pass exact size/SHA-256 checks, complete candidate validation
+and final live-library validation. Differing original/index/audio/support files
+are backed up by session/path, then replaced through atomic rename. Catalogs are
+backed up and committed last. Unrelated files remain. The actual live snapshot
+is recorded separately from staged availability, and changes after preview abort
+the plan. A new preview repairs interrupted jobs using retained verified bytes.
+Corrupt staging is replaceable only after checking the entire incoming stream.
+
+Local verification passed: 67 combined transfer/Admin/UI tests, the full 74-test
+asset regression, 53 backend transfer tests inside the Linux development container,
+and the production UI build. Targeted UI and backend ESLint checks passed. Coverage
+includes different/invalid-UTF8 catalogs, short/long/corrupt audio and indexes,
+CRLF-only percussion notices, exact backed-up old bytes, public HTTP publication,
+zero-payload repeat export, legacy negotiation, changed snapshots and corrupt-cache
+repair. Child processes crash at dependency installation, catalog intent and
+catalog commit in both preserve/source modes; restart verifies completion or
+requires a fresh preview which then converges. UI rendering tests verify the
+replacement count and explicit source-matching action.
+
+The deployment guide now specifies a single canonical source and serial export
+to each lab destination, recording verified receipts and checking a zero-change
+preview afterward. This chat has not deployed or exported to any lab destination;
+production HTTP playback/listening and rollout acceptance remain operator checks.
+V4's HTTP checksum fallback is retained; no peer/authentication or instrument data
+configuration was changed, and the old full-image candidate remains historical.
