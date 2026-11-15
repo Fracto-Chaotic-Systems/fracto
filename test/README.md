@@ -1,5 +1,10 @@
 # Fracto tests
 
+`docker_build_context.test.js` verifies the deployed source context excludes
+credentials and private runtime state while retaining reviewed source inputs.
+The local `test/test.json` peer-configuration scratch file is excluded by both
+Git and Docker ignore rules; it is not a test fixture and must stay local.
+
 `free_ec2_port_3007.test.js` uses mocked Linux commands and temporary nginx files
 to verify inspection, backup/edit/reload, invalid-edit rollback, and refusal to
 touch non-nginx listeners. It runs as root on Linux; no real service is touched.

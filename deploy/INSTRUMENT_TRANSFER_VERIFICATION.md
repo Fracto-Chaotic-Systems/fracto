@@ -108,3 +108,27 @@ one CPU, 2 GB memory, network isolation and a read-only source mount (191 passed
 9 platform-specific tests skipped). The reported case passed as test 95. The
 existing production candidate image above records v1; rebuild with the v2 AI and
 root revisions to consume this correction. The original v1 tag is preserved.
+
+## Support-document checkout follow-up: milestone/instrument-transfer-v3
+
+The actual production preview on 2026-11-15 reported identical catalog hashes,
+166 matching files, 1,457 missing files and one conflicting support document:
+`fluidr3-percussion/README.md`. Development's 7,734-byte copy mixed Windows CRLF
+and LF. Its LF-normalized 7,619 bytes exactly match the Git blob, with SHA-256
+`dd07e46736e73cbcf204ab04e34841fde0b44b8e3416bc7367068a6557242f5e`.
+
+After operator approval, only this development README was normalized and its Git
+checkout was pinned to LF. One new inventory-only preview still reports the same
+single destination conflict; no files were uploaded or published. The new source
+manifest is `720909bb0b394426c7011ee0287e51c5d26913ccc9f989c43f22af68428a23cc`.
+The production copy needs a separately authorized filesystem check/repair using
+the guarded one-file procedure in the deployment guide. Its bytes cannot be read
+through the current transfer API, so a line-ending-only destination difference
+has not been established.
+
+The 13 inventory/checkout tests passed on Windows and Linux. The new regression
+checks fresh Git checkout with automatic CRLF conversion enabled and disabled.
+No checksum-equivalence exception, overwrite permission or catalog/audio change
+was introduced. A discovered local peer-configuration scratch file is now excluded
+from Git and Docker contexts; all eight build-context tests pass. Earlier
+milestone tags remain immutable; v3 records the checkout and exclusion fixes.

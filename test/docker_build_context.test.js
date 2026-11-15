@@ -34,6 +34,8 @@ test('actual Docker context excludes host knowledge artifacts but retains review
    assert.equal(included('servers/fracto-asset-server/instruments/.instrument-transfer/sessions/private.json'), false)
    assert.equal(included('servers/fracto-asset-server/instruments/.instrument-transfer/packages/private.verified'), false)
    assert.equal(included('servers/fracto-asset-server/instruments/transfer_publication.js'), true)
+   assert.equal(included('test/test.json'), false)
+   assert.equal(included('test/docker_build_context.test.js'), true)
 })
 
 // Decode independently, checking each USTAR checksum and payload boundary.

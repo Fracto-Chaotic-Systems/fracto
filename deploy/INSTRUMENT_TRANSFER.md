@@ -10,16 +10,16 @@ Local results are recorded in [INSTRUMENT_TRANSFER_VERIFICATION.md](INSTRUMENT_T
 Publish the coordinated root and service revisions. Five repositories contain
 feature or build-test changes:
 
-The coordinated local milestone is `milestone/instrument-transfer-v2`, annotated
+The coordinated local milestone is `milestone/instrument-transfer-v3`, annotated
 in the root and every service repository, including unchanged services. Publish
 the required branches and explicitly push this tag in all seven repositories
 when releasing remotely.
 
 | Repository | Required change |
 | --- | --- |
-| `fracto` | Shared transfer contract/streams, Docker/Compose persistent instrument storage, proxy configuration and verification tooling |
+| `fracto` | Shared transfer contract/streams, Docker/Compose persistent instrument storage, proxy configuration, verification tooling and private scratch-file exclusions |
 | `servers/fracto-admin-server` | Authenticated inventory, jobs, streaming sender/receiver, publication receipt checks and isolated-lab route authorization |
-| `servers/fracto-asset-server` | Package inventory, private staging, validation, durable publication/recovery and storage bootstrap |
+| `servers/fracto-asset-server` | Package inventory, private staging, validation, durable publication/recovery, storage bootstrap and canonical support-document line endings |
 | `servers/fracto-ui` | Servers-page preview, explicit export, progress, cancellation, recovery and receipt display |
 | `servers/fracto-ai-server` | Bounded build-test concurrency and explicit real-adapter completion assertions |
 
@@ -34,7 +34,7 @@ No database migration is introduced by this feature.
 The original source ZIP in `logs/instrument-transfer-source-20261114.zip` captures
 the pre-commit v1 feature files from root, Admin, Asset and UI, baseline commit IDs,
 per-file hashes and verification evidence. It excludes audio, credentials and the
-subsequent v2 AI build-test correction. Use the v2 tagged Git revisions for current
+subsequent v2/v3 corrections. Use the v3 tagged Git revisions for current
 deployment. The ZIP remains a historical review snapshot, not a complete checkout
 or an automatic installer.
 
@@ -135,6 +135,34 @@ for instrument-storage errors before exporting.
    preview. Direction is always from the host whose page is open.
 
 ## Recovery and rollback
+
+### Single percussion README conflict
+
+The observed Windows development checkout mixed CRLF/LF in
+`fluidr3-percussion/README.md`. V3 pins its Git checkout to LF. This changes no
+document text, catalog bytes or audio. A persistent destination retains its old
+support files across image rebuilds, so updating the image alone may leave this
+existing conflict in place.
+
+For this specific library revision, the canonical README is 7,619 bytes with
+SHA-256 `dd07e46736e73cbcf204ab04e34841fde0b44b8e3416bc7367068a6557242f5e`.
+On the receiving server, an operator with filesystem access should:
+
+1. Ensure no transfer/importer is active. Read only
+   `<FRACTO_INSTRUMENT_DIR>/fluidr3-percussion/README.md`; reject symlinks.
+2. Normalize CRLF to LF in memory and require the exact size/hash above. If it
+   does not match, stop and review the document differences; do not overwrite it.
+3. Preserve an immutable backup of the original bytes outside the public package,
+   then atomically replace only this README with the verified LF bytes.
+4. Run a new preview from development. Require zero conflicts before selecting
+   Export. Do not remove the catalog/audio or disable the conflict checks.
+
+The normalized development copy still encountered this single destination
+conflict on 2026-11-15. Destination bytes were not readable through the transfer
+API, and no production file was changed by this chat. This procedure is an
+operator-reviewed one-file repair, not a protocol overwrite option.
+
+### General recovery
 
 Cancel before publication when possible; cancellation waits through a short
 non-cancellable commit/verification section. Do not delete staging while a job
