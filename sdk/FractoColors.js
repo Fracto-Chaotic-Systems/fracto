@@ -27,7 +27,7 @@ export class FractoColors {
       FractoColors.init_pattern_hues();
     }
     let pattern_in_range = pattern;
-    while (pattern_in_range > MAX_PATTERN) {
+    while (pattern_in_range >= MAX_PATTERN) {
       pattern_in_range = Math.floor(pattern_in_range / 2);
     }
     return FractoColors.pattern_hues[pattern_in_range];
@@ -47,7 +47,7 @@ export class FractoColors {
     // Convert object to sorted array only once
     const all_sets = Object.keys(all_sets_object)
       .map((key) => {
-        const iteration = parseInt(key.slice(1));
+        const iteration = Number(key.slice(1));
         return { iteration, iteration_count: all_sets_object[key] };
       })
       .sort((a, b) => a.iteration - b.iteration);

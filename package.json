@@ -15,6 +15,10 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
+    "test:flight": "node --test test/sdk_canvas_buffer.test.js test/flight_tile_access.test.js servers/fracto-ui/test/flight_frame_colors.test.js servers/fracto-ui/test/flight_frame_worker.test.js servers/fracto-ui/test/flight_refinement.test.js servers/fracto-ui/test/flight_tile_cache.test.js servers/fracto-ui/test/flight_projection.test.js servers/fracto-ui/test/flight_state.test.js servers/fracto-ui/test/flight_simulation.test.js servers/fracto-ui/test/flight_controls.test.js servers/fracto-ui/test/flight_scene.test.js servers/fracto-ui/test/flight_indicators.test.js servers/fracto-ui/test/flight_instrument_settings.test.js servers/fracto-ui/test/game_controller.test.js servers/fracto-ui/test/games_play_fullscreen.test.js servers/fracto-ui/test/games_play_settings_layout.test.js servers/fracto-ui/test/games_play_controls_layout.test.js",
+    "test:flight-frames": "node --test servers/fracto-ui/test/flight_frame_colors.test.js servers/fracto-ui/test/flight_frame_worker.test.js test/sdk_canvas_buffer.test.js",
+    "test:flight-refinement": "node --test servers/fracto-ui/test/flight_refinement.test.js servers/fracto-ui/test/flight_tile_cache.test.js test/flight_tile_access.test.js",
+    "test:flight-tiles": "node --test test/flight_tile_access.test.js servers/fracto-ui/test/flight_tile_cache.test.js",
     "test:tiles-db": "node --test test/tile_database_seed.test.js test/tile_database_seed.integration.test.js",
     "test:instrument-transfer": "node --test servers/fracto-asset-server/test/instrument_transfer.test.js servers/fracto-asset-server/test/instrument_transfer_stream.test.js servers/fracto-asset-server/test/instrument_publication.test.js servers/fracto-admin-server/test/instrument_transfer.test.js",
     "orbitals:catalog": "node scripts/build_orbital_denominator_catalog.js",

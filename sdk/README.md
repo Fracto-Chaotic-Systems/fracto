@@ -36,6 +36,18 @@ const result = FractoFastCalc.calc(point.re, point.im);
 
 ### Calculation and math
 
+`FractoTileGeometry.js` is a browser-safe numerical tile helper for canonical
+upper-plane codes at levels 3–34, bounds, conjugate-symmetric point lookup,
+native 256-sample indexing, and tile shape validation. It performs no file or
+network access and does not start cache timers. Flight transport and browser
+caching are documented in the UI flight README and tile-service README.
+
+The flight frame pipeline uses `FractoColors` to derive a fresh whole-frame
+palette before writing RGBA in a worker. Palette keys preserve finite fractional
+iterations, and hue lookup includes the pattern-20000 boundary. Canonical
+level-three point lookup reuses a 32-entry code table. Existing integer tone
+behavior is retained; the SDK canvas regression suite remains applicable.
+
 - `FractoFastCalc.js` performs fast Mandelbrot-set and orbit calculations.
   Its established `calc(re, im, level)` continues to iterate from `z=0`.
   The separate seeded `calc_from_seed(re, im, seed_re, seed_im, level,
