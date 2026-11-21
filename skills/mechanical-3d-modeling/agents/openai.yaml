@@ -1,0 +1,3 @@
+interface:
+  display_name: "Mechanical 3D Modeling"
+  short_description: "Build animated mechanical models with Three.js"
