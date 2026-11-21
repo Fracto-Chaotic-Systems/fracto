@@ -1,0 +1,6 @@
+Tool: built-in image_gen
+Source: servers/fracto-ui/public/images/10.jpg
+Output: servers/fracto-ui/public/images/10-transparent.png
+Transparent background: true
+
+BACKGROUND REMOVAL ONLY. The input is the exact edit target. Remove ALL the white background OUTSIDE the scroll and replace it with fully transparent pixels (alpha 0). Output MUST be an RGBA PNG with an actual transparent exterior, not white, not brown, not a gradient and not a checkerboard painted in the image. Keep every part of the original parchment scroll, rollers, hardware, ropes, texture and irregular edges unchanged. Do NOT rotate, redraw, stretch, redesign or embellish it. Keep the same square framing and same orientation as the source: horizontal rollers at top and bottom. Blank parchment. This is a precise cutout asset, not a new illustration.
