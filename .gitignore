@@ -163,5 +163,7 @@ codex.txt
 
 # Local CRT previews and skill-authoring scratch data
 /tmp/crt-*.jpg
+/tmp/parchment-*.jpg
+/tmp/parchment-*.jpg
 /tmp/reusable-skills/
 /tmp/skill-validator-deps/
