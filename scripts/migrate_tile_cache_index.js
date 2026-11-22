@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import {promises as fsp} from 'node:fs'
 
-import {tile_index_paths, resolve_tile_index_base} from '../sdk/FractoTilePaths.js'
+import {tile_index_paths, resolve_tile_index_base} from "@fracto/sdk/FractoTilePaths.js"
 
 const source_directory = path.resolve(process.argv[2] || '/legacy-tiles')
 const destination_directory = path.resolve(process.argv[3] || '/var/lib/fracto/tiles')

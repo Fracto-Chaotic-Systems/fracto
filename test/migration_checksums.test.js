@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import {
   migration_checksums,
   canonical_migration_history,
-} from "../utils/migration_checksums.js";
+} from "@fracto/sdk/utils/MigrationChecksums.js";
 const hash = (v) => createHash("sha256").update(v).digest("hex");
 const sql = "-- Migration\nCREATE TABLE example (id INT PRIMARY KEY);\n";
 test("LF and CRLF SQL share a canonical fingerprint and recognize both legacy histories", () => {

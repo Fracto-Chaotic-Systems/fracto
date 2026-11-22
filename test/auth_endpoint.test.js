@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import express from "express";
 import { readFileSync } from "node:fs";
-import vm from "node:vm";
+import{launch_service_fixture}from"@fracto/sdk/testing/ServiceFixture.js";
+import{create_http_proxy}from"@fracto/sdk/utils/HttpProxy.js";
+import{fileURLToPath}from"node:url";
 import { after, before, describe, test } from "node:test";
 
 import {
@@ -16,14 +18,15 @@ import { AUTH_COOKIE_NAME, create_session as store_session, get_session } from "
 import {
   is_lab_readonly_admin_bypass,
   require_administrator,
-} from "../utils/admin_authorization.js";
+} from "@fracto/sdk/utils/AdminAuthorization.js";
 import {
   require_enabled_user_if_configured,
   require_internal_service,
-} from "../utils/service_authorization.js";
+} from "@fracto/sdk/utils/ServiceAuthorization.js";
 
-import { require_data_editor } from "../servers/fracto-data-server/handlers/data_requests/authorization.js";
-import { require_world_notes_origin } from "../servers/fracto-data-server/handlers/world_notes.js";
+import { require_data_editor } from "@fracto/sdk/utils/PrivateEditorAuthorization.js";
+import { trusted_mutation_origin } from "@fracto/sdk/utils/AuthRequestOrigin.js";
+const require_world_notes_origin = (req,res,next) => { if(trusted_mutation_origin(req,res)) next(); };
 
 const users = new Map();
 const create_session = (user) => {
@@ -39,33 +42,9 @@ data_app.get("/user/session/:id", (req, res) => {
   return user ? res.json({ user }) : res.sendStatus(404);
 });
 data_app.post("/login_event", (req, res) => res.sendStatus(201));
-// Mount the data service's actual route declarations with database handlers
-// replaced by markers, retaining its real authorization middleware.
-const data_routes = readFileSync(new URL("../servers/fracto-data-server/index.js", import.meta.url), "utf8");
-const route_source = data_routes.slice(data_routes.indexOf('app.get("/",'));
-const route_globals = {
-  app: data_app,
-  create_orbital_data_router: () => {
-    const router = express.Router();
-    router.get("/", (req, res) => res.json({ handler: "orbital_data" }));
-    return router;
-  },
-  require_data_editor,
-  require_world_notes_origin,
-  require_administrator,
-  require_enabled_user_if_configured,
-  require_internal_service,
-  process,
-};
-for (const name of new Set(route_source.match(/\bhandle_\w+/g))) {
-  route_globals[name] = (req, res) => res.json({ handler: name });
-}
-route_globals.create_user_upsert_route = () =>
-  (req, res) => res.json({ handler: "handle_user_upsert" });
-route_globals.create_user_bootstrap_route = () =>
-  (req, res) => res.json({ handler: "handle_user_bootstrap" });
-data_app.use(express.json());
-vm.runInNewContext(route_source, route_globals);
+let data_fixture;
+const data_proxy=create_http_proxy({origin:()=>data_fixture.base,error:"fixture_unavailable"});
+data_app.use(async(req,res,next)=>{try{const values={};for(const key of ["FRACTO_SERVER_PORT","FRACTO_AUTH_REQUIRED","FRACTO_INTERNAL_SERVICE_TOKEN","FRACTO_AUTH_MODE","FRACTO_ADMIN_READONLY_BYPASS","FRACTO_UI_ORIGIN"])if(process.env[key]!==undefined)values[key]=process.env[key];await data_fixture.request("configure",values);data_proxy(req,res);}catch(error){next(error);}});
 let data_server;
 const previous_data_port = process.env.FRACTO_DATA_PORT;
 const previous_main_port = process.env.FRACTO_SERVER_PORT;
@@ -87,30 +66,13 @@ let server;
 let base_url;
 app.get("/admin", require_administrator, (req, res) => res.json({ ok: true }));
 
-before(
-  () =>
-    new Promise((resolve) => {
-      data_server = data_app.listen(0, () => {
-        process.env.FRACTO_DATA_PORT = `${data_server.address().port}`;
-      process.env.FRACTO_AUTH_REQUIRED = "true";
-      server = app.listen(0, () => {
-        base_url = `http://127.0.0.1:${server.address().port}`;
-        process.env.FRACTO_SERVER_PORT = `${server.address().port}`;
-        resolve();
-      });
-      });
-    }),
-);
-
-after(async () => {
-  await Promise.all([server, data_server].map((listener) => new Promise((resolve) => listener.close(resolve))));
-  if (previous_data_port === undefined) delete process.env.FRACTO_DATA_PORT;
-  else process.env.FRACTO_DATA_PORT = previous_data_port;
-  if (previous_main_port === undefined) delete process.env.FRACTO_SERVER_PORT;
-  else process.env.FRACTO_SERVER_PORT = previous_main_port;
-  if (previous_auth_required === undefined) delete process.env.FRACTO_AUTH_REQUIRED;
-  else process.env.FRACTO_AUTH_REQUIRED = previous_auth_required;
+before(async()=>{
+ data_fixture=await launch_service_fixture(fileURLToPath(new URL("../servers/fracto-data-server/tests/authorization_fixture.mjs",import.meta.url)));
+ data_server=data_app.listen(0);await new Promise(resolve=>data_server.once("listening",resolve));
+ process.env.FRACTO_DATA_PORT=String(data_server.address().port);process.env.FRACTO_AUTH_REQUIRED="true";
+ server=app.listen(0);await new Promise(resolve=>server.once("listening",resolve));base_url=`http://127.0.0.1:${server.address().port}`;process.env.FRACTO_SERVER_PORT=String(server.address().port);
 });
+after(async()=>{await data_fixture.close();await Promise.all([server,data_server].map(listener=>new Promise(resolve=>listener.close(resolve))));for(const[key,value]of [["FRACTO_DATA_PORT",previous_data_port],["FRACTO_SERVER_PORT",previous_main_port],["FRACTO_AUTH_REQUIRED",previous_auth_required]]){if(value===undefined)delete process.env[key];else process.env[key]=value;}});
 
 describe("authentication endpoint contract", () => {
   test("lab admin bypass opens only read-only pages when explicitly configured", () => {

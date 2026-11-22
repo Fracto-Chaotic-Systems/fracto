@@ -6,8 +6,10 @@ const script_directory = path.dirname(fileURLToPath(import.meta.url));
 const repository_root = path.resolve(script_directory, "..");
 const sdk_package_path = path.join(repository_root, "sdk", "package.json");
 const sdk_package = JSON.parse(fs.readFileSync(sdk_package_path, "utf8"));
-const sdk_dependency = "file:../../sdk";
 const consumers = [
+  ".",
+  "servers/fracto-admin-server",
+  "servers/fracto-ai-server",
   "servers/fracto-ui",
   "servers/fracto-data-server",
   "servers/fracto-asset-server",
@@ -15,23 +17,10 @@ const consumers = [
 ];
 
 const failures = [];
-const collect_source_files = (directory) => {
-  const files = [];
-  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
-    if (entry.name === "node_modules" || entry.name === ".git") {
-      continue;
-    }
-    const entry_path = path.join(directory, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...collect_source_files(entry_path));
-    } else if (/\.(js|jsx)$/.test(entry.name)) {
-      files.push(entry_path);
-    }
-  }
-  return files;
-};
 
 for (const consumer of consumers) {
+  const sdk_location = consumer === "." ? "sdk" : "../../sdk";
+  const sdk_dependency = consumer === "." ? "file:./sdk" : "file:../../sdk";
   const package_path = path.join(repository_root, consumer, "package.json");
   const package_json = JSON.parse(fs.readFileSync(package_path, "utf8"));
   const dependency = package_json.dependencies?.["@fracto/sdk"];
@@ -50,23 +39,12 @@ for (const consumer of consumers) {
     );
   }
   if (
-    installed_package?.resolved !== "../../sdk" ||
+    installed_package?.resolved !== sdk_location ||
     installed_package?.link !== true
   ) {
     failures.push(
       `${consumer}: lockfile does not resolve the local SDK package`,
     );
-  }
-
-  const consumer_root = path.join(repository_root, consumer);
-  const relative_sdk_import = /from\s+["']\.\.?\/[^"']*sdk\//;
-  for (const source_file of collect_source_files(consumer_root)) {
-    const source = fs.readFileSync(source_file, "utf8");
-    if (relative_sdk_import.test(source)) {
-      failures.push(
-        `${path.relative(repository_root, source_file)}: use @fracto/sdk instead of a relative SDK import`,
-      );
-    }
   }
 }
 

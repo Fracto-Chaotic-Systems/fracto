@@ -9,7 +9,7 @@ import {
    TILE_SOURCE_MODE,
 } from './FractoTilePaths.js'
 import {read_source_tile, tile_cache_identity} from './FractoTileSource.js'
-import {color_shortcode} from '../utils/ansi_colors.js'
+import {color_shortcode} from "@fracto/sdk/utils/AnsiColors.js"
 
 const SEPARATOR = path.sep;
 const TILES_DIR = TILE_DATA_DIRECTORY;
@@ -19,7 +19,7 @@ if (TILE_SOURCE_MODE !== 'local' && !fs.existsSync(TILES_DIR)) {
 }
 let CACHED_TILES = {}
 const IN_FLIGHT_DOWNLOADS = new Map()
-let REMOTE_TILE_BASE_URL_PROMISE = null
+import { remote_tile_base_url } from "./utils/TileRemote.js";
 const CACHE_STATS = {
    requests: 0,
    memory_hits: 0,
@@ -49,23 +49,7 @@ const CACHE_POLICY = TILE_SOURCE_MODE === 'local'
 const MIN_FREE_BYTES = Number(process.env.FRACTO_TILE_MIN_FREE_BYTES || 1024 ** 3)
 const CACHE_READ_ONLY = process.env.FRACTO_TILE_CACHE_READ_ONLY === 'true'
 
-const remote_tile_url = async remote_filepath => {
-   const configured_base_url = process.env.FRACTO_TILE_REMOTE_BASE_URL
-   if (typeof configured_base_url === 'string' && configured_base_url.trim()) {
-      return `${configured_base_url.trim().replace(/\/$/, '')}/${remote_filepath}`
-   }
-   if (!REMOTE_TILE_BASE_URL_PROMISE) {
-      REMOTE_TILE_BASE_URL_PROMISE = import('../config/network.json', {with: {type: 'json'}})
-         .then(({default: network}) => {
-            const base_url = network['fracto-prod']
-            if (typeof base_url !== 'string' || !base_url.trim()) {
-               throw new Error('config/network.json must provide a non-empty fracto-prod URL for remote-cache mode')
-            }
-            return base_url.replace(/\/$/, '')
-         })
-   }
-   return `${await REMOTE_TILE_BASE_URL_PROMISE}/${remote_filepath}`
-}
+const remote_tile_url = async remote_filepath => `${remote_tile_base_url()}/${remote_filepath}`;
 
 if (!Number.isFinite(MIN_FREE_BYTES) || MIN_FREE_BYTES < 0) {
    throw new Error('FRACTO_TILE_MIN_FREE_BYTES must be a non-negative number')

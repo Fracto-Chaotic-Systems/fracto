@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import vm from "node:vm";
 import * as sessions from "../utils/auth_sessions.js";
 import * as transactions from "../utils/auth_transactions.js";
-import { trusted_mutation_origin } from "../utils/auth_request_origin.js";
+import { trusted_mutation_origin } from "@fracto/sdk/utils/AuthRequestOrigin.js";
 import { get_auth_config } from "../utils/auth_config.js";
 
 const response = () => ({

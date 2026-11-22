@@ -1,26 +1,26 @@
 import test from "node:test";
-import { trace_parameter_ray } from "../sdk/orbitals/FractoParameterRayTrace.js";
+import { trace_parameter_ray } from "@fracto/sdk/orbitals/FractoParameterRayTrace.js";
 import assert from "node:assert/strict";
-import { find_minibrot_rays } from "../sdk/orbitals/FractoMinibrotRays.js";
-import { component_attachment } from "../sdk/orbitals/FractoParameterAttachment.js";
-import { big_component_attachment } from "../sdk/orbitals/FractoParameterBigAttachment.js";
-import { big_attachment_angles } from "../sdk/orbitals/FractoParameterBigAngles.js";
+import { find_minibrot_rays } from "@fracto/sdk/orbitals/FractoMinibrotRays.js";
+import { component_attachment } from "@fracto/sdk/orbitals/FractoParameterAttachment.js";
+import { big_component_attachment } from "@fracto/sdk/orbitals/FractoParameterBigAttachment.js";
+import { big_attachment_angles } from "@fracto/sdk/orbitals/FractoParameterBigAngles.js";
 import {
   satellite_parent,
   rotation_words,
-} from "../sdk/orbitals/FractoParameterParent.js";
-import { component_root_angles } from "../sdk/orbitals/FractoParameterRootAngles.js";
+} from "@fracto/sdk/orbitals/FractoParameterParent.js";
+import { component_root_angles } from "@fracto/sdk/orbitals/FractoParameterRootAngles.js";
 import {
   parameter_math,
   parameter_distance,
   MAX_PARAMETER_PERIOD,
-} from "../sdk/orbitals/FractoParameterPrecision.js";
+} from "@fracto/sdk/orbitals/FractoParameterPrecision.js";
 import {
   parameter_reference,
   decimal_parameter_sample,
-} from "../sdk/orbitals/FractoParameterRaySolver.js";
-import { rational_angle } from "../sdk/orbitals/FractoRayGeometry.js";
-import { tuned_wake_angles } from "../sdk/orbitals/FractoParameterTuning.js";
+} from "@fracto/sdk/orbitals/FractoParameterRaySolver.js";
+import { rational_angle } from "@fracto/sdk/orbitals/FractoRayGeometry.js";
+import { tuned_wake_angles } from "@fracto/sdk/orbitals/FractoParameterTuning.js";
 
 for (const [period, core] of [
   [21, { x: 0.2713568223215816, y: 0.006228315276223591 }],

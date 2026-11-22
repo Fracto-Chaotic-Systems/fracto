@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { MeshInventory } from "../sdk/terrain/Inventory.js";
-import { terrain_namespace } from "../sdk/terrain/Cache.js";
-import FractoUtil from "../sdk/FractoUtil.js";
+import { MeshInventory } from "@fracto/sdk/terrain/Inventory.js";
+import { terrain_namespace } from "@fracto/sdk/terrain/Cache.js";
+import FractoUtil from "@fracto/sdk/FractoUtil.js";
 
 const identity = { source_mode: "local", source_generation: "inventory-test" };
 const namespace = terrain_namespace(identity);

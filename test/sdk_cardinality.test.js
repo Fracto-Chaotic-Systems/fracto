@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import FractoFastCalc from "../sdk/FractoFastCalc.js";
-import FractoCardinality from "../sdk/FractoCardinality.js";
-import { sample_orbit } from "../sdk/orbitals/FractoOrbitSampling.js";
-import { detect_return_cardinality } from "../sdk/orbitals/FractoReturnDetection.js";
+import FractoFastCalc from "@fracto/sdk/FractoFastCalc.js";
+import FractoCardinality from "@fracto/sdk/FractoCardinality.js";
+import { sample_orbit } from "@fracto/sdk/orbitals/FractoOrbitSampling.js";
+import { detect_return_cardinality } from "@fracto/sdk/orbitals/FractoReturnDetection.js";
 
 test("orbit sampler reports the actual escape iteration instead of its horizon", () => {
   const escaped = sample_orbit(
@@ -24,7 +24,7 @@ test("orbit sampler reports the actual escape iteration instead of its horizon",
   assert.equal(bailout.iterations, 1);
   assert.equal(bailout.samples.at(-1).iteration, 1);
 });
-import * as sdk from "../sdk/index.js";
+import * as sdk from "@fracto/sdk/index.js";
 
 test("SDK exposes one adaptive main-cardioid cardinality function", () => {
   assert.equal(typeof FractoCardinality, "function");

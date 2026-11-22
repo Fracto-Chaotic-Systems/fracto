@@ -4,8 +4,8 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import * as sdk from "../sdk/index.js";
-import FractoCanvasBuffer from "../sdk/FractoCanvasBuffer.js";
+import * as sdk from "@fracto/sdk/index.js";
+import FractoCanvasBuffer from "@fracto/sdk/FractoCanvasBuffer.js";
 
 const repository_root = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),

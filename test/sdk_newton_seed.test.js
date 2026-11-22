@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { newton_derived } from "../sdk/orbitals/FractoNewtonDerived.js";
-import { newton_big_complex } from "../sdk/orbitals/FractoNewtonBigComplex.js";
+import { newton_derived } from "@fracto/sdk/orbitals/FractoNewtonDerived.js";
+import { newton_big_complex } from "@fracto/sdk/orbitals/FractoNewtonBigComplex.js";
 
 const coordinates = (result) =>
   result.point_list.map(({ re, im }) => [Number(re), Number(im)]);

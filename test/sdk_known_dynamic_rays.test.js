@@ -1,12 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { trace_known_dynamic_rays } from "../sdk/orbitals/FractoKnownDynamicRays.js";
+import { trace_known_dynamic_rays } from "@fracto/sdk/orbitals/FractoKnownDynamicRays.js";
 import {
   rational_angle,
   scale,
   sub,
   sqrt,
-} from "../sdk/orbitals/FractoRayGeometry.js";
+} from "@fracto/sdk/orbitals/FractoRayGeometry.js";
 
 const fixed = () => ({
   focal_point: { x: "0", y: "0" },

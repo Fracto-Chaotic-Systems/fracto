@@ -7,8 +7,9 @@ import config from "../config/mysql.json" with { type: "json" };
 import { ROOT_DIR } from "../constants.js";
 import { backup_insert_columns } from "./database_backup_columns.js";
 import { normalize_backup_collations } from "./database_collation_compatibility.js";
-import { migration_checksums } from "../utils/migration_checksums.js";
+import { migration_checksums } from "@fracto/sdk/utils/MigrationChecksums.js";
 import { compatible_migration_sql } from "./database_migration_compatibility.js";
+import { database_migration_files } from "./database_migration_files.js";
 
 const database = process.env.FRACTO_MYSQL_DATABASE || config.database;
 const backup_directory = path.resolve(
@@ -60,10 +61,8 @@ const backup_files = fs
   .readdirSync(backup_directory)
   .filter((name) => name.endsWith(".sql"))
   .sort();
-const migration_files = fs
-  .readdirSync(migration_directory)
-  .filter((name) => name.endsWith(".sql"))
-  .sort();
+const migration_paths = database_migration_files();
+const migration_files = [...migration_paths.keys()];
 
 if (!backup_files.length)
   throw new Error(`No SQL backups found in ${backup_directory}`);
@@ -167,7 +166,7 @@ const apply_migrations = async (connection, existing_database) => {
   );
 
   for (const filename of migration_files) {
-    const filepath = path.join(migration_directory, filename);
+    const filepath = migration_paths.get(filename);
     const file_checksum = checksum(filepath);
     const is_forced =
       force_argument && filename.startsWith(`${force_argument}_`);

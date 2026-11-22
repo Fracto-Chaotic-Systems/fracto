@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import BigComplex from "../sdk/math/BigComplex.js";
-import Complex from "../sdk/math/Complex.js";
-import HyperComplex from "../sdk/math/HyperComplex.js";
-import { farey_sequence } from "../sdk/math/utils.js";
-import FractoUtil from "../sdk/FractoUtil.js";
+import BigComplex from "@fracto/sdk/math/BigComplex.js";
+import Complex from "@fracto/sdk/math/Complex.js";
+import HyperComplex from "@fracto/sdk/math/HyperComplex.js";
+import { farey_sequence } from "@fracto/sdk/math/utils.js";
+import FractoUtil from "@fracto/sdk/FractoUtil.js";
 
 describe("main-cardioid multiplier coordinates", () => {
   it("round trips representative upper-cardioid points", () => {

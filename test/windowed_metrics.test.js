@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { create_windowed_metrics } from "../utils/windowed_metrics.js";
+import { create_windowed_metrics } from "@fracto/sdk/utils/WindowedMetrics.js";
 
 test("windowed metrics aggregate duration and outcomes without request details", () => {
   const records = [];

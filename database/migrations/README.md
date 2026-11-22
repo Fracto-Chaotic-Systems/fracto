@@ -1,12 +1,11 @@
 # Database migrations
 
-`019_environment-assets.sql` adds the Inventory asset/provenance registry, keyed
-by the permanent catalog asset ID. It creates indexed category, attribution
-status and parent references plus explicit creator, source, license and usage
-fields, source descriptors/checksums, modification history and catalog revision.
-This additive, replay-safe migration contains no creator data or binary files.
-After applying it, run `node scripts/register_environment_assets.js` to backfill
-the installation's existing library without changing its files.
+This directory retains immutable legacy migrations. New application migrations
+belong to their owning service under `database/migrations/`. The root runner and
+validator merge these directories in global order and reject duplicate numeric
+versions. Migration 019 moved unchanged to the data service; its filename and
+checksum/history are preserved. An explicit `FRACTO_DB_MIGRATION_DIR` overrides
+discovery exclusively. No applied SQL is rewritten or replayed by relocation.
 
 `018_tile-seed-checkpoints.sql` adds an InnoDB journal for resumable tile seeds.
 Each target has a source fingerprint, pinned/local CSV descriptor, committed byte

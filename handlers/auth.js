@@ -1,6 +1,6 @@
 import { get_auth_config } from "../utils/auth_config.js";
-import { trusted_mutation_origin } from "../utils/auth_request_origin.js";
-import { record_runtime_metric } from "../utils/windowed_metrics.js";
+import { trusted_mutation_origin } from "@fracto/sdk/utils/AuthRequestOrigin.js";
+import { record_runtime_metric } from "@fracto/sdk/utils/WindowedMetrics.js";
 import * as oidc from "openid-client";
 
 import { discover_oidc_provider } from "../utils/oidc_provider.js";

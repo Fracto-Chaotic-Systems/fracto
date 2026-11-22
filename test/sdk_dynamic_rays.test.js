@@ -1,8 +1,8 @@
 import {
   enumerate_doubling_families,
   doubling_family_count,
-} from "../sdk/orbitals/FractoRayFamilies.js";
-import { newton_big_complex } from "../sdk/orbitals/FractoNewtonBigComplex.js";
+} from "@fracto/sdk/orbitals/FractoRayFamilies.js";
+import { newton_big_complex } from "@fracto/sdk/orbitals/FractoNewtonBigComplex.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -12,13 +12,13 @@ import {
   sqrt,
   sub,
   scale,
-} from "../sdk/orbitals/FractoRayGeometry.js";
+} from "@fracto/sdk/orbitals/FractoRayGeometry.js";
 import {
   assess_ray_orbital,
   connectedness_evidence,
-} from "../sdk/orbitals/FractoRayEligibility.js";
-import { trace_dynamic_ray } from "../sdk/orbitals/FractoDynamicRayTrace.js";
-import { find_dynamic_rays, SEED_SURVEY_RAY_OPTIONS } from "../sdk/orbitals/FractoDynamicRays.js";
+} from "@fracto/sdk/orbitals/FractoRayEligibility.js";
+import { trace_dynamic_ray } from "@fracto/sdk/orbitals/FractoDynamicRayTrace.js";
+import { find_dynamic_rays, SEED_SURVEY_RAY_OPTIONS } from "@fracto/sdk/orbitals/FractoDynamicRays.js";
 
 test("shared high-accuracy survey profile resolves the analytic unit-circle landing", async () => {
   const result = await find_dynamic_rays({ x: 0, y: 0 }, { points: [{ x: 1, y: 0 }] }, SEED_SURVEY_RAY_OPTIONS);

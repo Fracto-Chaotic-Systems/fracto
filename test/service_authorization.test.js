@@ -4,7 +4,7 @@ import { createServer } from "node:http";
 import {
   require_enabled_user_if_configured,
   require_internal_service,
-} from "../utils/service_authorization.js";
+} from "@fracto/sdk/utils/ServiceAuthorization.js";
 
 const previous_env = {
   auth_required: process.env.FRACTO_AUTH_REQUIRED,

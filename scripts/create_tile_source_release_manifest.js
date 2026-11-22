@@ -6,7 +6,7 @@ import {
    TILE_SOURCE_RELEASE_SCHEMA,
    read_source_tile,
    tile_source_path,
-} from '../sdk/FractoTileSource.js'
+} from "@fracto/sdk/FractoTileSource.js"
 
 const ROOT_DIRECTORY = path.resolve(import.meta.dirname, '..')
 const ENV_FILE = path.join(ROOT_DIRECTORY, '.env')
@@ -30,8 +30,8 @@ const create_release_manifest = async () => {
    process.env.FRACTO_TILE_SOURCE_DIR = source_directory
    process.env.FRACTO_TILE_SOURCE_GENERATION = source_generation
 
-   const {TILE_SOURCE_DIRECTORY} = await import('../sdk/FractoTilePaths.js')
-   const {validate_tile_index_cache} = await import('../sdk/FractoTileIndexCache.js')
+   const {TILE_SOURCE_DIRECTORY} = await import("@fracto/sdk/FractoTilePaths.js")
+   const {validate_tile_index_cache} = await import("@fracto/sdk/FractoTileIndexCache.js")
 
    let source_stats
    try {

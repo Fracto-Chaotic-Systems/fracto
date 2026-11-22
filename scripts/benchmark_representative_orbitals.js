@@ -2,11 +2,11 @@ import assert from "node:assert/strict";
 import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { performance } from "node:perf_hooks";
 import { cpus } from "node:os";
-import { catalog_doubling_families } from "../sdk/orbitals/FractoDenominatorCatalog.js";
-import { discover_representative_orbital } from "../sdk/orbitals/FractoRepresentativeRaySolver.js";
-import { discover_catalog_orbital_family } from "../sdk/orbitals/FractoCatalogOrbitalDiscovery.js";
-import { same_orbital_cycle } from "../sdk/orbitals/FractoOrbitalIdentity.js";
-import { validate_representative_assignments } from "../sdk/orbitals/FractoLandingAssignments.js";
+import { catalog_doubling_families } from "@fracto/sdk/orbitals/FractoDenominatorCatalog.js";
+import { discover_representative_orbital } from "@fracto/sdk/orbitals/FractoRepresentativeRaySolver.js";
+import { discover_catalog_orbital_family } from "@fracto/sdk/orbitals/FractoCatalogOrbitalDiscovery.js";
+import { same_orbital_cycle } from "@fracto/sdk/orbitals/FractoOrbitalIdentity.js";
+import { validate_representative_assignments } from "@fracto/sdk/orbitals/FractoLandingAssignments.js";
 
 assert.ok(
   process.argv
@@ -18,7 +18,7 @@ const reference = process.argv.includes("--full-reference");
 const assignments = process.argv.includes("--assignments");
 const catalog = JSON.parse(
   await readFile(
-    new URL("../sdk/orbitals/data/denominator-catalog.json", import.meta.url),
+    new URL(import.meta.resolve("@fracto/sdk/orbitals/data/denominator-catalog.json")),
     "utf8",
   ),
 );

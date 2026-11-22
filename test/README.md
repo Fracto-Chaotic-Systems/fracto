@@ -1,29 +1,13 @@
 # Fracto tests
 
-`node --test test/environment_asset_database.test.js test/environment_catalog.test.js`
-covers explicit database provenance fields, parameter binding, connection retry,
-catalog-to-registry synchronization, revision changes and recovery when a file
-save succeeds before database synchronization fails. These tests use injected
-database adapters and temporary libraries rather than editing real attribution.
-Set `FRACTO_TEST_ENVIRONMENT_ASSET_DATABASE=1` to additionally verify the actual
-MySQL schema/upserts using a connection-local temporary copy of the live registry.
-Migration 019 must already be applied. No real asset rows change.
+`dependency_boundaries.test.js` checks package-only SDK consumption and rejection
+of root/server, server/root, inter-server and SDK/consumer imports, including
+re-exports, dynamic imports and requires. Comments and string literals are not
+treated as executable dependencies. Integration tests must use HTTP contracts
+rather than importing another service's implementation.
 
-`node --test test/blender_asset_conversion.test.js` covers Blender invocation
-flags/limits, validated GLB output, actionable conversion failures, source
-preservation, conversion history, and rollback before catalog publication.
-Process execution is mocked; the supplied grasses2 model was also converted with
-Blender 3.4.1 in the development container and imported into the real catalog.
-
-`node --test test/environment_asset_import.test.js` exercises folder/ZIP
-preservation, catalog registration/listing, duplicate and name-collision behavior,
-safe paths, selected model resources and the authenticated upload boundary using
-temporary libraries. It does not add assets to the user's library.
-
-`node --test test/environment_catalog.test.js` verifies real temporary-file
-catalog writes, source/runtime preservation, strict mutation/response fields,
-revision conflicts, concurrent writers, path containment, trusted origins,
-authentication integration, and body limits. No production records are changed.
+Application-specific asset/database suites live in the owning service repositories.
+The root retains pure SDK contract tests and generic migration discovery tests.
 
 `data_query_tiles.test.js` verifies that tile previews/listings use the short-code
 primary key, retain bounded results, preserve other tables' ordering, reject
@@ -37,7 +21,7 @@ remote snapshot reuse, and checkpoint failure rollback. The opt-in MySQL tests
 also run the CLI across separate processes, test cumulative limits, atomic tile/
 checkpoint rollback, concurrent-run rejection, source-change refusal and restart.
 Set `FRACTO_TEST_MYSQL_TILE_SEED=1` to include a real MySQL integration test using
-root database configuration and host/port overrides. It tests the automatically
+the data service’s private configuration and host/port overrides. It tests the automatically
 selected bulk method, needs schema create/drop privileges, and touches only its
 disposable schema.
 
@@ -102,13 +86,13 @@ references, incomplete panel states and the inactive UI subject-provider
 declaration. In-memory source edits verify drift detection without executing JSX
 or mutating the checkout. UI npm builds also run the catalog source check.
 
-`chat_stream.test.js` covers incremental UTF-8/NDJSON framing, completion/error
+`servers/fracto-ai-server/test/chat_stream.test.js` covers incremental UTF-8/NDJSON framing, completion/error
 semantics, size limits, backpressure, browser accumulation, and streaming through
 both HTTP hops. Delayed fixtures verify first text arrives before completion;
 Stop and timeouts abort model work. Engine tests also cover Ollama streaming and
 provider metadata filtering. No real model or machine credential is required.
 
-`admin_chat.test.js` verifies the admin chat bridge's origin/session enforcement,
+`servers/fracto-admin-server/test/admin_chat.test.js` verifies the admin chat bridge's origin/session enforcement,
 bounded text contract, server-only credentials, response filtering, fixed errors
 and timeout cancellation using local HTTP fixtures. It requires no running AI
 engine, model, database or real machine token.
@@ -119,7 +103,7 @@ file-only messages and combined/escaped context limits. The admin bridge test
 also verifies that extracted JSON file content reaches an injected model adapter
 through both HTTP hops.
 
-`controlled_corrections.integration.test.js` verifies the AI read-only proposal
+`servers/fracto-ai-server/test/controlled_corrections.integration.test.js` verifies the AI read-only proposal
 handoff to an independent data-service snapshot owner, explicit approval, atomic
 application and monotonic-revision rollback. It uses disposable local datasets,
 not existing MySQL tables or live deployment configuration.
@@ -138,13 +122,13 @@ Root tests use Node's built-in test runner and cover SDK, service, script and
 integration behavior. Run the maintained suite with `npm test`; run a focused
 file with `node --test test/<file>.test.js`.
 
-`terrain_mesh_cache.test.js` covers native-level planning from saved bailiwick
+`servers/fracto-tiles-server/test/terrain_mesh_cache.test.js` covers native-level planning from saved bailiwick
 regions, normalized mesh geometry, binary round trips, cache reuse, corrupt
 cache recovery, partial coverage and queued-job API behavior. It uses synthetic
 numerical tiles and temporary directories; it does not require a running DB or
 tile service. Live cache jobs can be started from the freeform page's test button.
 
-`mesh_storage.test.js` covers active-volume path selection, both tile-compatible
+`servers/fracto-tiles-server/test/mesh_storage.test.js` covers active-volume path selection, both tile-compatible
 directory layouts, initialization/read-back and idempotence, preservation of
 numerical tiles, incompatible stores, traversal rejection, complete typed-array
 round trips and the compressed retrieval route's 200/400/404/409/503 behavior.
@@ -158,14 +142,14 @@ and levels 2–34. Spatial results are compared with a brute-force reference ove
 mixed-status records and multiple viewports. Invalid inputs cannot mutate the
 index. Run it separately with `npm run test:mesh-inventory`.
 
-`mesh_inventory_store.test.js` verifies cold indexing, warm startup without mesh
+`servers/fracto-tiles-server/test/mesh_inventory_store.test.js` verifies cold indexing, warm startup without mesh
 decoding, source changes, uncheckpointed replay, interrupted file publication,
 torn/corrupt metadata recovery, compaction ordering, external additions/deletions,
 corrupt-file invalidation, active-worker reconciliation, cache hooks, retrieval
 repair, worker acknowledgments and failure recovery. Tests use temporary stores
 and synthetic numerical data; no live services are required.
 
-`mesh_heat_map.test.js` covers ready-only availability, empty regions, overlap
+`servers/fracto-tiles-server/test/mesh_heat_map.test.js` covers ready-only availability, empty regions, overlap
 precedence, mirrored/real-axis coverage, rectangular views, level 34, subpixel
 meshes, boundary rounding, request limits, bounded inventory collection, and
 sanitized endpoint failures. Raster results are checked against a direct
@@ -173,13 +157,13 @@ pixel-center reference. Run it with `npm run test:mesh-heat-map`.
 It also checks indexed tile counts, reflected-view deduplication, tile-only
 levels and the exact `tile_count - mesh_count` arithmetic used by the UI table.
 
-`mesh_lifecycle.integration.test.js` connects the real store, cache builder,
+`servers/fracto-tiles-server/test/mesh_lifecycle.integration.test.js` connects the real store, cache builder,
 retrieval and heat-map HTTP handlers on an ephemeral loopback server. It verifies
 build/reuse, missing/corrupt retrieval repair, external reconciliation, source
 changes, persistent reopen, and rebuild refresh tokens in both `LNN` and
 four-character shortcode layouts. A child process is actually killed before
 and after durable publication; recovery must neither invent coverage nor lose
-a published mesh. `mesh_lifecycle_helpers.js` owns the temporary stores, HTTP
+a published mesh. `servers/fracto-tiles-server/test/mesh_lifecycle_helpers.js` owns the temporary stores, HTTP
 fixture and child-process cleanup. Fault injection touches only these isolated
 stores, never the development tile volume.
 
@@ -194,7 +178,7 @@ mesh_runtime.test.js verifies sufficient-level selection, level-seven fallback, 
 
 terrain_lod.test.js covers complete-quartet availability, independent mirrored refinement, atomic parent fallback, canonical file sharing, coarsening and stable finer-level tone mapping. Included in test:terrain-cache and test:terrain-lod.
 
-`terrain_mesh_cache.test.js` includes a configuration-free handler import test.
+`servers/fracto-tiles-server/test/terrain_mesh_cache.test.js` includes a configuration-free handler import test.
 It loads the terrain-region handler from an isolated data URL without neighboring
 database modules and exercises its injected database functions, preventing an
 import-time dependency on the untracked production `config/mysql.json` file.

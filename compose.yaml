@@ -53,12 +53,13 @@ services:
       - "${FRACTO_AI_PEER_BIND_ADDRESS:-127.0.0.1}:3447:3447"
     volumes:
       - ./config:/app/config:ro
+      - ./servers/fracto-data-server/config:/app/servers/fracto-data-server/config:ro
       - fracto-tile-data:/var/lib/fracto/tiles
       - fracto-ai-data:/var/lib/fracto/ai
       - fracto-data-corrections:/var/lib/fracto/data-corrections
       - fracto-tile-index:/var/lib/fracto/index
       - fracto-assets:/app/assets
-      - ./assets/environments:/app/assets/environments
+      - ./servers/fracto-asset-server/environments:/app/servers/fracto-asset-server/environments
       - fracto-instruments:/var/lib/fracto/instruments
       - fracto-videos:/app/videos
       - fracto-logs:/app/logs
@@ -114,6 +115,7 @@ services:
       - ./config:/app/config:ro
       - ./backup:/app/backup:ro
       - ./database/migrations:/app/database/migrations:ro
+      - ./servers/fracto-data-server/database/migrations:/app/servers/fracto-data-server/database/migrations:ro
       - fracto-logs:/app/logs
     restart: "no"
     logging:

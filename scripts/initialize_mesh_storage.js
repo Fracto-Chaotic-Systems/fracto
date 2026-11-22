@@ -3,7 +3,7 @@ import {
   initialize_mesh_storage,
   MESH_DIRECTORY,
   MESH_LAYOUT,
-} from "../sdk/terrain/Paths.js";
+} from "@fracto/sdk/terrain/Paths.js";
 
 // An explicit host tile directory supports preparing a nested writable bind
 // before the service starts with the numerical source mounted read-only.

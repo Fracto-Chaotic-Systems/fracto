@@ -1,4 +1,4 @@
-import {build_tile_index_cache} from '../sdk/FractoTileIndexCache.js'
+import {build_tile_index_cache} from "@fracto/sdk/FractoTileIndexCache.js"
 
 let latest_level = null
 

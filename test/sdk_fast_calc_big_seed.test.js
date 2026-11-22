@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import FractoFastCalc from "../sdk/FractoFastCalc.js";
+import FractoFastCalc from "@fracto/sdk/FractoFastCalc.js";
 
 test("high-precision seeded calculator preserves decimal digits through iteration", () => {
   const result = FractoFastCalc.calc_big_complex_from_seed(

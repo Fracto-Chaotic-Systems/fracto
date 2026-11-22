@@ -5,7 +5,7 @@ import {
    TILE_DATA_DIRECTORY,
    TILE_INDEX_CURRENT_FILE,
    tile_index_paths,
-} from '../sdk/FractoTilePaths.js'
+} from "@fracto/sdk/FractoTilePaths.js"
 
 const scan_cache = root => {
    const result = {files: 0, tiles: 0, temporary: 0, bytes: 0, oldest: null, newest: null}

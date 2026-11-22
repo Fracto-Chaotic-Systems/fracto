@@ -2,6 +2,13 @@
 
 Main server for the Fracto mediaplex.
 
+The root owns orchestration and deployment infrastructure. It cannot import server
+files; servers cannot import root or other server implementations. Common code
+belongs in the SDK and all consumers, including the root, use `@fracto/sdk` through
+its npm interface. Service interactions use endpoints with documented contracts.
+See [PROJECT_GUIDELINES.md](PROJECT_GUIDELINES.md#architecture-and-compatibility)
+for the mandatory dependency and ownership rules.
+
 Instrument-library export between trusted servers is documented in the
 [deployment and acceptance guide](deploy/INSTRUMENT_TRANSFER.md).
 

@@ -21,12 +21,11 @@ RUN git config --system --add safe.directory /app \
 WORKDIR /app
 
 COPY package.json package-lock.json ./
+COPY sdk/package.json sdk/
 RUN npm ci
 
-# The service lockfiles reference the local @fracto/sdk package. Copy its
-# manifest before any service runs npm ci; the complete SDK source is copied
-# later with the application source in the development/build stages.
-COPY sdk/package.json sdk/
+# Service lockfiles use the same local SDK manifest. The complete SDK source
+# is copied with the application in the development/build stages.
 
 COPY servers/fracto-admin-server/package.json servers/fracto-admin-server/package-lock.json servers/fracto-admin-server/
 RUN npm ci --prefix servers/fracto-admin-server
@@ -72,6 +71,8 @@ ARG VITE_FRACTO_PROD_URL=https://fracto.mikehallstudio.com
 ENV VITE_FRACTO_PROD_URL=$VITE_FRACTO_PROD_URL
 COPY . .
 RUN npm run check
+RUN npm --prefix servers/fracto-asset-server run test:environment
+RUN npm --prefix servers/fracto-data-server run test:environment
 RUN npm --prefix servers/fracto-ai-server run check
 RUN npm --prefix servers/fracto-ui run lint
 RUN npm --prefix servers/fracto-ui run build

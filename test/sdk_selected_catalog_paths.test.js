@@ -3,14 +3,14 @@ import assert from "node:assert/strict";
 import {
   build_denominator_catalog,
   catalog_doubling_families,
-} from "../sdk/orbitals/FractoDenominatorCatalog.js";
-import { discover_validated_representative_orbital } from "../sdk/orbitals/FractoLandingAssignments.js";
-import { build_orbital_trace_request } from "../sdk/orbitals/FractoOrbitalTraceRequest.js";
-import { trace_known_dynamic_rays } from "../sdk/orbitals/FractoKnownDynamicRays.js";
+} from "@fracto/sdk/orbitals/FractoDenominatorCatalog.js";
+import { discover_validated_representative_orbital } from "@fracto/sdk/orbitals/FractoLandingAssignments.js";
+import { build_orbital_trace_request } from "@fracto/sdk/orbitals/FractoOrbitalTraceRequest.js";
+import { trace_known_dynamic_rays } from "@fracto/sdk/orbitals/FractoKnownDynamicRays.js";
 import {
   merge_orbital_ray_cache,
   cached_orbital_rays,
-} from "../sdk/orbitals/FractoOrbitalRayCache.js";
+} from "@fracto/sdk/orbitals/FractoOrbitalRayCache.js";
 
 test("selected catalog cycles above period 24 generate complete paths with per-ray progress and reusable cache", async () => {
   const parameter = { x: "0", y: "0" };

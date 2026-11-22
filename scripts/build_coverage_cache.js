@@ -1,8 +1,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import v8 from 'node:v8'
-import {tile_index_paths} from '../sdk/FractoTilePaths.js'
-import FractoIndexedTiles from '../sdk/FractoIndexedTiles.js'
+import {tile_index_paths} from "@fracto/sdk/FractoTilePaths.js"
+import FractoIndexedTiles from "@fracto/sdk/FractoIndexedTiles.js"
 
 const {base} = tile_index_paths({require_complete: false})
 const coverage_directory = path.join(base, 'coverage')

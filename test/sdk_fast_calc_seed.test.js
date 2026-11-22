@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import FractoFastCalc from "../sdk/FractoFastCalc.js";
+import FractoFastCalc from "@fracto/sdk/FractoFastCalc.js";
 
 test("calc keeps its zero-seed escape result independent of the experiment", () => {
   const original_experiment = FractoFastCalc.calc_from_seed;

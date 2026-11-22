@@ -24,6 +24,13 @@ reached. Credentials are never included in the response.
 
 ## Repository ownership
 
+The root owns infrastructure. Asset imports, conversion, files and catalog delivery
+belong to the asset service; application SQL and schemas belong to the data
+service; presentation belongs to the UI. Keep reusable pure contracts in the SDK.
+UI proxies provide transport only, and production services communicate through
+APIs rather than importing one another's application implementation.
+
+
 Do not treat this directory as a conventional monorepo workspace:
 
 - `fracto/` and every child under `servers/` have separate `.git` directories.
@@ -46,8 +53,7 @@ npm ci --prefix servers/fracto-ai-server
 npm ci --prefix servers/fracto-ui
 ```
 
-The AI foundation has no SDK dependency. The other services resolve `@fracto/sdk` from the root `sdk/` directory through the
-local file dependency recorded in each service lockfile. Keep the root SDK
+All six services resolve `@fracto/sdk` through the local npm dependency recorded in each service lockfile. Keep the root SDK
 directory present when installing dependencies or building the Docker image.
 
 The UI currently requires the legacy peer-dependency policy recorded in its `.npmrc`. Running through `npm ci --prefix` uses that local configuration.
@@ -90,7 +96,7 @@ The launcher runs backend entry points directly with Node and invokes Vite direc
 
 Running `npm start` inside a backend service uses `nodemon` and is intended for isolated development. Do not start a second copy when the root supervisor already owns that port.
 
-## Shared root dependencies
+## Shared SDK dependencies
 
 The services are separate repositories, but they share the local `@fracto/sdk`
 package during development. SDK imports should use package subpaths such as:
@@ -100,15 +106,12 @@ package during development. SDK imports should use package subpaths such as:
 @fracto/sdk/FractoTileData.js
 ```
 
-The package currently resolves to `../../sdk` in each SDK-consuming service's
-`package.json`. Run `npm run sdk:check` from the root after changing the SDK
-version or a service dependency. Root application files such as
-`../../constants.js` remain layout-sensitive, so keep the service directory
-names and their position beneath `servers/` unchanged.
-
-The AI foundation has no SDK or shared-config dependency. Root-level configuration
-under `config/` is shared by the existing services. It may contain credentials and
-environment-specific network endpoints and is intentionally excluded from version control.
+The package resolves to `../../sdk` in each service manifest and lockfile.
+Run `npm run sdk:check` and `npm run boundaries:check` from the root after
+changing dependencies. All seven consumers use npm exports. Root-to-server,
+server-to-root and server-to-server implementation imports are prohibited.
+Services own private configuration; the root launcher passes common platform
+settings through environment variables. Never load another owner's configuration.
 
 ## Tile server requirements
 

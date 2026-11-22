@@ -1,26 +1,7 @@
 # Main server handlers
 
-The catalog router also maintains the `environment_assets` MySQL registry.
-Metadata reads/listing reconcile existing assets, and imports and PATCH saves
-synchronize before returning success. Apply migration 019 and run
-`node scripts/register_environment_assets.js` when upgrading an existing library.
-Database errors use the generic `catalog_unavailable` 503 without exposing
-connection details; a subsequent metadata read repairs a pending synchronization.
-
-`environment_catalog.js` supplies the same-origin `/api/environment-catalog/:id`
-router hosted by the UI's Vite server and static UI server. GET returns an
-allowlisted view and revision. PATCH validates a bounded attribution/note edit,
-enforces the configured UI origin and existing enabled-user authentication, then
-updates the registered file. It never accepts filesystem paths or whole records
-from clients and never logs catalog content. Asset provenance is the narrow
-user-authorized exception documented in PROJECT_GUIDELINES.md.
-
-The same router lists registered assets at GET `/api/environment-catalog`, accepts
-bounded ZIP envelopes at POST `/import`, and serves only declared preview resources
-at GET `/:id/files/*file`. `utils/environment_asset_import.js` preserves originals,
-extracts safe ZIP paths, stages metadata and publishes the catalog entry under an
-exclusive import lock. Source files receive a restrictive content policy when
-served. Imports never accept an absolute host folder path.
+Application routes belong to their service repositories. The root mounts only
+platform/supervisor endpoints; asset catalog routes are owned by the asset service.
 
 Health contract version 1 also includes an additive, non-personal `startup_id`
 UUID, stable across this main process's health/readiness requests and replaced

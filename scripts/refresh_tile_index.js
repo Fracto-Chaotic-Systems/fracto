@@ -7,7 +7,7 @@ import {
    TILE_INDEX_GENERATIONS_DIRECTORY,
    TILE_INDEX_ROOT,
    tile_index_generation_directory,
-} from '../sdk/FractoTilePaths.js'
+} from "@fracto/sdk/FractoTilePaths.js"
 
 const retention_count = Number(process.env.FRACTO_TILE_INDEX_GENERATIONS_TO_KEEP || 2)
 const publish_current_generation = process.env.FRACTO_TILE_INDEX_PUBLISH_CURRENT !== 'false'

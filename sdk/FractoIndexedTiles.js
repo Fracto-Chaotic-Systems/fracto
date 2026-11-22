@@ -4,25 +4,8 @@ import fetch from 'node-fetch';
 import csv from 'csv-parser';
 import {TILE_SOURCE_DIRECTORY, TILE_SOURCE_MODE} from './FractoTilePaths.js'
 
-let REMOTE_TILE_BASE_URL_PROMISE = null
-
-const get_remote_tile_base_url = () => {
-   const configured_base_url = process.env.FRACTO_TILE_REMOTE_BASE_URL
-   if (typeof configured_base_url === 'string' && configured_base_url.trim()) {
-      return Promise.resolve(configured_base_url.trim().replace(/\/$/, ''))
-   }
-   if (!REMOTE_TILE_BASE_URL_PROMISE) {
-      REMOTE_TILE_BASE_URL_PROMISE = import('../config/network.json', {with: {type: 'json'}})
-         .then(({default: network}) => {
-            const base_url = network['fracto-prod']
-            if (typeof base_url !== 'string' || !base_url.trim()) {
-               throw new Error('config/network.json must provide a non-empty fracto-prod URL for remote index listings')
-            }
-            return base_url.replace(/\/$/, '')
-         })
-   }
-   return REMOTE_TILE_BASE_URL_PROMISE
-}
+import { remote_tile_base_url } from "./utils/TileRemote.js";
+const get_remote_tile_base_url = async () => remote_tile_base_url();
 
 export const TILE_SET_INDEXED = 'indexed'
 export const TILE_SET_READY = 'ready'

@@ -1,12 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { MeshInventory } from "../sdk/terrain/Inventory.js";
+import { MeshInventory } from "@fracto/sdk/terrain/Inventory.js";
 import {
   terrain_refinements,
   request_lod_plan,
   resolve_lod_plan,
-} from "../sdk/terrain/Lod.js";
-import { terrain_palette_mapper } from "../sdk/terrain/Palette.js";
+} from "@fracto/sdk/terrain/Lod.js";
+import { terrain_palette_mapper } from "@fracto/sdk/terrain/Palette.js";
 
 function fixture() {
   const inventory = new MeshInventory({ source: "lod-test" });

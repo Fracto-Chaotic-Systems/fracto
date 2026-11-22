@@ -1,10 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import vm from "node:vm";
-import { find_satellite_wake_rays } from "../sdk/orbitals/FractoSatelliteRays.js";
-import { find_minibrot_rays } from "../sdk/orbitals/FractoMinibrotRays.js";
-import { tuned_wake_angles } from "../sdk/orbitals/FractoParameterTuning.js";
-import { rational_angle, distance } from "../sdk/orbitals/FractoRayGeometry.js";
+import { find_satellite_wake_rays } from "@fracto/sdk/orbitals/FractoSatelliteRays.js";
+import { find_minibrot_rays } from "@fracto/sdk/orbitals/FractoMinibrotRays.js";
+import { tuned_wake_angles } from "@fracto/sdk/orbitals/FractoParameterTuning.js";
+import { rational_angle, distance } from "@fracto/sdk/orbitals/FractoRayGeometry.js";
 
 for (const [core, period, rotation, root, expected] of [
   [

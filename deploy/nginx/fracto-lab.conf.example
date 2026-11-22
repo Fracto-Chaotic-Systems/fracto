@@ -50,6 +50,14 @@ server {
         proxy_pass http://127.0.0.1:3007/;
     }
 
+    # Compatibility transport; application behavior belongs to the asset service.
+    location ^~ /api/environment-catalog {
+        client_max_body_size 128m;
+        proxy_request_buffering off;
+        proxy_read_timeout 180s;
+        proxy_pass http://127.0.0.1:3006;
+    }
+
     location ^~ /api/ {
         return 404;
     }

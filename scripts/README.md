@@ -1,30 +1,19 @@
 # Fracto scripts
 
-`node scripts/register_environment_assets.js` backfills the MySQL
-`environment_assets` registry from every registered library record after applying
-migration 019 with `npm run db:migrate`. It is idempotent and changes no library
-files. It uses the same `FRACTO_MYSQL_*` settings as the normal migration runner
-and supports `FRACTO_ENVIRONMENT_CATALOG_DIR`. Only the asset count is logged.
+`check_dependency_boundaries.js` audits parsed imports/re-exports/requires across
+root, SDK and server repositories. `npm run boundaries:check` fails on forbidden
+cross-repository or filesystem SDK imports. `boundaries:audit` prints the same
+findings without a failing exit status for an inventory of known legacy defects.
+Neither mode exempts existing violations. Services interact through documented
+endpoints; shared code is consumed through the SDK npm package.
 
-`export_blend_asset.py` runs inside Blender to export a separate static GLB for
-Inventory. `blend_preview_scene.py` evaluates mesh geometry and realizes a bounded
-set of particle object instances, sharing their mesh data. A JSON report records
-particle density reductions, texture relinking, material adaptations and source
-units. Neither script saves or rewrites the input `.blend`. The caller disables
-embedded scripts and bounds runtime/output size. Debian Blender also requires
-`python3-numpy` for glTF export; both packages are included in the Docker stages.
-
-`serve_ui.js` serves the built UI and its environment catalog router at
-`/api/environment-catalog`. Inventory saves write to the canonical registered
-`assets/environments/<asset-id>/asset.json`; `FRACTO_ENVIRONMENT_CATALOG_DIR`
-can override the library root. Compose binds the workspace environment library
-over the assets volume for both development and production.
-
-`python scripts/environment_catalog.py list [search]` searches the local
-environment asset library by ID, name, or tags. `validate` verifies catalog IDs,
-parent links, required file references, and SHA-256 hashes of original downloads.
-It reports unresolved attribution and pending runtime review separately from
-file integrity. See `assets/environments/README.md` for the catalog workflow.
+Application maintenance commands live in their owning services. Environment
+import/conversion/catalog commands are in `servers/fracto-asset-server/scripts/`.
+Static UI hosting is owned by `servers/fracto-ui/scripts/serve_ui.js`; the root
+launcher selects that entry point but contains no catalog handlers.
+`database_migration_files.js` discovers legacy and service-owned migrations,
+orders them globally and rejects duplicate numeric versions. An explicit
+`FRACTO_DB_MIGRATION_DIR` remains exclusive for isolated maintenance/tests.
 
 `verify_instrument_transfer.js --source <instrument directory> --midi <MIDI file>`
 performs a full-data transfer between loopback services into an owned temporary
@@ -545,7 +534,7 @@ failed check and likely fix. Local-source startup skips creation of the
 writable demand-cache directory; tile reads fail closed without network or
 demand-cache writes.
 
-### `launch_service.js` and `serve_ui.js`
+### `launch_service.js` and UI hosting
 
 `launch_service.js` launches one existing service checkout for the supervisor:
 
@@ -559,8 +548,8 @@ node scripts/launch_service.js fracto-ui
 
 Backends run directly through Node; the UI is launched through Vite. The
 launcher does not update repositories, install packages, copy data, or retry.
-`serve_ui.js` is the standalone static UI server used when serving a built UI
-without the root supervisor.
+`servers/fracto-ui/scripts/serve_ui.js` is the UI-owned static server selected in
+static mode. Both Vite and static mode run from the UI service directory.
 
 ### Platform launchers
 
@@ -1034,3 +1023,14 @@ discovery counts/rankings, preserved ray families, skipped finished orbitals,
 single-owner concurrent resumes, stale-owner fencing, and finalization recovery.
 It removes its own schema and writes logs/orbital_resume_verification.json. It
 performs no application-data recalculation or backfill.
+
+## Dependency enforcement and owned commands
+
+`check_dependency_boundaries.js` parses JavaScript imports, re-exports, dynamic
+imports and requires across all seven repositories. `boundaries:check` requires
+zero violations; `boundaries:audit` reports findings without changing files.
+`check_sdk_consumers.js` validates manifests and lockfiles for all seven consumers.
+Application maintenance wrappers launch the owning service’s `fracto.commands`
+executable through `run_owned_task.js`, with its declared prerequisites and cwd.
+The root never imports the command implementation. `configure_environment.js`
+translates root-owned platform configuration into environment settings at launch.

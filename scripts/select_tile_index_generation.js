@@ -6,7 +6,7 @@ import {
    TILE_INDEX_ROOT,
    read_current_tile_index_generation,
    tile_index_generation_directory,
-} from '../sdk/FractoTilePaths.js'
+} from "@fracto/sdk/FractoTilePaths.js"
 
 export const select_tile_index_generation = generation => {
    const generation_directory = tile_index_generation_directory(generation)

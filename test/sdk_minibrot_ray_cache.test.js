@@ -1,5 +1,5 @@
 import test from "node:test";
-import { find_minibrot_rays } from "../sdk/orbitals/FractoMinibrotRays.js";
+import { find_minibrot_rays } from "@fracto/sdk/orbitals/FractoMinibrotRays.js";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
@@ -10,7 +10,7 @@ import {
   reusable_ray_group,
   validate_ray_group,
   cached_ray_result,
-} from "../sdk/orbitals/FractoMinibrotRayCache.js";
+} from "@fracto/sdk/orbitals/FractoMinibrotRayCache.js";
 import { backup_insert_columns } from "../scripts/database_backup_columns.js";
 const core = { x: -1, y: 0 };
 const group = (error = 0.001, complete = true, points = 2) => ({
@@ -79,7 +79,7 @@ test("invalid group payloads are rejected", () => {
 });
 test("SDK cache hits avoid all calculation and only missing groups emit save events", () => {
   const source = readFileSync(
-    new URL("../sdk/orbitals/FractoMinibrotRays.js", import.meta.url),
+    new URL(import.meta.resolve("@fracto/sdk/orbitals/FractoMinibrotRays.js")),
     "utf8",
   );
   const fn = source

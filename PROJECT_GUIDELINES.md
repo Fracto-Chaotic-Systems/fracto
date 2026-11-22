@@ -6,6 +6,52 @@ in the README for that feature or service.
 
 ## Architecture and compatibility
 
+- Dependency direction is mandatory: root code must not import files from any
+  server repository, and server code must not import files from the root or
+  another server. This includes static imports, re-exports, dynamic imports and
+  CommonJS requires; do not hide a dependency behind an absolute path or alias.
+- All shared functionality belongs in the SDK. Every consumer, including the
+  root, must use its npm interface (`@fracto/sdk` and exported subpaths), never a
+  relative/absolute filesystem import into `sdk/` or another package's internals.
+  Declare the SDK in each consumer's own package manifest and lockfile.
+- Inter-service interactions use endpoints with documented contracts: method,
+  route, authentication, bounded request/response schemas, status/error semantics,
+  versioning and retry/concurrency behavior. Calling a server's function by
+  importing its implementation is prohibited, including in integration tests.
+- The root may launch a service's declared executable as orchestration; this is
+  not permission to import its modules or read/write its owned application data.
+  The SDK must not import consumer implementations. Tests should exercise shared
+  code through the npm package and service integration through endpoints.
+- Existing violations are architectural defects, not precedents or exceptions.
+  `npm run boundaries:audit` reports the repository state; `boundaries:check`
+  fails on violations. Do not claim the repository is compliant while findings
+  remain. The required baseline is zero; `npm run check` and CI enforce it
+  without grandfathered violations.
+
+- The root repository owns orchestration, deployment infrastructure and shared
+  platform concerns such as authentication and service health. It must not own
+  application handlers, asset import/conversion/storage, catalog business rules
+  or direct application database access. Put those implementations and their
+  tests/maintenance commands in their owning service repositories.
+- The data server owns application database schemas, SQL, persistence and
+  validation at its API boundary. New application migrations belong to the data
+  server's `database/migrations/`; the root migration runner discovers service
+  migrations and retains global ordering/checksum history. Historical root
+  migrations remain immutable; relocating a migration must preserve its bytes,
+  filename and recorded history.
+- The asset server owns asset files, imports, format conversion, provenance
+  catalogs and resource delivery. It uses an authenticated data-service API for
+  database persistence; it must not import data-service implementation modules
+  or open application database connections.
+- The UI owns presentation and optional thin transport proxies. A UI proxy must
+  not implement domain rules, read/write asset files or access the database.
+- The shared SDK supports reusable contracts, validation, algorithms and common
+  platform clients/helpers. It must not own a service's configuration files,
+  application records, endpoint registration or database persistence.
+  Services communicate through explicit, bounded APIs rather than importing one
+  another's implementation files. The combined Docker image may install runtime
+  tools for its services; those services retain ownership of how tools are used.
+
 - Preserve existing behavior and backward compatibility whenever practical.
 - Prefer incremental, reversible changes over broad rewrites.
 - Keep service boundaries clear and avoid introducing side effects into shared
@@ -107,9 +153,11 @@ in the README for that feature or service.
 
 - The Inventory catalog editor has a task-specific exception requested by the
   user: asset creator credits, creator/source URLs, license terms and asset
-  modification notes may pass between the Inventory UI and its same-origin
-  catalog endpoint to read and directly save registered `asset.json` records
-  and their `environment_assets` database registry rows.
+  modification notes may pass between the Inventory UI, its same-origin transport
+  proxy and the asset server's catalog API to read/save registered `asset.json`
+  records. The asset server may send the same explicit provenance fields and
+  source descriptors to the data server's internal environment registry API for
+  persistence in `environment_assets`. Other record extensions are excluded.
   This exception is limited to asset provenance; it does not cover account,
   session, contact, device or other personal records. Use explicit fields, no
   metadata logging, existing authentication, trusted mutation origins, and

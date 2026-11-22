@@ -1,18 +1,18 @@
 import test from "node:test";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
-import { find_minibrot_rays } from "../sdk/orbitals/FractoMinibrotRays.js";
+import { find_minibrot_rays } from "@fracto/sdk/orbitals/FractoMinibrotRays.js";
 import assert from "node:assert/strict";
-import { tuned_tip_angles } from "../sdk/orbitals/FractoParameterTuning.js";
+import { tuned_tip_angles } from "@fracto/sdk/orbitals/FractoParameterTuning.js";
 import {
   find_antenna_tip_rays,
   refine_antenna_tip,
-} from "../sdk/orbitals/FractoAntennaRays.js";
+} from "@fracto/sdk/orbitals/FractoAntennaRays.js";
 import {
   rational_angle as angle,
   distance,
-} from "../sdk/orbitals/FractoRayGeometry.js";
-import { critical } from "../sdk/orbitals/FractoParameterAttachment.js";
+} from "@fracto/sdk/orbitals/FractoRayGeometry.js";
+import { critical } from "@fracto/sdk/orbitals/FractoParameterAttachment.js";
 const cases = [
   {
     core: { x: 0, y: 0 },
@@ -86,7 +86,7 @@ test("facade opt-in adds tip rays without changing default groups", () => {
 });
 test("unverified endpoint preserves prefixes and never claims landing", () => {
   const source = readFileSync(
-    new URL("../sdk/orbitals/FractoAntennaRays.js", import.meta.url),
+    new URL(import.meta.resolve("@fracto/sdk/orbitals/FractoAntennaRays.js")),
     "utf8",
   )
     .replace(/^import[\s\S]*?;\r?\n/gm, "")

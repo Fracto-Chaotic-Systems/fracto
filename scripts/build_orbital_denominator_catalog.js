@@ -8,7 +8,7 @@ import {
   validate_denominator_catalog,
   DEFAULT_CATALOG_DENOMINATOR,
   DEFAULT_CATALOG_ANGLE_BUDGET,
-} from "../sdk/orbitals/FractoDenominatorCatalog.js";
+} from "@fracto/sdk/orbitals/FractoDenominatorCatalog.js";
 
 const usage =
   "node scripts/build_orbital_denominator_catalog.js [--max-denominator N] [--out FILE] [--angle-budget N] [--check]";

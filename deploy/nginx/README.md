@@ -1,5 +1,13 @@
 # nginx examples
 
+The explicit `/api/environment-catalog` location preserves the Assets inventory
+URL through the UI-owned transport proxy; the asset service owns the application
+route and calls the data service for SQL persistence. The former unknown-API
+fallback would reject this URL. Folder bodies are bounded at 128 MiB and forwarded
+without request buffering, with a 180-second read timeout for Blender conversion.
+Install/test the updated example when deploying this feature. These files are
+examples; editing them does not reload a live nginx server.
+
 `fracto.conf.example` is the public TLS proxy; `fracto-lab.conf.example` is the
 private lab HTTP profile. Install header snippets as instructed in ../README.md.
 The AI proxy exposes health/status only. Inference and peer-operation namespaces

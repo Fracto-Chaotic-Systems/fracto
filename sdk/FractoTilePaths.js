@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import {ROOT_DIR} from '../constants.js'
+import {ROOT_DIR} from "@fracto/sdk/utils/PlatformConstants.js"
 
 export const TILE_DATA_DIRECTORY = path.resolve(
    process.env.FRACTO_TILE_DATA_DIR || path.join(ROOT_DIR, 'tiles'),

@@ -11,13 +11,13 @@ const DATABASE_CONNECT_TIMEOUT_MS = 5000
 export const validate_local_tile_source = async () => {
    if (process.env.FRACTO_TILE_SOURCE_MODE !== 'local') return null
    const {TILE_SOURCE_DIRECTORY, TILE_SOURCE_GENERATION} =
-      await import('../sdk/FractoTilePaths.js')
+      await import("@fracto/sdk/FractoTilePaths.js")
    const {validate_tile_index_cache} =
-      await import('../sdk/FractoTileIndexCache.js')
+      await import("@fracto/sdk/FractoTileIndexCache.js")
    const {validate_tile_source_release} =
-      await import('../sdk/FractoTileSource.js')
+      await import("@fracto/sdk/FractoTileSource.js")
    const {read_source_tile, tile_source_path} =
-      await import('../sdk/FractoTileSource.js')
+      await import("@fracto/sdk/FractoTileSource.js")
 
    let source_stats
    try {

@@ -3,9 +3,9 @@ import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { performance } from "node:perf_hooks";
 import { cpus } from "node:os";
-import { catalog_doubling_families } from "../sdk/orbitals/FractoDenominatorCatalog.js";
-import { discover_validated_representative_orbital } from "../sdk/orbitals/FractoLandingAssignments.js";
-import { REPRESENTATIVE_CONFIRMATION_REVISION } from "../sdk/orbitals/FractoRepresentativeRaySolver.js";
+import { catalog_doubling_families } from "@fracto/sdk/orbitals/FractoDenominatorCatalog.js";
+import { discover_validated_representative_orbital } from "@fracto/sdk/orbitals/FractoLandingAssignments.js";
+import { REPRESENTATIVE_CONFIRMATION_REVISION } from "@fracto/sdk/orbitals/FractoRepresentativeRaySolver.js";
 const args = process.argv.slice(2);
 assert.ok(
   args.every((arg) => ["--full"].includes(arg)),
@@ -25,7 +25,7 @@ const targets = new Set([
 ]);
 const catalog = JSON.parse(
   await readFile(
-    new URL("../sdk/orbitals/data/denominator-catalog.json", import.meta.url),
+    new URL(import.meta.resolve("@fracto/sdk/orbitals/data/denominator-catalog.json")),
     "utf8",
   ),
 );

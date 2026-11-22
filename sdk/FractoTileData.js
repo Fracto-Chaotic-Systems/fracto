@@ -7,7 +7,7 @@ import FractoFastCalc from "./FractoFastCalc.js";
 import FractoTileCache from "./FractoTileCache.js";
 import {TileSourceError} from './FractoTileSource.js'
 import {tile_index_paths} from './FractoTilePaths.js'
-import {color_shortcode} from '../utils/ansi_colors.js'
+import {color_shortcode} from "@fracto/sdk/utils/AnsiColors.js"
 
 export const FILTER_ALL_TILES = 'filter_all_tiles'
 export const FILLING_CANVAS_BUFFER = 'filling_canvas_buffer'

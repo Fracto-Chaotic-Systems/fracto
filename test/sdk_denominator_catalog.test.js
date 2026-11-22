@@ -10,8 +10,8 @@ import {
   validate_denominator_catalog,
   catalog_doubling_families,
   DENOMINATOR_CATALOG_VERSION,
-} from "../sdk/orbitals/FractoDenominatorCatalog.js";
-import { enumerate_doubling_families } from "../sdk/orbitals/FractoRayFamilies.js";
+} from "@fracto/sdk/orbitals/FractoDenominatorCatalog.js";
+import { enumerate_doubling_families } from "@fracto/sdk/orbitals/FractoRayFamilies.js";
 
 const entry = (catalog, denominator) =>
   catalog.denominators.find((item) => item.denominator === String(denominator));
@@ -245,7 +245,7 @@ test("CLI writes, incrementally expands, verifies, and refuses to overwrite inva
 test("bundled preprocessing data matches a complete fresh build", async () => {
   const bundled = JSON.parse(
     await fs.readFile(
-      new URL("../sdk/orbitals/data/denominator-catalog.json", import.meta.url),
+      new URL(import.meta.resolve("@fracto/sdk/orbitals/data/denominator-catalog.json")),
       "utf8",
     ),
   );

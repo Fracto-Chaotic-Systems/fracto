@@ -9,7 +9,7 @@ import {
   SESSION_TTL_MS,
 } from "../utils/auth_sessions.js";
 import { create_clients_handler } from "../handlers/clients.js";
-import { is_lab_readonly_admin_bypass } from "../utils/admin_authorization.js";
+import { is_lab_readonly_admin_bypass } from "@fracto/sdk/utils/AdminAuthorization.js";
 
 test("client snapshots track activity, omit secrets, copy fields and expire", () => {
   const original = Date.now;

@@ -1,11 +1,9 @@
 # Database assets
 
-Migration 019 adds `environment_assets`, the Inventory registry for model/file
-references, creator attribution, source URLs, license/credit/usage conditions,
-source checksums and modification history. Binary files remain in the environment
-library. Run `node scripts/register_environment_assets.js` after migration to
-register an existing library; imports and catalog reads/edits maintain the rows.
-See `utils/README.md` for consistency and recovery behavior.
+New application schema changes belong to the data service. Its migration 019
+is now in `servers/fracto-data-server/database/migrations/`, unchanged from the
+applied original. The generic root runner discovers service-owned migrations
+and preserves their existing history; see that service for asset-registry details.
 
 Migration 008 adds an indexed primary `free_bailiwick_id` reference to stored
 orbitals. It is populated on insert/rediscovery; existing coordinates and ray

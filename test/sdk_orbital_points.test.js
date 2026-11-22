@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import FractoFastCalc from "../sdk/FractoFastCalc.js";
-import FractoOrbitalPoints from "../sdk/FractoOrbitalPoints.js";
-import * as sdk from "../sdk/index.js";
+import FractoFastCalc from "@fracto/sdk/FractoFastCalc.js";
+import FractoOrbitalPoints from "@fracto/sdk/FractoOrbitalPoints.js";
+import * as sdk from "@fracto/sdk/index.js";
 
 test("SDK exports one detector-to-orbital-points interface", () => {
   assert.equal(typeof FractoOrbitalPoints, "function");

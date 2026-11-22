@@ -3,17 +3,17 @@ import assert from "node:assert/strict";
 import {
   discover_representative_orbital,
   representative_ray_profile,
-} from "../sdk/orbitals/FractoRepresentativeRaySolver.js";
+} from "@fracto/sdk/orbitals/FractoRepresentativeRaySolver.js";
 import {
   create_dynamic_ray_tracer,
   trace_dynamic_ray,
-} from "../sdk/orbitals/FractoDynamicRayTrace.js";
+} from "@fracto/sdk/orbitals/FractoDynamicRayTrace.js";
 import {
   build_denominator_catalog,
   catalog_doubling_families,
-} from "../sdk/orbitals/FractoDenominatorCatalog.js";
-import { orbital_closure_error } from "../sdk/orbitals/FractoOrbitalIdentity.js";
-import { newton_big_complex } from "../sdk/orbitals/FractoNewtonBigComplex.js";
+} from "@fracto/sdk/orbitals/FractoDenominatorCatalog.js";
+import { orbital_closure_error } from "@fracto/sdk/orbitals/FractoOrbitalIdentity.js";
+import { newton_big_complex } from "@fracto/sdk/orbitals/FractoNewtonBigComplex.js";
 const families = [
   ...catalog_doubling_families(
     build_denominator_catalog({ max_denominator: 163 }),

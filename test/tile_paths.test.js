@@ -17,7 +17,7 @@ describe('tile index generations', () => {
       fs.writeFileSync(path.join(temporary_root, 'CURRENT'), `${generation}\n`)
 
       const script = [
-         "import {tile_index_paths} from './sdk/FractoTilePaths.js'",
+         "import {tile_index_paths} from '@fracto/sdk/FractoTilePaths.js'",
          'console.log(JSON.stringify(tile_index_paths()))',
       ].join(';')
       const result = spawnSync(process.execPath, ['--input-type=module', '-e', script], {
@@ -36,7 +36,7 @@ describe('tile index generations', () => {
    test('rejects a published generation without a completion marker', () => {
       fs.writeFileSync(path.join(temporary_root, 'CURRENT'), 'incomplete\n')
       const script = [
-         "import {tile_index_paths} from './sdk/FractoTilePaths.js'",
+         "import {tile_index_paths} from '@fracto/sdk/FractoTilePaths.js'",
          'tile_index_paths()',
       ].join(';')
       const result = spawnSync(process.execPath, ['--input-type=module', '-e', script], {

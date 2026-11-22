@@ -3,7 +3,7 @@ import express from 'express'
 import {after, before, describe, test} from 'node:test'
 
 import {handle_logs} from '../handlers/logs.js'
-import {format_log_records} from '../utils/logging.js'
+import {format_log_records} from "@fracto/sdk/utils/Logging.js"
 
 const app = express()
 app.get('/logs', handle_logs)

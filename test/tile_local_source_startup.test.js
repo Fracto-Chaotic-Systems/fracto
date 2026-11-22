@@ -52,7 +52,7 @@ const prepare_fixture = () => {
    const build = run_node([
       '--input-type=module',
       '-e',
-      "import {build_tile_index_cache} from './sdk/FractoTileIndexCache.js'; build_tile_index_cache()",
+      "import {build_tile_index_cache} from '@fracto/sdk/FractoTileIndexCache.js'; build_tile_index_cache()",
    ], {
       FRACTO_TILE_SOURCE_MODE: 'local',
       FRACTO_TILE_SOURCE_DIR: source_directory,
@@ -84,7 +84,7 @@ test('local tile-index preparation reads all coverage listings from disk', () =>
    const result = run_node([
       '--input-type=module',
       '-e',
-      "const {FractoIndexedTiles}=await import('./sdk/FractoIndexedTiles.js'); const names=['indexed','interior','blank','needs_update']; const values={}; for (const name of names) values[name]=await new Promise(resolve=>FractoIndexedTiles.load_short_codes(name,resolve)); console.log('LOCAL_LISTINGS:'+JSON.stringify(values))",
+      "const {FractoIndexedTiles}=await import('@fracto/sdk/FractoIndexedTiles.js'); const names=['indexed','interior','blank','needs_update']; const values={}; for (const name of names) values[name]=await new Promise(resolve=>FractoIndexedTiles.load_short_codes(name,resolve)); console.log('LOCAL_LISTINGS:'+JSON.stringify(values))",
    ], local_environment)
    assert.equal(result.status, 0, result.stderr)
    const output = result.stdout.split('\n').find(line => line.startsWith('LOCAL_LISTINGS:'))
@@ -100,7 +100,7 @@ test('local tile-index preparation fails when the listing is absent instead of u
    const result = run_node([
       '--input-type=module',
       '-e',
-      "const {FractoIndexedTiles}=await import('./sdk/FractoIndexedTiles.js'); FractoIndexedTiles.load_short_codes('absent',()=>console.log('UNEXPECTED_CALLBACK'))",
+      "const {FractoIndexedTiles}=await import('@fracto/sdk/FractoIndexedTiles.js'); FractoIndexedTiles.load_short_codes('absent',()=>console.log('UNEXPECTED_CALLBACK'))",
    ], local_environment)
    assert.notEqual(result.status, 0)
    assert.match(result.stderr, /Unable to read local tile listing manifest[\\/]absent\.csv/)

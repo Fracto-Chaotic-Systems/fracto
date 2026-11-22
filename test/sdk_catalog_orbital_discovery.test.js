@@ -3,16 +3,16 @@ import assert from "node:assert/strict";
 import {
   discover_catalog_orbitals,
   discover_catalog_orbital_family,
-} from "../sdk/orbitals/FractoCatalogOrbitalDiscovery.js";
+} from "@fracto/sdk/orbitals/FractoCatalogOrbitalDiscovery.js";
 import {
   build_denominator_catalog,
   catalog_doubling_families,
-} from "../sdk/orbitals/FractoDenominatorCatalog.js";
+} from "@fracto/sdk/orbitals/FractoDenominatorCatalog.js";
 import {
   orbital_closure_error,
   same_orbital_cycle,
-} from "../sdk/orbitals/FractoOrbitalIdentity.js";
-import { validate_landing_families } from "../sdk/orbitals/FractoOrbitalDiscovery.js";
+} from "@fracto/sdk/orbitals/FractoOrbitalIdentity.js";
+import { validate_landing_families } from "@fracto/sdk/orbitals/FractoOrbitalDiscovery.js";
 
 const parameter = { x: "0", y: "0" };
 const catalog = build_denominator_catalog({ max_denominator: 7 });

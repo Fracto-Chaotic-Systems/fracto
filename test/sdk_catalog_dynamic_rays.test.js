@@ -3,9 +3,9 @@ import assert from "node:assert/strict";
 import {
   build_denominator_catalog,
   catalog_doubling_families,
-} from "../sdk/orbitals/FractoDenominatorCatalog.js";
-import { trace_catalog_ray_family } from "../sdk/orbitals/FractoCatalogDynamicRays.js";
-import { find_dynamic_rays } from "../sdk/orbitals/FractoDynamicRays.js";
+} from "@fracto/sdk/orbitals/FractoDenominatorCatalog.js";
+import { trace_catalog_ray_family } from "@fracto/sdk/orbitals/FractoCatalogDynamicRays.js";
+import { find_dynamic_rays } from "@fracto/sdk/orbitals/FractoDynamicRays.js";
 
 const parameter = { x: 0, y: 0 };
 const orbital = { points: [{ x: 1, y: 0 }] };

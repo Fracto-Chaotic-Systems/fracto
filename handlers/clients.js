@@ -2,7 +2,7 @@ import { list_client_sessions } from "../utils/auth_sessions.js";
 import {
   require_administrator,
   is_lab_readonly_admin_bypass,
-} from "../utils/admin_authorization.js";
+} from "@fracto/sdk/utils/AdminAuthorization.js";
 
 export const create_clients_handler =
   ({

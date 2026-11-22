@@ -11,7 +11,15 @@
     "./terrain/*.js": "./terrain/*.js",
     "./math/*.js": "./math/*.js",
     "./utils/*.js": "./utils/*.js",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./catalog/*.js": "./catalog/*.js",
+    "./knowledge/*.js": "./knowledge/*.js",
+    "./chat/*.js": "./chat/*.js",
+    "./music/*.js": "./music/*.js",
+    "./flight/*.js": "./flight/*.js",
+    "./testing/*.js": "./testing/*.js",
+    "./audio/*.js": "./audio/*.js",
+    "./orbitals/data/*.json": "./orbitals/data/*.json"
   },
   "scripts": {
     "test": "node --test ../test/sdk_canvas_buffer.test.js ../test/sdk_cardinality.test.js ../test/sdk_orbital_points.test.js ../test/sdk_package.test.js ../test/sdk_dynamic_rays.test.js"
@@ -22,6 +30,7 @@
     "decimal.js": "^10.6.0",
     "node-fetch": "^3.3.2",
     "stream-chain": "^3.6.3",
-    "stream-json": "^2.1.0"
+    "stream-json": "^2.1.0",
+    "midi-parser-js": "4.0.4"
   }
 }

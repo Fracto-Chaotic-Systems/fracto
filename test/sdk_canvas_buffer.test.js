@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import FractoCanvasBuffer from "../sdk/FractoCanvasBuffer.js";
+import FractoCanvasBuffer from "@fracto/sdk/FractoCanvasBuffer.js";
 
 const create_context = () => {
   const calls = [];

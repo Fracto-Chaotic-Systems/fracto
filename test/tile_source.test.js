@@ -12,7 +12,7 @@ import {
    tile_cache_identity,
    tile_source_path,
    validate_tile_source_release,
-} from '../sdk/FractoTileSource.js'
+} from "@fracto/sdk/FractoTileSource.js"
 
 const temporary_root = fs.mkdtempSync(path.join(os.tmpdir(), 'fracto-tile-source-'))
 after(() => fs.rmSync(temporary_root, {recursive: true, force: true}))
@@ -126,7 +126,7 @@ test('requires a generation identifier in local-source mode', () => {
    const result = spawnSync(process.execPath, [
       '--input-type=module',
       '-e',
-      "await import('./sdk/FractoTilePaths.js')",
+      "await import('@fracto/sdk/FractoTilePaths.js')",
    ], {
       cwd: path.resolve(import.meta.dirname, '..'),
       encoding: 'utf8',
@@ -210,11 +210,11 @@ test('local-source tile loading uses memory without network or demand-cache writ
    const script = [
       "import https from 'node:https'",
       "https.get = () => { throw new Error('unexpected network request') }",
-      "const {FractoTileCache} = await import('./sdk/FractoTileCache.js')",
+      "const {FractoTileCache} = await import('@fracto/sdk/FractoTileCache.js')",
       "const first = await FractoTileCache.get_tile('12')",
       "const second = await FractoTileCache.get_tile('12')",
       "let missing = null; try { await FractoTileCache.get_tile('13') } catch (error) { missing = {code: error.code, kind: error.kind, short_code: error.short_code, message: error.message} }",
-      "const {raster_fill_turbo} = await import('./sdk/FractoTileData.js')",
+      "const {raster_fill_turbo} = await import('@fracto/sdk/FractoTileData.js')",
       "let render_failure = null; try { await raster_fill_turbo([[[0, 4]]], [{level: 2, tile_increment: 2, level_tiles: [{short_code: '13', bounds: {left: -1, right: 1, bottom: -1, top: 1}}]}], 1, {x: 0, y: 0}, 2, 1) } catch (error) { render_failure = {code: error.code, kind: error.kind, short_code: error.short_code} }",
       "console.log('RESULT:' + JSON.stringify({first, second, missing, render_failure, stats: FractoTileCache.get_stats()}))",
    ].join(';')
@@ -282,7 +282,7 @@ test('local corrupt or unreadable tiles fail without network fallback or cache w
       'const unreadable_path = process.env.TEST_UNREADABLE_TILE',
       'const original_read_file_sync = fs.readFileSync',
       "fs.readFileSync = (filepath, ...args) => { if (String(filepath) === unreadable_path) { const error = new Error('permission denied'); error.code = 'EACCES'; throw error } return original_read_file_sync(filepath, ...args) }",
-      "const {FractoTileCache} = await import('./sdk/FractoTileCache.js')",
+      "const {FractoTileCache} = await import('@fracto/sdk/FractoTileCache.js')",
       "const outcomes = {}; for (const short_code of ['12', '13', '14']) { try { await FractoTileCache.get_tile(short_code); outcomes[short_code] = null } catch (error) { outcomes[short_code] = {code: error.code, kind: error.kind} } }",
       "console.log('RESULT:' + JSON.stringify({outcomes, network_calls, stats: FractoTileCache.get_stats()}))",
    ].join(';')
@@ -329,7 +329,7 @@ test('local-source memory trimming uses a smaller working set and evicts idle en
    }
 
    const script = [
-      "const {FractoTileCache} = await import('./sdk/FractoTileCache.js')",
+      "const {FractoTileCache} = await import('@fracto/sdk/FractoTileCache.js')",
       "for (let index = 0; index < 99; index++) await FractoTileCache.get_tile(String(100000 + index))",
       'FractoTileCache.trim_cache(180000)',
       'const below_threshold = FractoTileCache.get_stats()',
@@ -367,7 +367,7 @@ test('local-source memory trimming uses a smaller working set and evicts idle en
 test('remote-cache memory retention policy remains unchanged', () => {
    const demand_cache_directory = path.join(temporary_root, 'remote-policy-cache')
    const script = [
-      "const {FractoTileCache} = await import('./sdk/FractoTileCache.js')",
+      "const {FractoTileCache} = await import('@fracto/sdk/FractoTileCache.js')",
       "console.log('RESULT:' + JSON.stringify(FractoTileCache.get_stats().limits))",
    ].join(';')
    const result = spawnSync(process.execPath, ['--input-type=module', '-e', script], {
@@ -403,7 +403,7 @@ test('restarting with a new source generation reads the new immutable dataset', 
       )
    }
    const script = [
-      "const {FractoTileCache} = await import('./sdk/FractoTileCache.js')",
+      "const {FractoTileCache} = await import('@fracto/sdk/FractoTileCache.js')",
       "const tile = await FractoTileCache.get_tile('12')",
       "console.log('RESULT:' + JSON.stringify({tile, stats: FractoTileCache.get_stats()}))",
    ].join(';')
@@ -449,7 +449,7 @@ test('remote-cache mode still downloads once, persists the tile, and serves late
       'let http_calls = 0',
       "const payload = fs.readFileSync(process.env.TEST_TILE_FIXTURE)",
       "https.get = (url, callback) => { http_calls++; const request = new EventEmitter(); process.nextTick(() => { const response = Readable.from([payload]); response.statusCode = 200; callback(response) }); return request }",
-      "const {FractoTileCache} = await import('./sdk/FractoTileCache.js')",
+      "const {FractoTileCache} = await import('@fracto/sdk/FractoTileCache.js')",
       "const tile = await FractoTileCache.get_tile('12')",
       "console.log('RESULT:' + JSON.stringify({tile, http_calls, stats: FractoTileCache.get_stats()}))",
    ].join(';')
@@ -478,7 +478,7 @@ test('remote-cache mode still downloads once, persists the tile, and serves late
    const disk_script = [
       "import https from 'node:https'",
       "https.get = () => { throw new Error('unexpected remote fallback for cached tile') }",
-      "const {FractoTileCache} = await import('./sdk/FractoTileCache.js')",
+      "const {FractoTileCache} = await import('@fracto/sdk/FractoTileCache.js')",
       "const tile = await FractoTileCache.get_tile('12')",
       "console.log('RESULT:' + JSON.stringify({tile, stats: FractoTileCache.get_stats()}))",
    ].join(';')

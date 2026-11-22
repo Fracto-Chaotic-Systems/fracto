@@ -1,8 +1,9 @@
 # Workflows
 
 `validate.yml` checks out the root and six service repositories, installs the
-root and AI dependencies, and runs root validation plus AI standalone checks on
-Node 22. Service checkouts follow their default branches, matching Fracto's
+dependencies for all seven consumers, and runs the strict dependency gate,
+root validation, UI/data survey and numerical contract regressions, and AI
+standalone checks on Node 22. Service checkouts follow their default branches, matching Fracto's
 coordinated-repository development model. Publish compatible service changes
 before publishing root integration changes.
 

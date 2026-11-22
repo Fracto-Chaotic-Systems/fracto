@@ -27,7 +27,7 @@ test('remote shortcode listings still parse CSV rows', async () => {
          response.end('short_code\n12\n123\n')
       }, async base_url => {
          process.env.FRACTO_TILE_REMOTE_BASE_URL = base_url
-         const {FractoIndexedTiles} = await import('../sdk/FractoIndexedTiles.js')
+         const {FractoIndexedTiles} = await import("@fracto/sdk/FractoIndexedTiles.js")
          const rows = await new Promise(resolve =>
             FractoIndexedTiles.load_short_codes('indexed', resolve),
          )
@@ -51,7 +51,7 @@ test('remote shortcode fetch failures mark the index build unsuccessful', async 
    try {
       await with_server(request => request.socket.destroy(), async base_url => {
          process.env.FRACTO_TILE_REMOTE_BASE_URL = base_url
-         const {FractoIndexedTiles} = await import('../sdk/FractoIndexedTiles.js')
+         const {FractoIndexedTiles} = await import("@fracto/sdk/FractoIndexedTiles.js")
          const rows = await new Promise(resolve =>
             FractoIndexedTiles.load_short_codes('indexed', resolve),
          )

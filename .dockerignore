@@ -12,6 +12,7 @@
 /.idea
 /backup
 /config
+/servers/fracto-data-server/config/
 /logs
 /assets
 /tiles
@@ -30,3 +31,5 @@ npm-debug.log*
 # Installed managed production controller and local runtime selection
 /.fracto-managed/
 /.fracto-production.json
+/tmp/service-boundary-backup/
+/tmp/dependency-migration-backup/

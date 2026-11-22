@@ -1,5 +1,15 @@
 # Fracto SDK
 
+All consumers, including the root, import the npm package (`@fracto/sdk` and its
+exported subpaths). Relative filesystem imports into this directory are forbidden.
+Common authorization/origin helpers are under `utils/`; service implementations
+and application persistence remain outside the SDK.
+
+`FractoEnvironmentCatalog.js` defines pure environment provenance projections,
+catalog edit validation and the bounded service registration contract. It owns
+no storage paths, HTTP routes, SQL or service configuration; those responsibilities
+remain in the asset and data services.
+
 `FractoAssetArchive.js` supplies framework-neutral folder/archive validation for
 environment imports: safe relative paths, shared file/byte limits, bounded ZIP
 expansion and supported model discovery. Browser and server supply their own
@@ -21,8 +31,7 @@ Shared JavaScript utilities for Fracto's fractal calculations, coordinate handli
 The SDK is defined as the `@fracto/sdk` package in this repository. It uses ES
 modules and exposes a stable barrel entry point plus explicit `.js` subpaths.
 
-During the local-development transition, direct file imports remain supported.
-Consumers should eventually prefer package imports:
+Every consumer must use the npm interface:
 
 ```js
 import { FractoCanvasBuffer } from "@fracto/sdk";
@@ -30,8 +39,8 @@ import FractoFastCalc from "@fracto/sdk/FractoFastCalc.js";
 ```
 
 ```js
-import Complex from "./sdk/math/Complex.js";
-import FractoFastCalc from "./sdk/FractoFastCalc.js";
+import Complex from "@fracto/sdk/math/Complex.js";
+import FractoFastCalc from "@fracto/sdk/FractoFastCalc.js";
 
 const point = new Complex(-0.75, 0.1);
 const result = FractoFastCalc.calc(point.re, point.im);
@@ -205,7 +214,8 @@ of the complete SDK result.
   uses the configured HTTP tile origin and local disk cache; local-source mode
   reads from the mounted filesystem and does not load that network
   configuration. Remote mode accepts `FRACTO_TILE_REMOTE_BASE_URL` as an
-  optional override before falling back to `config/network.json`.
+  explicit setting. The root launcher may translate its own network configuration
+  into this environment variable; the SDK never reads root configuration.
 - `FractoIndexedTiles.js` loads tile short-code CSV listings. Local-source mode
   streams them from `FRACTO_TILE_SOURCE_DIR/manifest/` (including `indexed`,
   `interior`, and `blank` listings); remote-cache mode retains the configured
@@ -238,7 +248,7 @@ boundaries to normalize legacy `{ x, y }` values; internal stages should use
 
 ## Runtime considerations
 
-The modules under `math/`, along with the core calculation and color utilities, are mostly self-contained. Tile and data modules depend on repository configuration, files under `tiles/`, Node.js filesystem APIs, or network access. They should be used from the Fracto repository root with project dependencies installed.
+The modules under `math/`, along with the core calculation and color utilities, are mostly self-contained. Node tile modules use explicit environment settings, filesystem storage and network access. Consumers supply their configuration; the SDK never imports their implementation or configuration files.
 
 Some modules provide both named and default exports. Follow the exports in the
 individual source file. `index.js` is the browser-safe root barrel; Node

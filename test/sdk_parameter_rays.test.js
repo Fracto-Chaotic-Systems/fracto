@@ -4,9 +4,9 @@ import {
   find_doubling_rays,
   trace_parameter_ray,
   trace_parameter_ray_group,
-} from "../sdk/orbitals/FractoParameterRays.js";
-import { doubling_attachment } from "../sdk/orbitals/FractoParameterAttachment.js";
-import { rational_angle, distance } from "../sdk/orbitals/FractoRayGeometry.js";
+} from "@fracto/sdk/orbitals/FractoParameterRays.js";
+import { doubling_attachment } from "@fracto/sdk/orbitals/FractoParameterAttachment.js";
+import { rational_angle, distance } from "@fracto/sdk/orbitals/FractoRayGeometry.js";
 
 for (const [core, period, root, angles] of [
   [{ x: 0, y: 0 }, 1, { x: -0.75, y: 0 }, ["1/3", "2/3"]],
@@ -93,7 +93,7 @@ test("nearby core guesses refine to the same period-two attachment", () => {
 import {
   find_component_root_rays,
   find_minibrot_rays,
-} from "../sdk/orbitals/FractoMinibrotRays.js";
+} from "@fracto/sdk/orbitals/FractoMinibrotRays.js";
 for (const [core, period, angles, root] of [
   [{ x: 0, y: 0 }, 1, ["0/1"], { x: 0.25, y: 0 }],
   [{ x: -1, y: 0 }, 2, ["1/3", "2/3"], { x: -0.75, y: 0 }],
@@ -191,7 +191,7 @@ for (const [core, period, tolerance, angles] of [
 
 test("reference perturbations preserve parameter corrections below a global-coordinate ulp", async () => {
   const { parameter_reference, perturbed_critical } =
-    await import("../sdk/orbitals/FractoParameterRaySolver.js");
+    await import("@fracto/sdk/orbitals/FractoParameterRaySolver.js");
   const { default: Decimal } = await import("decimal.js");
   const root = { x: -0.041718658954093546, y: 0.9860559664503621 };
   const reference = parameter_reference(root, 2048);
@@ -213,7 +213,7 @@ test("reference perturbations preserve parameter corrections below a global-coor
   assert.equal(parameter_reference(root, 2048), reference);
 });
 
-import { tuned_doubling_angles } from "../sdk/orbitals/FractoParameterTuning.js";
+import { tuned_doubling_angles } from "@fracto/sdk/orbitals/FractoParameterTuning.js";
 test("binary tuning reuses exact parent blocks, including reduced fractions", () => {
   for (const [period, roots, expected] of [
     [1, [rational_angle(0, 1)], ["1/3", "2/3"]],
@@ -267,7 +267,7 @@ test("reported period-12 minibrot tunes its verified root pair and traces beyond
 
 test("a larger depth budget does not reject a usable reference prefix", async () => {
   const { parameter_reference, perturbed_critical } =
-    await import("../sdk/orbitals/FractoParameterRaySolver.js");
+    await import("@fracto/sdk/orbitals/FractoParameterRaySolver.js");
   const reference = parameter_reference({ x: 2, y: 0 }, 128);
   assert.equal(perturbed_critical({ x: 0, y: 0 }, 2, reference).z.x, 6);
   assert.throws(() => reference.ensure(128), /trace_reference/);
