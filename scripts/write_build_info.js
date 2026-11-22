@@ -2,16 +2,10 @@ import fs from 'node:fs'
 import path from 'node:path'
 import {spawnSync} from 'node:child_process'
 
-import {ALL_SERVICES} from '../constants.js'
+import {repository_inventory} from './repository_inventory.js'
 
 const root = path.resolve(import.meta.dirname, '..')
-const repositories = [
-   {name: 'fracto', directory: root},
-   ...ALL_SERVICES.map(service => ({
-      name: service.name,
-      directory: path.join(root, 'servers', service.name),
-   })),
-]
+const repositories = repository_inventory(root)
 
 const git = (directory, args) => {
    const result = spawnSync('git', ['-C', directory, ...args], {encoding: 'utf8'})

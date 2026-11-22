@@ -128,5 +128,15 @@
   "devDependencies": {
     "prettier": "^3.9.6",
     "@babel/parser": "7.29.8"
+  },
+  "fracto": {
+    "serviceRepositories": [
+      "fracto-data-server",
+      "fracto-asset-server",
+      "fracto-admin-server",
+      "fracto-ui",
+      "fracto-tiles-server",
+      "fracto-ai-server"
+    ]
   }
 }

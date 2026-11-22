@@ -3,17 +3,11 @@ import path from 'node:path'
 import {createInterface} from 'node:readline/promises'
 import {spawnSync} from 'node:child_process'
 
-import {ALL_SERVICES} from '../constants.js'
+import {repository_inventory} from './repository_inventory.js'
 
 const ROOT_DIRECTORY = path.join(import.meta.dirname, '..')
 const ALLOWED_UNSTAGED_FILES = new Set(['.idea/fracto.iml'])
-const repositories = [
-   {name: 'fracto', directory: ROOT_DIRECTORY},
-   ...ALL_SERVICES.map(service => ({
-      name: service.name,
-      directory: path.join(ROOT_DIRECTORY, 'servers', service.name),
-   })),
-]
+const repositories = repository_inventory(ROOT_DIRECTORY)
 
 const run_git = (repository, args, allow_failure = false, show_output = false) => {
    const git_args = show_output

@@ -9,6 +9,14 @@ rather than importing another service's implementation.
 Application-specific asset/database suites live in the owning service repositories.
 The root retains pure SDK contract tests and generic migration discovery tests.
 
+`update_repositories.test.js` verifies fail-safe divergence handling and the
+pre-install deployment inventory. Its integration fixture creates seven isolated
+local Git repositories/remotes, then runs the real updater and build-info
+generator with runtime `constants.js` present but no SDK or `node_modules`.
+It validates complete repository metadata and clean working trees without
+contacting real upstreams or changing the developer's checkout. Inventory tests
+also reject duplicate/path-escaping names and detect drift from runtime services.
+
 `data_query_tiles.test.js` verifies that tile previews/listings use the short-code
 primary key, retain bounded results, preserve other tables' ordering, reject
 unlisted tables, and report missing live tables without silently using a seed.

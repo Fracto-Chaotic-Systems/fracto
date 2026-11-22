@@ -492,6 +492,14 @@ category.
 
 Fetches and fast-forwards the root and six service repositories:
 
+This is a pre-install entry point: it and `write_build_info.js` use only Node
+built-ins and the root-owned `repository_inventory.js` helper. The expected
+service checkout names are declared in `package.json` under
+`fracto.serviceRepositories`. Neither script imports runtime `constants.js`,
+server implementations or SDK files, so repository refresh and image preparation
+work before `npm ci`, including hosts that install dependencies only in Docker.
+The SDK remains available to installed runtime code only through `@fracto/sdk`.
+
 ```powershell
 npm run update:repos
 ```
@@ -508,7 +516,8 @@ The one permitted unstaged exception is the tracked IDE metadata file
 exclusions. All other tracked or staged changes still abort the update.
 
 The standalone `npm run update:repos` command remains fail-safe and never resets
-diverged history. `cold_boot.bat` opts into an interactive recovery prompt: when
+diverged history. `cold_boot.bat` uses this default. Passing
+`--confirm-reset-diverged` explicitly opts into an interactive recovery prompt: when
 divergence is found, it lists each affected repository and its local/upstream
 revision, then requires the exact text `RESET`. Confirmation hard-resets only
 those diverged repositories to their configured upstream. Declining or running

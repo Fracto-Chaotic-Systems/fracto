@@ -350,6 +350,11 @@ After a normally operating Docker host is restarted, run:
 Use `.\scripts\cold_boot.bat dev` to run the same workflow but launch the
 development Compose target on ports 3101–3107 instead of production.
 
+Repository refresh and build-info generation use Node built-ins and the
+root's `package.json` deployment inventory; they do not require host-side
+`node_modules` or an installed SDK. Docker installs dependencies before loading
+application code. Native service startup still requires the normal `npm ci`.
+
 This refreshes the root and service repositories, rebuilds the production image,
 optionally refreshes the cloud-backed tile index, and finally runs `docker compose
 up -d fracto`. The script asks `Refresh the compiled tile index now? [y/N]`; Enter
