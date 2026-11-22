@@ -3,6 +3,7 @@ import path from 'node:path'
 import mysql from 'mysql2/promise'
 
 import {ALL_SERVICES, SERVICE_NAME_UI} from '../constants.js'
+import {run_declared_task} from './run_owned_task.js'
 
 const ROOT_DIRECTORY = path.join(import.meta.dirname, '..')
 const DATABASE_CONNECT_TIMEOUT_MS = 5000
@@ -173,6 +174,7 @@ export const validate_database = async () => {
 export const validate_startup = async () => {
    const errors = []
    const ports = new Set()
+   const service_checks = []
 
    for (const service of ALL_SERVICES) {
       const service_folder = path.join(ROOT_DIRECTORY, 'servers', service.name)
@@ -187,12 +189,13 @@ export const validate_startup = async () => {
          errors.push(`${service.name}: missing package.json`)
          continue
       }
+      const manifest = JSON.parse(fs.readFileSync(package_file, 'utf8'))
+      if (manifest.fracto?.commands?.startup_check) service_checks.push(service.name)
       const static_ui = service.name === SERVICE_NAME_UI && process.env.FRACTO_UI_MODE === 'static'
       if (!static_ui && !fs.existsSync(path.join(service_folder, 'node_modules'))) {
          errors.push(`${service.name}: missing node_modules (run npm install in ${service_folder})`)
       }
       if (service.name === SERVICE_NAME_UI) {
-         const manifest = JSON.parse(fs.readFileSync(package_file, 'utf8'))
          if (!manifest.scripts?.start) {
             errors.push(`${service.name}: package.json has no start script`)
          }
@@ -206,6 +209,9 @@ export const validate_startup = async () => {
 
    if (errors.length) {
       throw new Error(`Startup preflight failed:\n- ${errors.join('\n- ')}`)
+   }
+   for (const service of service_checks) {
+      await run_declared_task('startup_check', [], service)
    }
    try {
       await validate_local_tile_source()

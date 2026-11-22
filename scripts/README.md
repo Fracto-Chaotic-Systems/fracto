@@ -1,5 +1,21 @@
 # Fracto scripts
 
+Startup preflight invokes each service's optional declared `startup_check`
+command before checking tile storage or the root database connection. Services
+own these checks and their configuration; the root does not read their private
+configuration or import their implementations. A failed check stops startup.
+
+`migrate_database.js` is the dependency-free entry point for `db:init` and
+`db:migrate`. It checks SDK loading before dispatching the existing migration
+runner, preserves arguments such as `--force`, and explains recovery when host
+npm dependencies are missing. Git updates and Docker builds do not install host
+dependencies: run `npm ci` in the root checkout before native migration commands.
+Docker installations can instead use `docker compose run --build --rm database-init`.
+
+Service stderr is forwarded to the terminal as well as persisted service logs,
+including for services whose normal output is quiet. Startup exits report both
+code and signal; a supervisor SIGTERM can be secondary to another service's failure.
+
 `check_dependency_boundaries.js` audits parsed imports/re-exports/requires across
 root, SDK and server repositories. `npm run boundaries:check` fails on forbidden
 cross-repository or filesystem SDK imports. `boundaries:audit` prints the same

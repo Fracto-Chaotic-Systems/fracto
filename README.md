@@ -355,6 +355,22 @@ root's `package.json` deployment inventory; they do not require host-side
 `node_modules` or an installed SDK. Docker installs dependencies before loading
 application code. Native service startup still requires the normal `npm ci`.
 
+If host-side `npm run db:migrate` reports a missing `@fracto/sdk`, run `npm ci`
+from the root checkout and retry. Updating all repositories alone does not update
+host `node_modules`. For a Docker installation, run the migration in the built
+image instead:
+
+```powershell
+docker compose run --build --rm database-init
+```
+
+This applies pending migrations to the configured database; it is not required
+merely to repair a missing host dependency. A Docker service's SIGTERM may be a
+supervisor shutdown after an earlier failure. Inspect the preceding error with
+`docker compose logs --tail=150 fracto`, or
+`docker compose -f compose.yaml -f compose.dev.yaml logs --tail=150 fracto-dev`.
+Service errors are printed to the terminal and retained in the service's log file.
+
 This first runs `git pull --ff-only` for the root checkout and reloads the updated
 batch file, then runs the coordinated root/service repository updater. Root pull
 failures stop the workflow before loading the updater or starting a build.

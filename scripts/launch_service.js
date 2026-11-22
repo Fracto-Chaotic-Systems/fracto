@@ -73,6 +73,11 @@ child.once("error", (error) => {
   process.exit(1);
 });
 child.once("exit", (code, signal) => {
+  if (code !== 0 || signal) {
+    console.error(
+      `${service.name}: child exited (code=${code}, signal=${signal || "none"}).`,
+    );
+  }
   process.exitCode = code ?? (signal ? 1 : 0);
 });
 

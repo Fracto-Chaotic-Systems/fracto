@@ -73,6 +73,7 @@ COPY . .
 RUN npm run check
 RUN npm --prefix servers/fracto-asset-server run test:environment
 RUN npm --prefix servers/fracto-data-server run test:environment
+RUN npm --prefix servers/fracto-data-server run test:startup
 RUN npm --prefix servers/fracto-ai-server run check
 RUN npm --prefix servers/fracto-ui run lint
 RUN npm --prefix servers/fracto-ui run build

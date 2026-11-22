@@ -1,5 +1,17 @@
 # Fracto tests
 
+`service_startup_checks.test.js` launches root preflight against isolated service
+manifests and real declared checker processes. A failed checker must stop before
+database checks; successful and absent optional checks allow preflight to continue.
+The database is a stub and no actual services or databases are started.
+
+`migrate_database_bootstrap.test.js` runs the native migration entry point in
+isolated temporary checkouts with missing and installed SDK packages. It verifies
+actionable dependency recovery, no migration dispatch on failure, and preserved
+`--force` arguments. No database connection or real migration is performed.
+It also launches a synthetic service that fails before readiness, verifying the
+original stderr, exit code and explicit child-exit diagnostic are preserved.
+
 `dependency_boundaries.test.js` checks package-only SDK consumption and rejection
 of root/server, server/root, inter-server and SDK/consumer imports, including
 re-exports, dynamic imports and requires. Comments and string literals are not

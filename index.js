@@ -148,8 +148,10 @@ const wait_for_health = async (service, child) => {
   const health_url = `http://127.0.0.1:${service.port}${service.health_path || "/"}`;
   let last_error = "no response";
   while (Date.now() < deadline) {
-    if (child.exitCode !== null) {
-      throw new Error(`${service.name} exited with code ${child.exitCode}`);
+    if (child.exitCode !== null || child.signalCode) {
+      throw new Error(
+        `${service.name} exited during startup (code=${child.exitCode}, signal=${child.signalCode || "none"}). See ${path.join(LOGS_DIRECTORY, service.logfile)} for its output.`,
+      );
     }
     try {
       const response = await fetch(health_url, {
@@ -236,7 +238,8 @@ const start_service = async (service, show_output = false) => {
     source.on("data", (chunk) => {
       // Preserve ANSI colors in the terminal, but persist structured records.
       const text = chunk.toString();
-      if (show_output) terminal.write(text);
+      // Failures must remain visible even for services with quiet normal output.
+      if (show_output || level === "error") terminal.write(text);
       const lines = `${pending}${text}`.split(/\r?\n/);
       pending = lines.pop() || "";
       lines.forEach(write_record);
