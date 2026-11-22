@@ -1,5 +1,12 @@
 # Database assets
 
+Migration 019 adds `environment_assets`, the Inventory registry for model/file
+references, creator attribution, source URLs, license/credit/usage conditions,
+source checksums and modification history. Binary files remain in the environment
+library. Run `node scripts/register_environment_assets.js` after migration to
+register an existing library; imports and catalog reads/edits maintain the rows.
+See `utils/README.md` for consistency and recovery behavior.
+
 Migration 008 adds an indexed primary `free_bailiwick_id` reference to stored
 orbitals. It is populated on insert/rediscovery; existing coordinates and ray
 data are preserved, and additional source associations remain in run provenance.

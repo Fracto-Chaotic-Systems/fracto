@@ -3,7 +3,7 @@ FROM node:22-bookworm AS dependencies
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential python3 pkg-config git \
-    ffmpeg \
+    ffmpeg blender python3-numpy \
     libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev \
     && rm -rf /var/lib/apt/lists/*
 
@@ -86,7 +86,7 @@ RUN npm prune --omit=dev \
 FROM node:22-bookworm-slim AS runtime
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ffmpeg \
+    ffmpeg blender python3-numpy \
     libcairo2 libpango-1.0-0 libjpeg62-turbo libgif7 librsvg2-2 \
     && rm -rf /var/lib/apt/lists/*
 

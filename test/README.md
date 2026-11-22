@@ -1,5 +1,30 @@
 # Fracto tests
 
+`node --test test/environment_asset_database.test.js test/environment_catalog.test.js`
+covers explicit database provenance fields, parameter binding, connection retry,
+catalog-to-registry synchronization, revision changes and recovery when a file
+save succeeds before database synchronization fails. These tests use injected
+database adapters and temporary libraries rather than editing real attribution.
+Set `FRACTO_TEST_ENVIRONMENT_ASSET_DATABASE=1` to additionally verify the actual
+MySQL schema/upserts using a connection-local temporary copy of the live registry.
+Migration 019 must already be applied. No real asset rows change.
+
+`node --test test/blender_asset_conversion.test.js` covers Blender invocation
+flags/limits, validated GLB output, actionable conversion failures, source
+preservation, conversion history, and rollback before catalog publication.
+Process execution is mocked; the supplied grasses2 model was also converted with
+Blender 3.4.1 in the development container and imported into the real catalog.
+
+`node --test test/environment_asset_import.test.js` exercises folder/ZIP
+preservation, catalog registration/listing, duplicate and name-collision behavior,
+safe paths, selected model resources and the authenticated upload boundary using
+temporary libraries. It does not add assets to the user's library.
+
+`node --test test/environment_catalog.test.js` verifies real temporary-file
+catalog writes, source/runtime preservation, strict mutation/response fields,
+revision conflicts, concurrent writers, path containment, trusted origins,
+authentication integration, and body limits. No production records are changed.
+
 `data_query_tiles.test.js` verifies that tile previews/listings use the short-code
 primary key, retain bounded results, preserve other tables' ordering, reject
 unlisted tables, and report missing live tables without silently using a seed.

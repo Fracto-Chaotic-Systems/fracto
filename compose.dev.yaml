@@ -97,6 +97,7 @@ services:
       - fracto-dev-data-corrections:/var/lib/fracto/data-corrections
       - fracto-tile-index:/var/lib/fracto/index:ro
       - fracto-dev-assets:/app/assets
+      - ./assets/environments:/app/assets/environments
       - fracto-dev-videos:/app/videos
       - fracto-dev-logs:/app/logs
       - ./servers/fracto-tiles-server/benchmarks:/app/servers/fracto-tiles-server/benchmarks

@@ -105,6 +105,20 @@ in the README for that feature or service.
 
 ## Personal information and APIs
 
+- The Inventory catalog editor has a task-specific exception requested by the
+  user: asset creator credits, creator/source URLs, license terms and asset
+  modification notes may pass between the Inventory UI and its same-origin
+  catalog endpoint to read and directly save registered `asset.json` records
+  and their `environment_assets` database registry rows.
+  This exception is limited to asset provenance; it does not cover account,
+  session, contact, device or other personal records. Use explicit fields, no
+  metadata logging, existing authentication, trusted mutation origins, and
+  revision checks. The general restrictions below continue to apply elsewhere.
+  Inventory may also receive user-selected local asset folders for import,
+  including model/texture files and their supplied readme/license provenance.
+  Preserve the selected files, reject unsafe archive paths, and restrict served
+  resources to files declared by a registered asset.
+
 - Never transmit personal information of any kind via an API. This applies to
   request and response bodies, URL paths and query parameters, headers,
   cookies, error details, logs, and telemetry. It covers public,

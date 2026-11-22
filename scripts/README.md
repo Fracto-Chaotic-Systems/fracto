@@ -1,5 +1,31 @@
 # Fracto scripts
 
+`node scripts/register_environment_assets.js` backfills the MySQL
+`environment_assets` registry from every registered library record after applying
+migration 019 with `npm run db:migrate`. It is idempotent and changes no library
+files. It uses the same `FRACTO_MYSQL_*` settings as the normal migration runner
+and supports `FRACTO_ENVIRONMENT_CATALOG_DIR`. Only the asset count is logged.
+
+`export_blend_asset.py` runs inside Blender to export a separate static GLB for
+Inventory. `blend_preview_scene.py` evaluates mesh geometry and realizes a bounded
+set of particle object instances, sharing their mesh data. A JSON report records
+particle density reductions, texture relinking, material adaptations and source
+units. Neither script saves or rewrites the input `.blend`. The caller disables
+embedded scripts and bounds runtime/output size. Debian Blender also requires
+`python3-numpy` for glTF export; both packages are included in the Docker stages.
+
+`serve_ui.js` serves the built UI and its environment catalog router at
+`/api/environment-catalog`. Inventory saves write to the canonical registered
+`assets/environments/<asset-id>/asset.json`; `FRACTO_ENVIRONMENT_CATALOG_DIR`
+can override the library root. Compose binds the workspace environment library
+over the assets volume for both development and production.
+
+`python scripts/environment_catalog.py list [search]` searches the local
+environment asset library by ID, name, or tags. `validate` verifies catalog IDs,
+parent links, required file references, and SHA-256 hashes of original downloads.
+It reports unresolved attribution and pending runtime review separately from
+file integrity. See `assets/environments/README.md` for the catalog workflow.
+
 `verify_instrument_transfer.js --source <instrument directory> --midi <MIDI file>`
 performs a full-data transfer between loopback services into an owned temporary
 receiver, verifies publication/restart/repair and the MIDI's original sample

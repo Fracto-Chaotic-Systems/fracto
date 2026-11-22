@@ -1,1 +1,4 @@
 *.sh text eol=lf
+
+# Imported originals must retain their exact bytes and source checksums.
+assets/environments/**/source/** -text -diff

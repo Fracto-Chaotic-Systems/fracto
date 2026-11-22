@@ -1,5 +1,13 @@
 # Database migrations
 
+`019_environment-assets.sql` adds the Inventory asset/provenance registry, keyed
+by the permanent catalog asset ID. It creates indexed category, attribution
+status and parent references plus explicit creator, source, license and usage
+fields, source descriptors/checksums, modification history and catalog revision.
+This additive, replay-safe migration contains no creator data or binary files.
+After applying it, run `node scripts/register_environment_assets.js` to backfill
+the installation's existing library without changing its files.
+
 `018_tile-seed-checkpoints.sql` adds an InnoDB journal for resumable tile seeds.
 Each target has a source fingerprint, pinned/local CSV descriptor, committed byte
 offset and cumulative counts. Tile batches and checkpoint advances share a

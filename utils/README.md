@@ -1,5 +1,41 @@
 # Main server utilities
 
+`environment_asset_database.js` maintains the MySQL `environment_assets` registry
+using the installation's `config/mysql.json` and `FRACTO_MYSQL_*` overrides.
+It persists an explicit asset-provenance allowlist, source checksums and history;
+arbitrary extensions are excluded. Parameterized, idempotent upserts preserve
+creation timestamps. Apply migration 019 before enabling the catalog endpoint.
+
+The Inventory endpoint enables this registry on its catalog store. Listing or
+reading metadata reconciles registered JSON into database rows; successful
+imports and saves include database synchronization. Existing `asset.json` files
+remain the editable portable authority, preserving the direct-save workflow.
+Files/binaries are not stored in MySQL. A database failure produces an explicit
+503 rather than reporting synchronization success. If the file was already
+published, its data is retained; the next metadata read/list or registration
+command retries synchronization. No distributed transaction spans disk and MySQL.
+Database rows are a queryable projection; do not edit them directly or delete
+library folders to remove assets. No automatic database deletion occurs.
+Preview resource requests do not access the database. Standalone file tools and
+tests may explicitly omit a registry; the HTTP endpoint always enables it.
+
+`blender_asset_conversion.js` launches Blender for `.blend` imports with factory
+startup and embedded auto-execution disabled, a two-minute timeout and bounded
+captured output. It checks the generated GLB before the importer publishes the
+asset. `FRACTO_BLENDER_BIN` can select the native executable; Docker uses Blender
+and NumPy installed by the image. Errors are mapped to catalog-safe codes.
+
+`environment_asset_import.js` imports user-selected environment folders from ZIP
+envelopes. It retains originals and checksums, expands archives with shared SDK
+validation, detects duplicate source sets, assigns collision-free IDs, and stages
+files before atomically publishing the catalog index. Its lock guards concurrent
+imports; the existing catalog store resolves the live list and preview resources.
+
+`environment_catalog.js` reads registered environment records and saves only
+allowlisted attribution fields and modification notes. It serializes edits per
+asset, checks the expected SHA-256 revision, and replaces the JSON atomically.
+Unknown stored metadata, source checksums and runtime data are preserved.
+
 `startup_benchmark.js` starts the hidden Windows host benchmark bootstrap from
 native supervisor startup. It is a no-op on other platforms and reports launch
 failures without throwing into application startup. It never waits for sampling.

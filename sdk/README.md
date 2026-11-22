@@ -1,5 +1,10 @@
 # Fracto SDK
 
+`FractoAssetArchive.js` supplies framework-neutral folder/archive validation for
+environment imports: safe relative paths, shared file/byte limits, bounded ZIP
+expansion and supported model discovery. Browser and server supply their own
+compatible ZIP decoder. It does not read files or contact services.
+
 `terrain/` provides tile-level mesh planning, normalized mesh generation and
 versioned binary caching for the freeform bailiwick test workflow. See its README
 for cache layout, coordinate transforms, palette data and deferred edge handling.
