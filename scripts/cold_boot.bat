@@ -12,6 +12,23 @@ exit /b 2
 
 :mode_valid
 
+if /I not "%~2"=="--root-updated" (
+  echo [1/4] Pulling the root repository before running the updater...
+  git pull --ff-only
+  if errorlevel 1 goto failed
+  rem Parse this entire block before Git can replace the batch file.
+  rem Reload the updated script once, preserving the selected mode and exit code.
+  popd
+  "%ComSpec%" /d /s /c ""%~f0" %cold_boot_mode% --root-updated"
+  goto root_update_finished
+)
+goto repositories_ready
+
+:root_update_finished
+exit /b %ERRORLEVEL%
+
+:repositories_ready
+
 echo [1/4] Refreshing the root and service repositories...
 call npm run update:repos
 if errorlevel 1 goto failed

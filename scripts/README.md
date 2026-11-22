@@ -780,8 +780,15 @@ Pass `dev` to launch the development Compose target instead:
 .\scripts\cold_boot.bat dev
 ```
 
-It runs the repository refresh with the divergence-reset confirmation described
-above, `node scripts/build_windows_image.js prod` (or `dev`),
+It first runs `git pull --ff-only` against the root checkout's current upstream,
+then reloads the updated batch file and runs `npm run update:repos`. The pull
+uses Git directly, before loading any JavaScript or npm dependencies. Reloading
+avoids resuming at a stale byte offset if the pull replaces the batch file
+itself; the selected mode and child exit code are preserved. The root is pulled
+once, and any pull failure stops before service updates or image builds. Normal
+repository refresh remains fail-safe; divergence recovery requires the explicit
+updater option described above.
+Next it runs `node scripts/build_windows_image.js prod` (or `dev`),
 optionally `docker compose run --rm index-refresh`, and finally
 `docker compose up -d --no-build fracto` (or the development `fracto-dev` target when
 `dev` is passed), in that order. It does not initialize/reset

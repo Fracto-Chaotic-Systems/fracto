@@ -17,6 +17,12 @@ It validates complete repository metadata and clean working trees without
 contacting real upstreams or changing the developer's checkout. Inventory tests
 also reject duplicate/path-escaping names and detect drift from runtime services.
 
+`cold_boot.test.js` checks that a direct, fast-forward-only root pull precedes
+the JavaScript updater. Native Windows fixtures use disposable local Git remotes
+to update the batch file itself in a path containing spaces, verify exactly one
+pull in both `prod` and `dev`, and preserve updater failure codes. A failed root
+pull must stop before the updater or image build. Fixtures never start Docker.
+
 `data_query_tiles.test.js` verifies that tile previews/listings use the short-code
 primary key, retain bounded results, preserve other tables' ordering, reject
 unlisted tables, and report missing live tables without silently using a seed.

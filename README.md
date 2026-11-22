@@ -355,7 +355,10 @@ root's `package.json` deployment inventory; they do not require host-side
 `node_modules` or an installed SDK. Docker installs dependencies before loading
 application code. Native service startup still requires the normal `npm ci`.
 
-This refreshes the root and service repositories, rebuilds the production image,
+This first runs `git pull --ff-only` for the root checkout and reloads the updated
+batch file, then runs the coordinated root/service repository updater. Root pull
+failures stop the workflow before loading the updater or starting a build.
+It then rebuilds the production image,
 optionally refreshes the cloud-backed tile index, and finally runs `docker compose
 up -d fracto`. The script asks `Refresh the compiled tile index now? [y/N]`; Enter
 or any answer other than `Y` skips the refresh. It does not initialize/reset
