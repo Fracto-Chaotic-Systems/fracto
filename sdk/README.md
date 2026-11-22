@@ -293,3 +293,8 @@ produce parameter-plane wakes.
 See [the algorithm and limitations](orbitals/RAYS.md). The published theoretical
 basis is [Milnor, Astérisque 261 (2000)](https://numdam.org/item/AST_2000__261__277_0/)
 and [Benini–Lyubich, AIF 64 (2014), polynomial case in §2](https://doi.org/10.5802/aif.2888).
+
+The environment contract includes model categories material/component/area,
+relative library tier names and validated paginated asset summaries. Construction
+category (`model_category`) is separate from descriptive `category`. Legacy
+registrations omit it and default to material; shared helpers perform no I/O.

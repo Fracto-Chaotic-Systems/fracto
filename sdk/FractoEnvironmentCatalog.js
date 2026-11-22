@@ -1,4 +1,59 @@
 // Pure contracts shared by asset storage and database services. No I/O or SQL.
+export const MODEL_CATEGORY_DIRECTORIES = {
+  material: "ingredients",
+  component: "composites",
+  area: "environments",
+};
+export function validate_model_category(value = "material") {
+  if (
+    typeof value !== "string" ||
+    !Object.hasOwn(MODEL_CATEGORY_DIRECTORIES, value)
+  )
+    fail();
+  return value;
+}
+export function model_category_from_path(relative) {
+  return (
+    Object.keys(MODEL_CATEGORY_DIRECTORIES).find(
+      (category) =>
+        MODEL_CATEGORY_DIRECTORIES[category] ===
+        relative.replaceAll("\\", "/").split("/")[0],
+    ) || "material"
+  );
+}
+
+export function validate_model_asset_page(page, category) {
+  const id = (value) =>
+    typeof value === "string" && /^[a-z][a-z0-9-]{0,63}$/.test(value);
+  if (
+    !page ||
+    !Array.isArray(page.assets) ||
+    page.assets.length > 200 ||
+    !(page.next_cursor === null || id(page.next_cursor))
+  )
+    fail();
+  for (const asset of page.assets) {
+    if (
+      !asset ||
+      !id(asset.id) ||
+      typeof asset.name !== "string" ||
+      asset.name.length > 255 ||
+      typeof asset.category !== "string" ||
+      !Object.hasOwn(MODEL_CATEGORY_DIRECTORIES, asset.category) ||
+      (category && asset.category !== category) ||
+      !(
+        asset.model === null ||
+        (typeof asset.model === "string" && asset.model.length <= 4096)
+      ) ||
+      !(
+        asset.format === null ||
+        (typeof asset.format === "string" && asset.format.length <= 16)
+      )
+    )
+      fail();
+  }
+  return page;
+}
 export const CATALOG_FIELDS = [
   "creator_name",
   "creator_profile_url",
@@ -83,6 +138,7 @@ export function environment_registration(record, revision) {
     record: {
       ...catalog_view(record),
       category: record.category || "environment",
+      model_category: validate_model_category(record.model_category),
       parent_id: record.parent_id || null,
       sources: (record.sources || []).map(({ path, format, sha256 }) => ({
         path,
@@ -118,6 +174,7 @@ export function validate_environment_registration(body) {
       "name",
       "description",
       "category",
+      "model_category",
       "parent_id",
       "attribution",
       "sources",
@@ -130,6 +187,9 @@ export function validate_environment_registration(body) {
     !text(record.name, 255) ||
     !text(record.description, 10000, true) ||
     !text(record.category, 64) ||
+    (record.model_category !== undefined &&
+      (typeof record.model_category !== "string" ||
+        !Object.hasOwn(MODEL_CATEGORY_DIRECTORIES, record.model_category))) ||
     !(
       record.parent_id === null ||
       /^[a-z][a-z0-9-]{0,63}$/.test(record.parent_id)

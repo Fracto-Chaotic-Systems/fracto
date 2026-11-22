@@ -52,3 +52,38 @@ test("shared registration contract excludes extensions and rejects unsafe proven
     /invalid_record/,
   );
 });
+
+test("shared registration retains construction category independently of descriptive category", () => {
+  const base = {
+    id: "grass",
+    name: "Grass",
+    version: "1",
+    description: "Grass",
+    category: "vegetation/grass",
+    model_category: "material",
+    attribution: { status: "unresolved" },
+    sources: [],
+    history: [],
+  };
+  const registration = environment_registration(base, "a".repeat(64));
+  assert.equal(registration.record.model_category, "material");
+  assert.equal(registration.record.category, "vegetation/grass");
+  for (const category of ["material", "component", "area"])
+    assert.equal(
+      validate_environment_registration(
+        environment_registration(
+          { ...base, model_category: category },
+          "a".repeat(64),
+        ),
+      ).record.model_category,
+      category,
+    );
+  assert.throws(
+    () =>
+      environment_registration(
+        { ...base, model_category: "invalid" },
+        "a".repeat(64),
+      ),
+    /invalid_record/,
+  );
+});
