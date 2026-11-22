@@ -59,7 +59,7 @@ services:
       - fracto-data-corrections:/var/lib/fracto/data-corrections
       - fracto-tile-index:/var/lib/fracto/index
       - fracto-assets:/app/assets
-      - ./servers/fracto-asset-server/environments:/app/servers/fracto-asset-server/environments
+      - ./servers/fracto-asset-server/models:/app/servers/fracto-asset-server/models
       - fracto-instruments:/var/lib/fracto/instruments
       - fracto-videos:/app/videos
       - fracto-logs:/app/logs

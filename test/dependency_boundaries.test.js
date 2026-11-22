@@ -54,12 +54,12 @@ const ignored = "import './servers/string/index.js'";`;
   assert.deepEqual(findings.map((f) => f.line).sort(), [1, 2, 3, 4]);
 });
 
-test("source directories named tiles, instruments and public remain audited", () => {
+test("source directories named tiles, instruments, public and models remain audited", () => {
   const directory = fs.mkdtempSync(
     path.join(os.tmpdir(), "fracto-boundaries-"),
   );
   try {
-    for (const name of ["tiles", "instruments", "public"]) {
+    for (const name of ["tiles", "instruments", "public", "models"]) {
       const folder = path.join(directory, "servers", "one", name);
       fs.mkdirSync(folder, { recursive: true });
       fs.writeFileSync(
@@ -67,7 +67,7 @@ test("source directories named tiles, instruments and public remain audited", ()
         "export * from '../../../two/private.js';",
       );
     }
-    assert.equal(audit_dependency_boundaries(directory).length, 3);
+    assert.equal(audit_dependency_boundaries(directory).length, 4);
   } finally {
     fs.rmSync(directory, { recursive: true, force: true });
   }

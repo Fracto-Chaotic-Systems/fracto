@@ -7,6 +7,10 @@ findings without a failing exit status for an inventory of known legacy defects.
 Neither mode exempts existing violations. Services interact through documented
 endpoints; shared code is consumed through the SDK npm package.
 
+The dependency audit excludes imported library resources only at
+`servers/fracto-asset-server/models/`. Application source folders named `models`
+continue to be checked, including UI model helpers.
+
 Application maintenance commands live in their owning services. Environment
 import/conversion/catalog commands are in `servers/fracto-asset-server/scripts/`.
 Static UI hosting is owned by `servers/fracto-ui/scripts/serve_ui.js`; the root

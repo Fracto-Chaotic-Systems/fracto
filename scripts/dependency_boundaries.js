@@ -144,7 +144,6 @@ const ignored = new Set([
   "tmp",
   "backup",
   "config",
-  "environments",
   "images",
   "videos",
 ]);
@@ -164,6 +163,9 @@ export function audit_dependency_boundaries(root) {
       const file = path.join(directory, entry.name);
       // This is the root numerical runtime store, not UI/SDK tiles source folders.
       if (file === path.join(root, "tiles")) continue;
+      // Imported model resources are data; application folders named models still get audited.
+      if (file === path.join(root, "servers", "fracto-asset-server", "models"))
+        continue;
       if (entry.isDirectory()) walk(file);
       else if (/\.(?:js|jsx|mjs|cjs)$/.test(entry.name)) {
         try {
