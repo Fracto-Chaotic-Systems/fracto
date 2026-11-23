@@ -127,7 +127,14 @@ export function validate_catalog_edit(body) {
     !body ||
     Object.keys(body).some(
       (key) =>
-        !["revision", "attribution", "note", "folder_path"].includes(key),
+        ![
+          "revision",
+          "attribution",
+          "note",
+          "folder_path",
+          "name",
+          "archived",
+        ].includes(key),
     ) ||
     !/^[a-f0-9]{64}$/.test(body.revision) ||
     !body.attribution ||
@@ -141,6 +148,15 @@ export function validate_catalog_edit(body) {
     body.note.length > 10000
   )
     fail();
+  if (
+    body.name !== undefined &&
+    (typeof body.name !== "string" ||
+      !body.name.trim() ||
+      body.name.length > 255 ||
+      /[\u0000-\u001f\u007f]/.test(body.name))
+  )
+    fail();
+  if (body.archived !== undefined && typeof body.archived !== "boolean") fail();
   const attribution = {};
   for (const field of CATALOG_FIELDS) {
     const value = body.attribution[field];
@@ -158,6 +174,8 @@ export function validate_catalog_edit(body) {
   }
   return {
     attribution,
+    ...(body.name !== undefined ? { name: body.name.trim() } : {}),
+    ...(body.archived !== undefined ? { archived: body.archived } : {}),
     note: body.note.trim(),
     ...(Object.hasOwn(body, "folder_path")
       ? { folder_path: normalize_model_folder(body.folder_path) }
@@ -170,6 +188,7 @@ export function environment_registration(record, revision) {
   return {
     record: {
       ...catalog_view(record),
+      archived: record.archived === true,
       category: record.category || "environment",
       model_category: validate_model_category(record.model_category),
       parent_id: record.parent_id || null,
@@ -202,6 +221,7 @@ export function validate_environment_registration(body) {
     !/^[a-f0-9]{64}$/.test(body.revision) ||
     !keys(record, [
       "schema_version",
+      "archived",
       "id",
       "version",
       "name",
@@ -215,6 +235,7 @@ export function validate_environment_registration(body) {
       "runtime",
       "history",
     ]) ||
+    (record.archived !== undefined && typeof record.archived !== "boolean") ||
     record.schema_version !== 1 ||
     !/^[a-z][a-z0-9-]{0,63}$/.test(record.id) ||
     !text(record.version, 64) ||

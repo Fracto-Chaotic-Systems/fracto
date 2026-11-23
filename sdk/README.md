@@ -306,3 +306,7 @@ empty for the category root, slash-delimited canonical names, up to eight levels
 colons, backslashes and control characters are rejected. Catalog views and model
 summaries carry folder_path; legacy records without it remain at the root. Catalog
 edits may omit it to preserve existing organization, or send empty to clear it.
+
+FractoModelManagement.js defines bounded tree management requests and exact
+folder-prefix matching. Model rename/archive extend the revision-checked catalog
+edit and registration allowlists; resource paths and permanent IDs remain stable.

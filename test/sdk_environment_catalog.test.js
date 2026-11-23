@@ -127,3 +127,58 @@ test("logical folder paths are portable and reject filesystem-like traversal", (
     false,
   );
 });
+
+test("model management validates action-specific bounded inputs and exact folder ancestry", async () => {
+  const { validate_model_management, folder_contains } =
+    await import("@fracto/sdk/FractoModelManagement.js");
+  assert.equal(
+    validate_model_management({
+      action: "rename-model",
+      id: "grass",
+      revision: "a".repeat(64),
+      name: " Grass ",
+    }).name,
+    "Grass",
+  );
+  assert.equal(
+    validate_model_management({
+      action: "rename-folder",
+      category: "material",
+      folder_path: "plants/herbs",
+      name: "flowers",
+    }).target,
+    "plants/flowers",
+  );
+  assert.equal(folder_contains("plants", "plants2"), false);
+  for (const body of [
+    { action: "delete-folder", category: "material", folder_path: "" },
+    { action: "delete-folder", category: "material", folder_path: "../plants" },
+    {
+      action: "rename-folder",
+      category: "material",
+      folder_path: "plants",
+      name: "nested/name",
+    },
+    { action: "delete-model", id: "grass", revision: "old" },
+    {
+      action: "rename-model",
+      id: "grass",
+      revision: "a".repeat(64),
+      name: " ",
+    },
+    {
+      action: "rename-model",
+      id: "grass",
+      revision: "a".repeat(64),
+      name: "x".repeat(256),
+    },
+    {
+      action: "delete-model",
+      id: "grass",
+      revision: "a".repeat(64),
+      name: "unexpected",
+    },
+    { action: "delete-folder", category: "unknown", folder_path: "plants" },
+  ])
+    assert.throws(() => validate_model_management(body));
+});

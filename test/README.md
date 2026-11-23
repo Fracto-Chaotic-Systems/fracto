@@ -259,3 +259,6 @@ command fixtures for production, development and managed production. It verifies
 build/stop/migrate/start ordering, optional index refresh, and fail-closed migration,
 stop and build errors with preserved exit codes. It never starts real Docker or
 changes a database. Migration runner tests cover applied checksums and no-op runs.
+
+The SDK catalog tests validate model/folder management shapes, revision/name bounds
+and exact folder ancestry alongside archive registration compatibility.
