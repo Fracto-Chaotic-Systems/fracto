@@ -808,12 +808,54 @@ itself; the selected mode and child exit code are preserved. The root is pulled
 once, and any pull failure stops before service updates or image builds. Normal
 repository refresh remains fail-safe; divergence recovery requires the explicit
 updater option described above.
-Next it runs `node scripts/build_windows_image.js prod` (or `dev`),
+Before rebuilding, `cold_boot_preflight.js` invokes service-owned startup checks
+on the host and validates read-only Compose bind sources. Missing or invalid
+private configuration stops the boot before Docker recovery, builds or service
+stops; credentials are never guessed or printed. Services retain ownership of
+configuration contents and validation through their declared CLI tasks.
+
+For managed production, preflight also recovers incomplete upgrades using the
+recorded rollback command. It verifies the registered previous container's full
+ID, immutable image and original/recorded rollback name against the journal.
+Only a stopped failed-name occupant with journal-proven ownership may be renamed
+to a unique retained name. Ownership requires an exact ID/image pair, or the
+recorded Compose project/service labels plus candidate image. Names alone are
+insufficient. Known failed-name occupants are retained before a new upgrade too,
+so a later rollback has a free name. Recovery verifies that the original production
+ID is running and registration is restored before continuing. It deletes no
+containers, images or volumes; retain actions are logged to
+`cold-boot-recovery.jsonl` in the operation capture or `.fracto-managed` directory.
+Unknown/running conflicts, changed journals, missing identities and unsuccessful
+rollbacks stop cold boot with an actionable error. Development does not recover
+or start production automatically. A recovery lock prevents concurrent preflights;
+an interrupted lock requires inspection rather than being cleared speculatively.
+
+The installed host controller predates newer configuration mounts. Preflight
+backs it up and installs a syntax-checked adapter around its known `payload`
+factory; unsupported controller shapes fail before building. The versioned
+`managed_mounts.js` helper adds the resolved Compose read-only configuration
+binds to replacement payloads while preserving data volumes and runtime options.
+The AI-only rehearsal payload remains unchanged. Windows host sources are mapped
+through a verified existing Docker Desktop bind root; ambiguous paths or
+conflicting sources stop instead of silently replacing a mount. The generated
+`.fracto-managed/required-config-mounts.json` contains mount paths only, not
+configuration values. Both it and controller backups remain outside Git/images.
+This host preflight and adapter use Node built-ins only; they do not require the
+SDK or npm development packages to be installed on the lab host. Node validates
+the staged controller's syntax before its atomic replacement. Stopping already
+stopped managed production is a successful no-op after verifying its identity,
+so rerunning after migration failures does not introduce another stop failure.
+
+Next cold boot runs `node scripts/build_windows_image.js prod` (or `dev`),
 optionally `docker compose run --rm index-refresh`, then checks exclusivity and
 stops the selected application stack (via the controller for managed production).
-It runs `docker compose run --rm --no-deps --no-build database-init` with the newly
-built production image before starting or upgrading the application. This also
-applies in dev mode: its build produces the production maintenance image as well.
+It runs `docker compose run --rm --no-deps database-init` with the newly
+built production image before starting or upgrading the application. It
+uses only flags supported by `compose run`; `--no-build` belongs on `compose up`.
+The `database-init` service has only an image reference and no build target.
+Git checks out `cold_boot.bat` with CRLF endings so Windows batch failure labels
+remain reliable; its regression fixtures retain those endings.
+This also applies in dev mode: its build produces the production maintenance image as well.
 The existing initializer discovers root/service migrations, verifies recorded
 checksums, and applies only pending files under its database advisory lock. No
 pending changes is a successful no-op; an empty database follows the existing
@@ -860,6 +902,14 @@ also fail explicitly. Unsupported Compose build features such as secret mounts
 require updating the helper rather than being silently dropped.
 
 Run manually with `node scripts/build_windows_image.js prod` or `dev`.
+
+For managed production, image retention checks both the registered immutable
+image ID and the container name before rebuilding. This matches the installed
+controller's stop guard, catching a stale registration or renamed rollback
+container before an expensive build or image retag. Cold-boot preflight handles
+the supported journal-backed recovery first. The standalone builder never
+adopts or renames a container automatically.
+
 `test/docker_build_context.test.js` covers excluded secrets/runtime, binary and
 long-path archive contents, fresh source, Compose settings and failure cleanup.
 

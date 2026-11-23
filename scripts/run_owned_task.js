@@ -23,6 +23,14 @@ const registry = () =>
       );
     });
 
+export const declared_task_services = (name) => [
+  ...new Set(
+    registry()
+      .filter((item) => item.name === name)
+      .map((item) => item.service),
+  ),
+];
+
 /** Root orchestration invokes declared executables, never imports their implementation. */
 export async function run_declared_task(
   name,

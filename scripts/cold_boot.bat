@@ -33,6 +33,10 @@ echo [1/5] Refreshing the root and service repositories...
 call npm run update:repos
 if errorlevel 1 goto failed
 
+echo [1/5] Checking deployment configuration and managed recovery before rebuilding...
+node scripts\cold_boot_preflight.js %cold_boot_mode%
+if errorlevel 1 goto failed
+
 echo [2/5] Rebuilding the production image (this may take several minutes)...
 node scripts\write_build_info.js
 if errorlevel 1 goto failed
@@ -69,7 +73,7 @@ if errorlevel 1 goto failed
 
 :migrate_database
 echo Detecting and applying pending database migrations from the rebuilt image...
-docker compose run --rm --no-deps --no-build database-init
+docker compose run --rm --no-deps database-init
 if errorlevel 1 goto failed
 
 echo [5/5] Starting the %cold_boot_mode% server with Docker Compose...

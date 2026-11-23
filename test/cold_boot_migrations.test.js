@@ -10,9 +10,24 @@ const source = fs.readFileSync(
   "utf8",
 );
 
+test("cold boot uses CRLF so Windows can resolve early failure labels reliably", () => {
+  assert.doesNotMatch(source, /(?<!\r)\n/);
+  const attributes = fs.readFileSync(
+    new URL("../.gitattributes", import.meta.url),
+    "utf8",
+  );
+  assert.match(attributes, /^scripts\/cold_boot\.bat text eol=crlf\r?$/m);
+});
+
 function simulate(
   t,
-  { mode = "prod", managed = false, fail = "", refresh = false } = {},
+  {
+    mode = "prod",
+    managed = false,
+    fail = "",
+    refresh = false,
+    unsupported_run_flag = false,
+  } = {},
 ) {
   const directory = fs.mkdtempSync(
     path.join(os.tmpdir(), "fracto-boot-migrations-"),
@@ -43,6 +58,11 @@ function simulate(
 const fs = require('fs');
 const args = process.argv.slice(2);
 fs.appendFileSync(process.env.FRACTO_BOOT_TRACE, args.join(' ') + '\\n');
+// Unlike the former permissive stub, model Compose's command-specific flags.
+if (args[0] === 'docker' && args[1] === 'compose' && args[2] === 'run' && args.includes('--no-build')) {
+  console.error('unknown flag: --no-build');
+  process.exit(125);
+}
 const stage = args[0] === 'docker' && args.includes('database-init') ? 'migration'
   : args[0] === 'docker' && args.includes('stop') ? 'stop'
   : args[0] === 'managed' && args[1] === 'stop' ? 'stop'
@@ -58,7 +78,13 @@ process.exit(stage === process.env.FRACTO_BOOT_FAIL ? 41 : 0);
   // Every Docker call is replaced: this fixture cannot reach real containers.
   fs.writeFileSync(
     path.join(scripts, "cold_boot.bat"),
-    source
+    (unsupported_run_flag
+      ? source.replace(
+          "--rm --no-deps database-init",
+          "--rm --no-deps --no-build database-init",
+        )
+      : source
+    )
       .replaceAll("docker compose", `call "${docker}" compose`)
       .replace("call npm run update:repos", `call "${npm}" run update:repos`),
   );
@@ -69,6 +95,7 @@ process.exit(stage === process.env.FRACTO_BOOT_FAIL ? 41 : 0);
   for (const [name, label] of [
     ["write_build_info", "build-info"],
     ["build_windows_image", "build"],
+    ["cold_boot_preflight", "preflight"],
     ["windows_host_startup", "observer"],
     ["managed_production", "managed"],
   ]) {
@@ -113,7 +140,7 @@ process.exit(stage === process.env.FRACTO_BOOT_FAIL ? 41 : 0);
 test("cold boot uses the rebuilt Docker maintenance image for migration detection", () => {
   assert.match(
     source,
-    /docker compose run --rm --no-deps --no-build database-init\r?\nif errorlevel 1 goto failed/,
+    /docker compose run --rm --no-deps database-init\r?\nif errorlevel 1 goto failed/,
   );
   assert.ok(
     source.indexOf("build_windows_image.js") <
@@ -123,7 +150,37 @@ test("cold boot uses the rebuilt Docker maintenance image for migration detectio
     source,
     /npm run db:migrate|node scripts\\migrate_database/,
   );
+  assert.doesNotMatch(
+    source,
+    /docker compose[^\r\n]*\brun\b[^\r\n]*--(?:no-)?build/,
+  );
 });
+
+test("migration maintenance service uses the already-built image without a build target", () => {
+  const compose = fs.readFileSync(
+    new URL("../compose.yaml", import.meta.url),
+    "utf8",
+  );
+  const service = compose.match(
+    /^  database-init:\r?\n([\s\S]*?)(?=^  [a-z][\w-]*:|^volumes:)/m,
+  )?.[1];
+  assert.ok(service);
+  assert.match(service, /^    image: fracto:local\r?$/m);
+  assert.doesNotMatch(service, /^    build:/m);
+});
+
+test(
+  "the Compose fixture rejects unsupported run flags before application startup",
+  { skip: process.platform !== "win32" },
+  (t) => {
+    const result = simulate(t, { unsupported_run_flag: true });
+    assert.equal(result.status, 125, result.stdout + result.stderr);
+    assert.match(result.stderr, /unknown flag: --no-build/);
+    assert.ok(
+      !result.steps.some((step) => /\bup\b|managed upgrade/.test(step)),
+    );
+  },
+);
 
 for (const options of [
   { mode: "prod" },
@@ -140,12 +197,16 @@ for (const options of [
       const steps = result.steps;
       const stop = steps.findIndex((step) => /\bstop\b/.test(step));
       const migration = steps.indexOf(
-        "docker compose run --rm --no-deps --no-build database-init",
+        "docker compose run --rm --no-deps database-init",
       );
       const start = steps.findIndex((step) =>
         /\bup\b|managed upgrade/.test(step),
       );
       assert.ok(steps.indexOf(`build ${options.mode}`) < stop);
+      assert.ok(
+        steps.indexOf(`preflight ${options.mode}`) <
+          steps.indexOf(`build ${options.mode}`),
+      );
       assert.ok(
         stop >= 0 && migration > stop && start > migration,
         steps.join("\n"),
@@ -181,7 +242,7 @@ for (const options of [
   );
 }
 
-for (const fail of ["build", "stop"]) {
+for (const fail of ["preflight", "build", "stop"]) {
   test(
     `${fail} failure prevents migration execution and application start`,
     { skip: process.platform !== "win32" },
@@ -191,6 +252,12 @@ for (const fail of ["build", "stop"]) {
       assert.ok(
         !result.steps.some((step) => /database-init|\bup\b/.test(step)),
       );
+      if (fail === "preflight")
+        assert.ok(
+          !result.steps.some((step) =>
+            /^(build |exclusive |managed stop)/.test(step),
+          ),
+        );
     },
   );
 }

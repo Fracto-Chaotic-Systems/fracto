@@ -52,7 +52,24 @@ export function bounded_unzip(data, unzip) {
   });
 }
 
-export function expand_asset_files(files, unzip) {
+export function asset_model_paths(entries, { allow_empty = false } = {}) {
+  const models = entries
+    .filter((file) => MODEL_FORMATS.includes(asset_format(file.path)))
+    .map((file) => asset_relative_path(file.path))
+    .sort(
+      (a, b) =>
+        MODEL_FORMATS.indexOf(asset_format(a)) -
+          MODEL_FORMATS.indexOf(asset_format(b)) || a.localeCompare(b),
+    );
+  if (!models.length && !allow_empty) fail("no_model");
+  return models;
+}
+
+export function expand_asset_files(
+  files,
+  unzip,
+  { allow_no_model = false } = {},
+) {
   const entries = [],
     names = new Set();
   let total = 0;
@@ -80,14 +97,6 @@ export function expand_asset_files(files, unzip) {
   };
   for (const file of files)
     add(`source/files/${asset_relative_path(file.path)}`, file.data, true, 0);
-  const models = entries
-    .filter((file) => MODEL_FORMATS.includes(asset_format(file.path)))
-    .map((file) => file.path)
-    .sort(
-      (a, b) =>
-        MODEL_FORMATS.indexOf(asset_format(a)) -
-          MODEL_FORMATS.indexOf(asset_format(b)) || a.localeCompare(b),
-    );
-  if (!models.length) fail("no_model");
+  const models = asset_model_paths(entries, { allow_empty: allow_no_model });
   return { entries, models };
 }

@@ -150,23 +150,39 @@ test('cold boot uses archive builds and prevents Compose from implicitly rebuild
 test('managed rebuild retains and verifies the exact active image before replacing its tag', t => {
    const {root, write} = fixture(t)
    const id = 'a'.repeat(64), image = 'sha256:' + 'b'.repeat(64)
-   write('.fracto-production.json', JSON.stringify({schema_version: 1, current: {container_id: id, image_id: image}}))
+   write('.fracto-production.json', JSON.stringify({schema_version: 1, current: {container_id: id, image_id: image, name: 'fracto-production'}}))
    const calls = []
-   const run_sync = (exe, args) => { calls.push(args); return {status: 0, stdout: image} }
+   const run_sync = (exe, args) => { calls.push(args); return {status: 0, stdout: args.includes('{{.Name}}') ? '/fracto-production' : image} }
    assert.equal(retain_managed_image({root, run_sync, log() {}}), 'fracto:retained-' + 'b'.repeat(64))
-   assert.deepEqual(calls[2], ['image', 'tag', image, 'fracto:retained-' + 'b'.repeat(64)])
-   assert.deepEqual(calls[3], ['image', 'inspect', '--format', '{{.Id}}', 'fracto:retained-' + 'b'.repeat(64)])
+   assert.deepEqual(calls[1], ['container', 'inspect', '--format', '{{.Name}}', id])
+   assert.deepEqual(calls[3], ['image', 'tag', image, 'fracto:retained-' + 'b'.repeat(64)])
+   assert.deepEqual(calls[4], ['image', 'inspect', '--format', '{{.Id}}', 'fracto:retained-' + 'b'.repeat(64)])
 })
 
 test('missing managed image or changed container identity prevents build execution', async t => {
    const {root, write} = fixture(t)
    const image = 'sha256:' + 'b'.repeat(64)
-   write('.fracto-production.json', JSON.stringify({schema_version: 1, current: {container_id: 'a'.repeat(64), image_id: image}}))
+   write('.fracto-production.json', JSON.stringify({schema_version: 1, current: {container_id: 'a'.repeat(64), image_id: image, name: 'fracto-production'}}))
    for (const missing of [false, true]) {
       let built = false
       const run_sync = (exe, args) => args[0] === 'compose' ? {status: 0, stdout: JSON.stringify(configuration(root))} :
-         args[0] === 'container' ? {status: 0, stdout: missing ? image : 'sha256:' + 'c'.repeat(64)} : {status: 1, stdout: ''}
+         args[0] === 'container' ? {status: 0, stdout: args.includes('{{.Name}}') ? '/fracto-production' : missing ? image : 'sha256:' + 'c'.repeat(64)} : {status: 1, stdout: ''}
       await assert.rejects(build_windows_image({root, run_sync, log() {}, run_build: async () => {built = true}}), /refusing image rebuild|restore its retained archive/)
       assert.equal(built, false)
    }
+})
+
+test('renamed retained production is rejected before image tags or builds change', async t => {
+   const {root, write} = fixture(t)
+   const image = 'sha256:' + 'b'.repeat(64)
+   write('.fracto-production.json', JSON.stringify({schema_version: 1, current: {container_id: 'a'.repeat(64), image_id: image, name: 'fracto-production'}}))
+   const calls = []
+   let built = false
+   const run_sync = (exe, args) => {
+      calls.push(args)
+      return {status: 0, stdout: args[0] === 'compose' ? JSON.stringify(configuration(root)) : args.includes('{{.Name}}') ? '/fracto-production-rollback-retained' : image}
+   }
+   await assert.rejects(build_windows_image({root, run_sync, log() {}, run_build: async () => {built = true}}), /container name changed; refusing image rebuild/)
+   assert.equal(built, false)
+   assert.equal(calls.some(args => args[0] === 'image'), false)
 })

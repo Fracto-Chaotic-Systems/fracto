@@ -138,6 +138,23 @@ not existing MySQL tables or live deployment configuration.
 source snapshots, Docker ignore exclusions, binary/long-path tar entries, resolved
 Compose image/target/argument settings, development builds and temporary cleanup
 on success/failure. It uses temporary fixtures and simulated Docker calls.
+Managed image-retention checks cover unchanged immutable identities, missing
+images and renamed retained containers; name mismatches must fail before any
+image tag or build is changed.
+
+`managed_recovery.test.js` reproduces the stopped rollback container, failed
+candidate and older failed-name occupant that caused Docker 409 on the lab.
+It verifies journal-backed retention, controller rollback, identity checks,
+retry/idempotence, proactive name reservation, concurrent metadata changes and
+refusal of unknown/running containers. Fixtures never invoke real Docker.
+`managed_mounts.test.js` covers Docker Desktop path mapping and missing config
+binds, preservation of existing volumes/options, conflicting targets and the
+guarded controller adapter with a retained source backup. It executes the adapted
+fixture and checks that AI-only rehearsal mounts stay isolated.
+`cold_boot_preflight.test.js` verifies service-owned configuration failures and
+missing directories stop before recovery/build/stop, with repeatable managed
+contract generation. These suites run in the root test command. Windows batch
+fixtures additionally verify preflight order and failure propagation.
 
 `startup_benchmark.test.js` covers Windows bootstrap selection/failure isolation,
 automatic entrypoint hooks and process startup markers. The AI repository's
@@ -262,3 +279,7 @@ changes a database. Migration runner tests cover applied checksums and no-op run
 
 The SDK catalog tests validate model/folder management shapes, revision/name bounds
 and exact folder ancestry alongside archive registration compatibility.
+
+The cold-boot Compose fixture rejects unsupported run --no-build flags and tests
+that rejection. It also verifies the migration service references the existing
+image without declaring a build target.

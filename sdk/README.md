@@ -310,3 +310,5 @@ edits may omit it to preserve existing organization, or send empty to clear it.
 FractoModelManagement.js defines bounded tree management requests and exact
 folder-prefix matching. Model rename/archive extend the revision-checked catalog
 edit and registration allowlists; resource paths and permanent IDs remain stable.
+
+Archive callers may defer the no-model error with expand_asset_files(..., {allow_no_model:true}) while another service-owned codec runs. asset_model_paths applies the same safe-path and model-format ordering after expansion. Default ZIP/folder expansion remains strict.

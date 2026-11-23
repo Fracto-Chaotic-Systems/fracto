@@ -35,7 +35,7 @@ export const retain_managed_image = ({root, run_sync = spawnSync, log = console.
    if (!fs.existsSync(file)) return null
    const registry = JSON.parse(fs.readFileSync(file, 'utf8'))
    const current = registry.current
-   if (registry.schema_version !== 1 || !/^[a-f0-9]{64}$/.test(current?.container_id || '') || !/^sha256:[a-f0-9]{64}$/.test(current?.image_id || ''))
+   if (registry.schema_version !== 1 || !/^[a-f0-9]{64}$/.test(current?.container_id || '') || !/^sha256:[a-f0-9]{64}$/.test(current?.image_id || '') || !/^[a-zA-Z0-9][a-zA-Z0-9_.-]*$/.test(current?.name || ''))
       throw new Error('Invalid managed production identity; refusing image rebuild')
    const run = args => {
       const result = run_sync('docker', args, {cwd: root, encoding: 'utf8', timeout: 30000})
@@ -44,6 +44,8 @@ export const retain_managed_image = ({root, run_sync = spawnSync, log = console.
    }
    if (run(['container', 'inspect', '--format', '{{.Image}}', current.container_id]) !== current.image_id)
       throw new Error('Managed production identity changed; refusing image rebuild')
+   if (run(['container', 'inspect', '--format', '{{.Name}}', current.container_id]) !== '/' + current.name)
+      throw new Error('Managed production container name changed; refusing image rebuild. Compare .fracto-production.json with Docker and the retained upgrade journal before retrying.')
    if (run(['image', 'inspect', '--format', '{{.Id}}', current.image_id]) !== current.image_id)
       throw new Error('Managed production image identity changed; refusing image rebuild')
    const tag = 'fracto:retained-' + current.image_id.slice(7)
