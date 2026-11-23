@@ -253,3 +253,9 @@ listener/process/HTTP providers and a recording stop function. Tests never stop
 real processes or change networking. Windows cases cover prod/dev stale relays,
 healthy relays, unrelated/shared processes, identity and listener races, unavailable
 IPv4 and failure to recover localhost. A portable check verifies both cold-boot paths.
+
+`cold_boot_migrations.test.js` executes the Windows batch flow against disposable
+command fixtures for production, development and managed production. It verifies
+build/stop/migrate/start ordering, optional index refresh, and fail-closed migration,
+stop and build errors with preserved exit codes. It never starts real Docker or
+changes a database. Migration runner tests cover applied checksums and no-op runs.

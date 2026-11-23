@@ -13,7 +13,7 @@ exit /b 2
 :mode_valid
 
 if /I not "%~2"=="--root-updated" (
-  echo [1/4] Pulling the root repository before running the updater...
+  echo [1/5] Pulling the root repository before running the updater...
   git pull --ff-only
   if errorlevel 1 goto failed
   rem Parse this entire block before Git can replace the batch file.
@@ -29,17 +29,17 @@ exit /b %ERRORLEVEL%
 
 :repositories_ready
 
-echo [1/4] Refreshing the root and service repositories...
+echo [1/5] Refreshing the root and service repositories...
 call npm run update:repos
 if errorlevel 1 goto failed
 
-echo [2/4] Rebuilding the production image (this may take several minutes)...
+echo [2/5] Rebuilding the production image (this may take several minutes)...
 node scripts\write_build_info.js
 if errorlevel 1 goto failed
 node scripts\build_windows_image.js %cold_boot_mode%
 if errorlevel 1 goto failed
 
-echo [3/4] Tile-index refresh is optional and can take about an hour.
+echo [3/5] Tile-index refresh is optional and can take about an hour.
 set "refresh_tiles="
 set /p "refresh_tiles=Refresh the compiled tile index now? [y/N] "
 if /I not "%refresh_tiles%"=="Y" goto start_production
@@ -49,9 +49,30 @@ docker compose run --rm index-refresh
 if errorlevel 1 goto failed
 
 :start_production
-echo [4/4] Starting the %cold_boot_mode% server with Docker Compose...
+echo [4/5] Stopping the application before checking database migrations...
 call scripts\ensure_exclusive.bat %cold_boot_mode%
 if errorlevel 1 goto failed
+if /I "%cold_boot_mode%"=="dev" goto stop_dev
+if exist ".fracto-production.json" goto stop_managed
+docker compose stop fracto
+if errorlevel 1 goto failed
+goto migrate_database
+
+:stop_dev
+docker compose -f compose.yaml -f compose.dev.yaml stop fracto-dev
+if errorlevel 1 goto failed
+goto migrate_database
+
+:stop_managed
+node scripts\managed_production.js stop
+if errorlevel 1 goto failed
+
+:migrate_database
+echo Detecting and applying pending database migrations from the rebuilt image...
+docker compose run --rm --no-deps --no-build database-init
+if errorlevel 1 goto failed
+
+echo [5/5] Starting the %cold_boot_mode% server with Docker Compose...
 if /I "%cold_boot_mode%"=="dev" goto start_dev
 node scripts\windows_host_startup.js --port 3001
 if exist ".fracto-production.json" goto start_managed

@@ -386,8 +386,11 @@ failures stop the workflow before loading the updater or starting a build.
 It then rebuilds the production image,
 optionally refreshes the cloud-backed tile index, and finally runs `docker compose
 up -d fracto`. The script asks `Refresh the compiled tile index now? [y/N]`; Enter
-or any answer other than `Y` skips the refresh. It does not initialize/reset
-MySQL, migrate legacy tiles, or remove named volumes. The index refresh can take
+or any answer other than `Y` skips the refresh. Before starting the application,
+it stops the selected stack and runs the rebuilt Docker database-init maintenance
+service to detect and apply pending migrations. Applied checksums are verified;
+an up-to-date database is unchanged. Migration failure prevents startup. Empty
+databases use the existing bootstrap path; named volumes are preserved. The index refresh can take
 about an hour; an existing published generation remains available until the
 replacement completes.
 The repository refresh permits the known local IntelliJ metadata change in

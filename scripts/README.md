@@ -809,10 +809,19 @@ once, and any pull failure stops before service updates or image builds. Normal
 repository refresh remains fail-safe; divergence recovery requires the explicit
 updater option described above.
 Next it runs `node scripts/build_windows_image.js prod` (or `dev`),
-optionally `docker compose run --rm index-refresh`, and finally
-`docker compose up -d --no-build fracto` (or the development `fracto-dev` target when
-`dev` is passed), in that order. It does not initialize/reset
-MySQL, migrate legacy tiles, or delete named volumes. If a stage fails, correct
+optionally `docker compose run --rm index-refresh`, then checks exclusivity and
+stops the selected application stack (via the controller for managed production).
+It runs `docker compose run --rm --no-deps --no-build database-init` with the newly
+built production image before starting or upgrading the application. This also
+applies in dev mode: its build produces the production maintenance image as well.
+The existing initializer discovers root/service migrations, verifies recorded
+checksums, and applies only pending files under its database advisory lock. No
+pending changes is a successful no-op; an empty database follows the existing
+bootstrap path. Failure stops cold boot, preserves the command exit code and
+leaves the application stopped. No host SDK/npm database dependencies are needed.
+Finally it runs `docker compose up -d --no-build fracto` (or `fracto-dev`, or the
+managed upgrade controller). It does not reset tables, migrate legacy tiles, or
+delete named volumes. If a stage fails, correct
 the issue and rerun the script; the existing published tile-index generation
 remains available until a replacement completes. Tile refresh is opt-in: pressing
 Enter or answering anything other than `Y` skips it and starts production with the
