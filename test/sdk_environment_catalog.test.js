@@ -2,6 +2,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   environment_registration,
+  normalize_model_folder,
+  validate_catalog_edit,
+  CATALOG_FIELDS,
   validate_environment_registration,
 } from "@fracto/sdk/FractoEnvironmentCatalog.js";
 
@@ -85,5 +88,42 @@ test("shared registration retains construction category independently of descrip
         "a".repeat(64),
       ),
     /invalid_record/,
+  );
+});
+
+test("logical folder paths are portable and reject filesystem-like traversal", () => {
+  assert.equal(normalize_model_folder(), "");
+  assert.equal(
+    normalize_model_folder(" Vegetation / Grasses "),
+    "Vegetation/Grasses",
+  );
+  for (const value of [
+    "../escape",
+    "/absolute",
+    "C:/private",
+    "a//b",
+    "a/./b",
+    "a/../b",
+    "a".repeat(65),
+    Array(9).fill("a").join("/"),
+    "a" + String.fromCharCode(92) + "b",
+    "a" + String.fromCharCode(0) + "b",
+    null,
+    [],
+  ])
+    assert.throws(() => normalize_model_folder(value), /invalid_folder/);
+  const body = {
+    revision: "a".repeat(64),
+    attribution: Object.fromEntries(CATALOG_FIELDS.map((key) => [key, null])),
+    note: "",
+  };
+  assert.equal(
+    validate_catalog_edit({ ...body, folder_path: "Vegetation/Grasses" })
+      .folder_path,
+    "Vegetation/Grasses",
+  );
+  assert.equal(
+    Object.hasOwn(validate_catalog_edit(body), "folder_path"),
+    false,
   );
 });

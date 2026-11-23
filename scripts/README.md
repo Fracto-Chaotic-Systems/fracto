@@ -1070,3 +1070,28 @@ Application maintenance wrappers launch the owning service’s `fracto.commands`
 executable through `run_owned_task.js`, with its declared prerequisites and cwd.
 The root never imports the command implementation. `configure_environment.js`
 translates root-owned platform configuration into environment settings at launch.
+
+
+## Windows localhost relay recovery
+
+After starting Docker, cold_boot.bat runs clear_stale_wsl_relays.ps1 in the
+selected prod/dev mode, including managed production. This dependency-free host
+check covers HTTP ports 3001–3007 or 3101–3107. It compares bounded IPv4 and IPv6
+HTTP probes only where Docker owns the underlying listener. Two consecutive
+IPv4 responses with stalled IPv6 identify the stale-localhost condition.
+
+Only a genuine wslrelay executable in the Windows/WSL installation directories
+can be stopped, and all its listeners must be loopback Fracto HTTP ports. Healthy
+relays, other processes and relays serving unrelated ports are never stopped.
+Identity, process start time and listener scope are rechecked immediately before
+stopping; Windows settings, WSL distributions and Docker are never restarted.
+Unknown/shared relay scope fails visibly without stopping it. A failed check
+leaves containers running for inspection and returns nonzero to cold boot.
+
+When a candidate relay exists but services are starting, the check waits up to
+300 seconds by default. Each HTTP probe has a 1.5-second deadline. After removal,
+localhost must respond before recovery is reported. No candidate means no wait.
+To run it manually: powershell.exe -NoProfile -ExecutionPolicy Bypass -File
+scripts/clear_stale_wsl_relays.ps1 -Mode dev. Optional WaitSeconds (0–600) and
+ProbeTimeoutMs (100–10000) bound diagnostics. Permission failures are reported;
+the script never tries to elevate itself.

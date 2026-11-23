@@ -246,3 +246,10 @@ no generation retries or fallback, model digest guards, cancellation and revocat
 peer exchange/delegation readiness on temporary ports and storage. HTTP startup
 and peer startup each have a separate 60-second budget for cold parallel builds,
 with bounded HTTP requests. Missing `.env` is allowed; no engine/model is needed.
+
+
+wsl_relay_repair.test.js runs the actual PowerShell repair logic with isolated
+listener/process/HTTP providers and a recording stop function. Tests never stop
+real processes or change networking. Windows cases cover prod/dev stale relays,
+healthy relays, unrelated/shared processes, identity and listener races, unavailable
+IPv4 and failure to recover localhost. A portable check verifies both cold-boot paths.

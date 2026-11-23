@@ -371,6 +371,15 @@ supervisor shutdown after an earlier failure. Inspect the preceding error with
 `docker compose -f compose.yaml -f compose.dev.yaml logs --tail=150 fracto-dev`.
 Service errors are printed to the terminal and retained in the service's log file.
 
+After Docker starts, cold boot checks for stale WSL localhost relays on the
+selected Fracto HTTP ports. It clears only verified WSL relays serving Fracto
+loopback ports when Docker responds over IPv4 and IPv6 repeatedly stalls.
+Healthy relays and unrelated listeners are left untouched. The check may wait
+for services to start (up to five minutes when a relay needs inspection), then
+verifies localhost recovery before reporting completion. It does not restart Docker,
+shut down WSL or change Windows networking settings. See
+[the relay recovery helper](scripts/README.md#windows-localhost-relay-recovery).
+
 This first runs `git pull --ff-only` for the root checkout and reloads the updated
 batch file, then runs the coordinated root/service repository updater. Root pull
 failures stop the workflow before loading the updater or starting a build.

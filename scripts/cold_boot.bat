@@ -64,6 +64,8 @@ goto stream_logs
 :start_managed
 node scripts\managed_production.js upgrade
 if errorlevel 1 goto failed
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\clear_stale_wsl_relays.ps1 -Mode %cold_boot_mode%
+if errorlevel 1 goto failed
 echo Managed production is running; prior containers and backups are retained.
 node scripts\managed_production.js logs
 popd
@@ -77,6 +79,9 @@ set "cold_boot_log_service=fracto-dev"
 set "cold_boot_log_compose=docker compose -f compose.yaml -f compose.dev.yaml"
 
 :stream_logs
+echo Checking Fracto localhost routing for stale WSL relays...
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\clear_stale_wsl_relays.ps1 -Mode %cold_boot_mode%
+if errorlevel 1 goto failed
 if /I "%cold_boot_mode%"=="dev" (set "cold_boot_url=http://localhost:3106") else (set "cold_boot_url=http://localhost:3006")
 echo Cold boot complete. %cold_boot_mode% is running on %cold_boot_url%.
 echo Streaming Docker logs; press Ctrl+C to stop viewing logs (the server stays running).

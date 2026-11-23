@@ -1,4 +1,28 @@
 // Pure contracts shared by asset storage and database services. No I/O or SQL.
+export function normalize_model_folder(value = "") {
+  if (
+    typeof value !== "string" ||
+    value.length > 512 ||
+    value.includes(":") ||
+    value.includes(String.fromCharCode(92)) ||
+    [...value].some(
+      (char) => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127,
+    )
+  )
+    fail("invalid_folder");
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  const parts = trimmed.split("/").map((part) => part.trim());
+  if (
+    parts.length > 8 ||
+    parts.some(
+      (part) => !part || part === "." || part === ".." || part.length > 64,
+    )
+  )
+    fail("invalid_folder");
+  return parts.join("/");
+}
+
 export const MODEL_CATEGORY_DIRECTORIES = {
   material: "ingredients",
   component: "composites",
@@ -33,6 +57,7 @@ export function validate_model_asset_page(page, category) {
   )
     fail();
   for (const asset of page.assets) {
+    if (asset) normalize_model_folder(asset.folder_path);
     if (
       !asset ||
       !id(asset.id) ||
@@ -76,6 +101,7 @@ export function catalog_view(record) {
     version: record.version,
     name: record.name,
     description: record.description,
+    folder_path: normalize_model_folder(record.folder_path),
     attribution: Object.fromEntries(
       ["status", ...CATALOG_FIELDS].map((field) => [
         field,
@@ -100,7 +126,8 @@ export function validate_catalog_edit(body) {
   if (
     !body ||
     Object.keys(body).some(
-      (key) => !["revision", "attribution", "note"].includes(key),
+      (key) =>
+        !["revision", "attribution", "note", "folder_path"].includes(key),
     ) ||
     !/^[a-f0-9]{64}$/.test(body.revision) ||
     !body.attribution ||
@@ -129,7 +156,13 @@ export function validate_catalog_edit(body) {
       }
     }
   }
-  return { attribution, note: body.note.trim() };
+  return {
+    attribution,
+    note: body.note.trim(),
+    ...(Object.hasOwn(body, "folder_path")
+      ? { folder_path: normalize_model_folder(body.folder_path) }
+      : {}),
+  };
 }
 
 // Do not transmit source machine paths or arbitrary record extensions.
@@ -173,6 +206,7 @@ export function validate_environment_registration(body) {
       "version",
       "name",
       "description",
+      "folder_path",
       "category",
       "model_category",
       "parent_id",
@@ -219,6 +253,7 @@ export function validate_environment_registration(body) {
     )
   )
     fail();
+  normalize_model_folder(record.folder_path);
   validate_catalog_edit({
     revision: body.revision,
     attribution: Object.fromEntries(

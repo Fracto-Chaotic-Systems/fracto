@@ -298,3 +298,11 @@ The environment contract includes model categories material/component/area,
 relative library tier names and validated paginated asset summaries. Construction
 category (`model_category`) is separate from descriptive `category`. Legacy
 registrations omit it and default to material; shared helpers perform no I/O.
+
+
+Logical model folder paths use the shared normalize_model_folder validator:
+empty for the category root, slash-delimited canonical names, up to eight levels,
+64 characters per name and 512 overall. Traversal, absolute paths, empty segments,
+colons, backslashes and control characters are rejected. Catalog views and model
+summaries carry folder_path; legacy records without it remain at the root. Catalog
+edits may omit it to preserve existing organization, or send empty to clear it.
