@@ -1,5 +1,17 @@
 # Fracto SDK
 
+`FractoPathMotion.js` owns renderer/model/page-independent planar-XZ path motion.
+Its strict `polyline-ping-pong-v1` description contains metre-space points,
+speed in metres per second, acceleration/deceleration ramp time, endpoint pause
+and half-turn duration. `create_path_motion_controller` keeps its own supplied
+seconds clock and returns position, heading, phase and instantaneous speed.
+Travel eases to zero at each end, pauses, rotates 180° in place with zero angular
+speed at either end of the turn, and resumes in reverse. Short paths use triangular
+speed ramps. Intermediate polyline corners preserve position but change tangent
+immediately; rounded corners are not part of v1. Models and component clip clocks
+are never read or mutated. Callers pause by withholding `advance`; `sample` and
+`reset` allow deterministic seeking and fast full-cycle verification.
+
 Component documents optionally store `lighting: {direction_degrees, intensity}`.
 Direction is a finite azimuth from 0–360 degrees; intensity is a finite Three.js
 directional-light strength from 0.25–6, matching the materials viewer. New documents

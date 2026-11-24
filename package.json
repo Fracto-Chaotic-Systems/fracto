@@ -15,6 +15,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
+    "test:path-motion": "node --test test/sdk_path_motion.test.js servers/fracto-ui/test/games_play_grass.test.js",
     "test:construction-evaluation": "node --test --test-concurrency=2 servers/fracto-ai-server/construction/evaluation.test.js servers/fracto-ai-server/construction/wooded_path.test.js servers/fracto-ai-server/construction/dense_grass_strip.test.js servers/fracto-ui/test/component_build_evaluation.test.js servers/fracto-ui/test/component_planner_hook.test.js servers/fracto-data-server/tests/component_documents.test.js servers/fracto-asset-server/test/construction_resources.test.js",
     "test:construction-planner": "node --test --test-concurrency=2 servers/fracto-ai-server/construction.test.js servers/fracto-ai-server/construction/browser.test.js servers/fracto-ui/test/component_proposal.test.js servers/fracto-ui/test/component_planner_hook.test.js servers/fracto-ui/test/component_planner_proxy.test.js servers/fracto-ui/test/component_document_state.test.js servers/fracto-ui/test/component_memory_store.test.js servers/fracto-ui/test/component_memory_controls.test.js test/sdk_construction_memory.test.js test/sdk_component_document.test.js test/sdk_component_tools.test.js",
     "test:construction": "node --test test/sdk_component_tools.test.js test/sdk_component_document.test.js servers/fracto-ui/test/component_stage_content.test.js servers/fracto-ui/test/component_document_state.test.js servers/fracto-asset-server/test/material_search.test.js",

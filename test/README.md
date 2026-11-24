@@ -1,5 +1,9 @@
 # Fracto tests
 
+`sdk_path_motion.test.js` checks independently authored paths, eased stops,
+stationary pauses/half-turns, reverse travel, repeat boundaries, clock isolation,
+short-path ramps, multi-segment sampling and strict description validation.
+
 `sdk_component_tools.test.js` checks atomic command/history batches, calibrated
 references, seeded footprint exclusions, resource allowlists and rejection paths.
 
