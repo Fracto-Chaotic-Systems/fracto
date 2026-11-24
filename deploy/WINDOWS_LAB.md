@@ -66,6 +66,7 @@ container.
    Do not create a new `nginx.conf` under the Fracto repository. Nginx uses the
    configuration beneath its own installation directory unless started with
    an explicit prefix or configuration path.
+
 3. From the Nginx installation directory, validate the full configuration:
 
    ```powershell
@@ -101,6 +102,79 @@ network policy. This HTTP, authentication-bypass profile is intended only for
 a trusted, isolated development network.
 
 ## Verify access
+
+### Published Play background
+
+Deploy the updated asset service, its complete
+`components/published/grass-strip/d8e227c70918a9be7a1db2ba1f7f759de1ae7d8a9e9cd0d9c79bbf7df326716c/`
+directory, and the matching UI build. The UI pins this release in
+`GamesPlayGrassRelease.js`. The existing `/api/asset/` Nginx route serves it:
+
+```text
+http://LAB-HOST:3000/api/asset/component-runtime/grass-strip/d8e227c70918a9be7a1db2ba1f7f759de1ae7d8a9e9cd0d9c79bbf7df326716c/manifest.json
+http://LAB-HOST:3000/motions/slow-strip-patrol.json
+```
+
+Play loads the component snapshot, calibrated materials and files from this
+immutable package. No component-table row, authoring catalog reconciliation or
+compatibility API location is required for background playback. A missing package
+is a deployment error, not a reason to restore an authoring record. There is no
+database/catalog fallback. The first load downloads about 62 MB of assets, which
+then receive immutable browser caching. Editing an authoring scene has no effect
+until an accepted revision is published and the consuming UI binding is updated.
+See the asset service's `components/README.md` for explicit publication commands.
+
+### Authoring editor routes and records (separate from playback)
+
+Pulling Git repositories does not copy authored component rows between databases.
+The component editor needs its saved component, registered material pins and
+the UI compatibility proxy routes. These are authoring dependencies only.
+
+Check these URLs through the lab origin (replace `LAB-HOST`):
+
+```text
+http://LAB-HOST:3000/motions/slow-strip-patrol.json
+http://LAB-HOST:3000/api/component-documents/0bb37175-0459-49bf-b5fc-f918bf090563
+http://LAB-HOST:3000/api/environment-catalog/animated-grass/construction
+```
+
+An Nginx HTML 404 for the last two indicates an outdated installed proxy profile,
+not a missing database table. Compare the installed server block with
+`nginx/fracto-lab.conf.example`; preserve the host's other custom configuration.
+These locations must be inside the active `server` block, forwarding their full
+paths to the UI's transport proxies:
+
+```nginx
+location ^~ /api/component-documents {
+    client_max_body_size 1m;
+    proxy_pass http://127.0.0.1:3006;
+}
+location ^~ /api/environment-catalog {
+    client_max_body_size 128m;
+    proxy_request_buffering off;
+    proxy_read_timeout 180s;
+    proxy_pass http://127.0.0.1:3006;
+}
+```
+
+Run `nginx.exe -t` from the actual Nginx installation before `nginx.exe -s reload`.
+Editing the repository example alone does not change the running proxy.
+
+The direct service route `/api/data/component-documents/ID` distinguishes missing
+data from the blocked UI route: JSON `component_not_found` means the component
+row is absent; a 503 is a service/database failure and must not be treated as an
+empty database. Once the operator authorizes importing the accepted grass base into the editor,
+the data-owned command below can restore it through that working route:
+
+```powershell
+node servers/fracto-data-server/components/restore_blueprint.js --blueprint grass-strip --endpoint http://LAB-HOST:3000/api/data/component-documents
+```
+
+It verifies the checked-in snapshot hash, creates only an absent component with
+`expected_revision:0`, and checks exact save/reopen. Existing lab edits are never
+overwritten. The destination gets its own revision 1; source revision 17 is not
+a globally shared database counter. Variant previews require an explicit rebase
+to that destination revision. This command does not change Nginx or material files.
 
 On the Windows host, test the UI and one routed API:
 

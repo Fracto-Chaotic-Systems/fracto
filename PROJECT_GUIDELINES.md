@@ -61,6 +61,13 @@ in the README for that feature or service.
 
 ## Component and state ownership
 
+- Gameplay consumes explicitly published, immutable component packages with all
+  calibrated material dependencies and required resource files. Runtime playback
+  must not query or fall back to authoring component tables/catalog APIs. Editing
+  and saving a component does not change a published game release; publication and
+  the consuming game's release binding are separate, deliberate steps. Keep path
+  descriptions and their reusable operation separate from model data and pages.
+
 - Construct game components collaboratively with the coding assistant and keep
   a construction description current with each accepted change. Data-owned
   `servers/fracto-data-server/components/blueprints/` contains the descriptions,

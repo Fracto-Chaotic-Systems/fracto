@@ -1,5 +1,8 @@
 # Fracto tests
 
+`sdk_component_runtime.test.js` checks the published runtime transport contract,
+canonical release identity, complete dependency closure and safe resource paths.
+
 `sdk_path_motion.test.js` checks independently authored paths, eased stops,
 stationary pauses/half-turns, reverse travel, repeat boundaries, clock isolation,
 short-path ramps, multi-segment sampling and strict description validation.

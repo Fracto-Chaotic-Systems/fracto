@@ -1,5 +1,13 @@
 # Fracto SDK
 
+`FractoComponentRuntime.js` validates immutable published scene packages: an
+accepted component snapshot, exact calibrated material pins, bounded resource
+paths, file byte counts/hashes and an attribution notice. Authoring descriptions
+and full catalog records are excluded. Every reference must resolve within the
+package; traversal, undeclared/unreferenced files and external resource paths are
+rejected. Canonical manifest bytes define the release digest. The SDK owns no
+publishing storage, HTTP endpoints or database connections.
+
 `FractoPathMotion.js` owns renderer/model/page-independent planar-XZ path motion.
 Its strict `polyline-ping-pong-v1` description contains metre-space points,
 speed in metres per second, acceleration/deceleration ramp time, endpoint pause
