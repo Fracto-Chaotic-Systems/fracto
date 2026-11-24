@@ -1,5 +1,17 @@
 # Fracto tests
 
+`sdk_component_tools.test.js` checks atomic command/history batches, calibrated
+references, seeded footprint exclusions, resource allowlists and rejection paths.
+
+`sdk_material_search.test.js` covers explicit unknown placement facts, dimensions/
+unit/axis validation, bounded lexical search/filtering/pagination and safe material
+projections. Root `npm run test:materials` also runs owning asset/UI tests.
+
+`sdk_component_document.test.js` verifies complete component document roundtrips,
+strict bounds/references/allowlists, batch undo/redo, branch invalidation and the
+100-edit history bound. `npm run test:components` also runs the owning UI/data
+service tests through their declared npm SDK interface and HTTP contracts.
+
 `service_startup_checks.test.js` launches root preflight against isolated service
 manifests and real declared checker processes. A failed checker must stop before
 database checks; successful and absent optional checks allow preflight to continue.
@@ -264,7 +276,6 @@ peer exchange/delegation readiness on temporary ports and storage. HTTP startup
 and peer startup each have a separate 60-second budget for cold parallel builds,
 with bounded HTTP requests. Missing `.env` is allowed; no engine/model is needed.
 
-
 wsl_relay_repair.test.js runs the actual PowerShell repair logic with isolated
 listener/process/HTTP providers and a recording stop function. Tests never stop
 real processes or change networking. Windows cases cover prod/dev stale relays,
@@ -283,3 +294,44 @@ and exact folder ancestry alongside archive registration compatibility.
 The cold-boot Compose fixture rejects unsupported run --no-build flags and tests
 that rejection. It also verifies the migration service references the existing
 image without declaring a build target.
+
+`npm run test:construction-planner` runs AI-owned synthetic planner/HTTP tests
+alongside shared component document/tool contracts. It covers bounded model
+schemas, catalog projection/revision checks, SDK replay, missing calibration,
+invalid aliases/geometry, no persistent writes, admission and cancellation.
+It also runs the AI browser authorization/disconnect tests and UI-owned proposal,
+hook lifecycle, proxy and atomic history tests for step 5.
+Step 6 adds SDK matching/projection bounds, AppSettings reload/edit/delete and
+rollback, explicit memory controls and stale-memory request/proposal invalidation.
+Real-model verification is the AI service's separate `construction:plan --smoke`
+CLI; no model is required by automated tests.
+
+`npm run test:construction-evaluation` runs representative scoring, renderer/history
+and draft-failure checks, plus persistence tests with opt-in temporary-table SQL.
+The AI-owned `construction:evaluate` CLI separates offline scripted outcomes from
+live catalog/model evidence. See its construction/EVALUATION.md acceptance report.
+The suite also verifies asset-owned surface extraction and normalized runtime
+publication. Opt-in actual catalog geometry checks live in the UI service's
+`test/live_material_calibration.test.js`; they include ground anchors, leaf
+cutouts and the registered `dry_dirt` image and write only a diagnostic report.
+The AI-owned `construction/wooded_path.test.js` verifies reviewed composition
+across counts, dimensions, seeds, corridor axes/offsets, broad calibrated canopies,
+explicit scale conflicts, stale pins, JSON regeneration and atomic undo/redo.
+
+`coverage_lazy_index.test.js` verifies that coverage initialization counts the
+compiled index without retaining duplicate shortcode Sets, and that the first
+coverage query, cached reuse and index reset preserve membership results. It uses
+an isolated tiny index and local classification fixtures, without the live stack.
+
+The SDK component tools tests also exercise bounded `place-pattern` expansion,
+exact instance shapes, missing pins, duplicate IDs and atomic count rejection.
+The AI's `construction/dense_grass_strip.test.js` checks transform fidelity to
+the reviewed 809-patch recipe, sampled coverage, scale/pin guards and replay.
+
+The component document tests cover optional persisted `animation_speed`, finite
+0–10 validation, quarter-speed JSON roundtrips, unchanged legacy canonical bytes
+and authored-speed undo/redo.
+
+`sdk_component_motion.test.js` verifies the optional facing-patrol contract,
+deterministic speed/distance sampling, forward-facing return legs, JSON/history
+retention and invalid-field rejection.

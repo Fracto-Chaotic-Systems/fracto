@@ -1,5 +1,13 @@
 # Endpoint-based service test support
 
+`ConstructionBuilds.js` defines synthetic calibrated catalog descriptors and
+representative component batches shared across owner tests: plain floor, wooded
+path, crossing-path meadow, refinement and remembered-direction comparisons.
+Facts are fixtures, never calibration for real assets. Callers supply UUIDs.
+`ConstructionMetrics.js` expands seeded instances and independently scores full
+footprint clearance, extents, counts and scale against explicit scene criteria.
+Its correction proxy counts failed criteria, not human edits or learned quality.
+
 `ServiceFixture.js` launches a service-owned test executable using an explicit
 `--serve-fixture` flag and a random private token. Readiness returns one loopback
 URL. All test operations then use bounded JSON HTTP requests; fixture processes

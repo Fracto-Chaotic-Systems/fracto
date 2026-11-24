@@ -1,9 +1,35 @@
 # Fracto SDK
 
+`FractoConstructionMemory.js` validates explicit local preference/recipe libraries,
+revision-checked edits/deletes, keyword matching and identity-free planner guidance.
+Storage belongs to the UI; the SDK performs no I/O.
+
+`FractoConstructionMemory.js` validates explicit local preference/recipe libraries,
+revision-checked edits/deletes, keyword matching and identity-free planner guidance.
+Storage belongs to the UI; the SDK performs no I/O.
+
+`FractoComponentTools.js` applies exact-shape construction command batches with
+calibrated pinned materials and atomic snapshot semantics.
+`FractoComponentScatter.js` freezes footprint-xz-v1 seeded placements and rotated
+footprint exclusion checks. Both are shared by manual tools and future agents.
+
+`FractoMaterialMetadata.js` defines portable dimensions, conversion, orientation,
+anchor, footprint and tile-size facts with explicit unknowns.
+`FractoMaterialSearch.js` supplies bounded queries and deterministic lexical
+ranking/pagination over allowlisted projections. Both are pure; services own
+catalog reads, membership, revisions and persistence.
+
 All consumers, including the root, import the npm package (`@fracto/sdk` and its
 exported subpaths). Relative filesystem imports into this directory are forbidden.
 Common authorization/origin helpers are under `utils/`; service implementations
 and application persistence remain outside the SDK.
+
+`FractoComponentDocument.js` supplies the strict v1 authoring document contract
+(meters, Y-up, pinned catalog assets, floor, placements, groups and scatter rules)
+and bounded snapshot undo/redo. `component_document_json` validates and serializes
+recursively sorted object keys for proposal base/preview hashes; array order is
+preserved. It owns no persistence or rendering. The component
+construction plan lives in the UI's `src/pages/games/COMPONENT_CONSTRUCTION_PLAN.md`.
 
 `FractoEnvironmentCatalog.js` defines pure environment provenance projections,
 catalog edit validation and the bounded service registration contract. It owns
@@ -208,7 +234,9 @@ of the complete SDK result.
   through explicit subpath imports; they are intentionally not loaded by the
   browser-safe root entry point.
 - `FractoIndexedTiles.js` defines tile-set names and retrieves indexed tile information.
-- `FractoCoverageUtils.js` initializes and queries tile coverage.
+- `FractoCoverageUtils.js` counts compiled-index coverage without duplicating
+  all shortcodes at startup. Membership Sets are built on the first coverage
+  request; the compiled spatial index remains available for ordinary tile reads.
 - `FractoTileData.js` loads manifests and packets, selects tiles in scope, and fills raster buffers.
 - `FractoTileCache.js` retrieves and manages tile files. Remote-cache mode
   uses the configured HTTP tile origin and local disk cache; local-source mode
@@ -299,7 +327,6 @@ relative library tier names and validated paginated asset summaries. Constructio
 category (`model_category`) is separate from descriptive `category`. Legacy
 registrations omit it and default to material; shared helpers perform no I/O.
 
-
 Logical model folder paths use the shared normalize_model_folder validator:
 empty for the category root, slash-delimited canonical names, up to eight levels,
 64 characters per name and 512 overall. Traversal, absolute paths, empty segments,
@@ -312,3 +339,22 @@ folder-prefix matching. Model rename/archive extend the revision-checked catalog
 edit and registration allowlists; resource paths and permanent IDs remain stable.
 
 Archive callers may defer the no-model error with expand_asset_files(..., {allow_no_model:true}) while another service-owned codec runs. asset_model_paths applies the same safe-path and model-format ordering after expansion. Default ZIP/folder expansion remains strict.
+
+`FractoComponentTools.js` also supports an exact `place-pattern` command with one
+asset pin and up to 1,000 explicit instances (id, position, rotation, scale).
+It expands into normal ungrouped document objects, preserving the document schema,
+atomic batch semantics, instance/document/pin bounds and material checks. This
+allows reviewed dense construction recipes to stay within small command batches.
+
+Component v1 documents may carry `animation_speed`, a finite multiplier from 0
+to 10. Omission means 1× and remains omitted during validation, preserving legacy
+canonical bytes and proposal hashes. Zero pauses authored clips. It is component
+content, included in JSON persistence, hashes and snapshot undo/redo, rather than
+a camera or browser preference. Runtime consumers apply it to authored clip time.
+
+Authored objects can optionally include `motion:{algorithm:"facing-patrol-v1",
+speed_mps,distance_m}`. `FractoComponentMotion.js` validates this exact bounded
+shape and samples deterministic positions/facing from component time. Models walk
+along their local +Z heading and turn 180° before returning, rather than sliding
+backwards. Component animation speed scales this clock too; zero pauses both
+translation and clips. Missing motion preserves legacy documents and hashes.

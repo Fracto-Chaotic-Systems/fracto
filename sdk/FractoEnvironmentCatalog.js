@@ -1,3 +1,7 @@
+import {
+  validate_material_construction,
+  validate_material_tags,
+} from "./FractoMaterialMetadata.js";
 // Pure contracts shared by asset storage and database services. No I/O or SQL.
 export function normalize_model_folder(value = "") {
   if (
@@ -134,6 +138,9 @@ export function validate_catalog_edit(body) {
           "folder_path",
           "name",
           "archived",
+          "description",
+          "tags",
+          "construction",
         ].includes(key),
     ) ||
     !/^[a-f0-9]{64}$/.test(body.revision) ||
@@ -157,6 +164,11 @@ export function validate_catalog_edit(body) {
   )
     fail();
   if (body.archived !== undefined && typeof body.archived !== "boolean") fail();
+  if (
+    Object.hasOwn(body, "description") &&
+    (typeof body.description !== "string" || body.description.length > 10000)
+  )
+    fail();
   const attribution = {};
   for (const field of CATALOG_FIELDS) {
     const value = body.attribution[field];
@@ -174,6 +186,15 @@ export function validate_catalog_edit(body) {
   }
   return {
     attribution,
+    ...(Object.hasOwn(body, "description")
+      ? { description: body.description.trim() }
+      : {}),
+    ...(Object.hasOwn(body, "tags")
+      ? { tags: validate_material_tags(body.tags) }
+      : {}),
+    ...(Object.hasOwn(body, "construction")
+      ? { construction: validate_material_construction(body.construction) }
+      : {}),
     ...(body.name !== undefined ? { name: body.name.trim() } : {}),
     ...(body.archived !== undefined ? { archived: body.archived } : {}),
     note: body.note.trim(),
