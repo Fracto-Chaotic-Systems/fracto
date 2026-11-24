@@ -61,6 +61,30 @@ in the README for that feature or service.
 
 ## Component and state ownership
 
+- Construct game components collaboratively with the coding assistant and keep
+  a construction description current with each accepted change. Data-owned
+  `servers/fracto-data-server/components/blueprints/` contains the descriptions,
+  structured parameters and template. Describe material roles, physical size
+  relationships, procedural distribution/exclusions, animation and verification;
+  use exact coordinates only when a particular placement is intentional. Keep
+  the description associated with the current realized scene revision. Read the
+  component API's `construction_description` before editing; repository blueprints
+  are versioned exports/companions, not a live mirror of browser edits.
+- For every new component, create its own stable, unique folder under the data
+  service's `components/blueprints/` directory. Keep its construction description,
+  structured parameters, realized snapshots and supporting evidence together,
+  with a README indexing the files. Reserve `variants/` inside that folder for
+  future variations. A variant inherits every property of its referenced base
+  component/blueprint revision and describes only explicit changes. Record the
+  target role/property and whether each change replaces or scales the base value;
+  do not duplicate the full component description. Rebase explicitly when the
+  base revision changes.
+- Material substitutions preserve the component's physical and visual intent;
+  resolve live calibration and revalidate affected geometry instead of copying
+  source scale factors. Future in-house AI work should consume these descriptions
+  to propose scoped minor edits, preserving unrelated content. Automatic server
+  generation is an existing capability, not the default authoring workflow.
+
 - A page coordinates its tabs; each tab component owns its own independent
   state, timers, data loading, and feature-specific helpers.
 - Pass props only for values genuinely controlled by the outer component, such

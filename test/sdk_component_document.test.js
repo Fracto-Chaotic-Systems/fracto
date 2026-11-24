@@ -9,7 +9,156 @@ import {
   edit_component_history,
   undo_component_history,
   redo_component_history,
+  COMPONENT_DESCRIPTION_LIMIT,
+  component_lighting,
 } from "@fracto/sdk/FractoComponentDocument.js";
+
+test("lighting defaults persist, validate and participate in history without rewriting legacy scenes", () => {
+  const base = create_component_document(randomUUID(), "Lighting");
+  assert.deepEqual(base.lighting, { direction_degrees: 45, intensity: 3 });
+  const changed = {
+    ...base,
+    lighting: { direction_degrees: 270, intensity: 0.75 },
+  };
+  assert.deepEqual(JSON.parse(component_document_json(changed)), changed);
+  const history = edit_component_history(
+    create_component_history(base),
+    changed,
+  );
+  assert.deepEqual(undo_component_history(history).present, base);
+  assert.deepEqual(
+    redo_component_history(undo_component_history(history)).present,
+    changed,
+  );
+  const legacy = { ...base };
+  delete legacy.lighting;
+  assert.deepEqual(component_lighting(legacy), base.lighting);
+  assert.equal(
+    Object.hasOwn(validate_component_document(legacy), "lighting"),
+    false,
+  );
+  assert.equal(
+    component_document_json(legacy),
+    component_document_json(JSON.parse(component_document_json(legacy))),
+  );
+  for (const lighting of [
+    null,
+    {},
+    { direction_degrees: -1, intensity: 3 },
+    { direction_degrees: 361, intensity: 3 },
+    { direction_degrees: NaN, intensity: 3 },
+    { direction_degrees: 45, intensity: 0 },
+    { direction_degrees: 45, intensity: 7 },
+    { direction_degrees: 45, intensity: Infinity },
+    { direction_degrees: 45, intensity: "3" },
+    { direction_degrees: 45, intensity: 3, extra: true },
+  ])
+    assert.throws(() => validate_component_document({ ...base, lighting }));
+  base.lighting.intensity = 1;
+  assert.equal(
+    create_component_document(randomUUID(), "Other").lighting.intensity,
+    3,
+  );
+});
+
+test("object clip speed persists as an independent clock without changing legacy objects", () => {
+  const base = create_component_document(randomUUID(), "Sparse grass");
+  base.animation_speed = 0.125;
+  base.objects = [
+    {
+      id: randomUUID(),
+      asset: { id: "animated-grass", revision: "a".repeat(64) },
+      position: [0, 0, 0],
+      rotation: [0, 0, 0],
+      scale: [1, 1, 1],
+      group_id: null,
+    },
+  ];
+  const legacy = component_document_json(base),
+    changed = structuredClone(base);
+  changed.objects[0].animation_speed = 1;
+  assert.equal(
+    JSON.parse(component_document_json(changed)).objects[0].animation_speed,
+    1,
+  );
+  assert.equal(
+    Object.hasOwn(
+      validate_component_document(base).objects[0],
+      "animation_speed",
+    ),
+    false,
+  );
+  assert.equal(component_document_json(base), legacy);
+  const history = edit_component_history(
+    create_component_history(base),
+    changed,
+  );
+  assert.deepEqual(undo_component_history(history).present, base);
+  assert.deepEqual(
+    redo_component_history(undo_component_history(history)).present,
+    changed,
+  );
+  for (const value of [-1, 11, NaN, Infinity, null, "1"])
+    assert.throws(() =>
+      validate_component_document({
+        ...base,
+        objects: [{ ...base.objects[0], animation_speed: value }],
+      }),
+    );
+});
+
+test("construction descriptions roundtrip and bind to scene history without altering legacy documents", () => {
+  const legacy = create_component_document(randomUUID(), "Grass strip");
+  const authored = {
+    ...legacy,
+    construction_description:
+      "# Grass strip\n\nGrass with **interior openings**.\n\n<script>inert source text</script>",
+  };
+  assert.deepEqual(JSON.parse(component_document_json(authored)), authored);
+  assert.notEqual(
+    component_document_json(authored),
+    component_document_json(legacy),
+  );
+  assert.equal(
+    Object.hasOwn(
+      validate_component_document(legacy),
+      "construction_description",
+    ),
+    false,
+  );
+  const h = edit_component_history(create_component_history(legacy), authored);
+  assert.deepEqual(undo_component_history(h).present, legacy);
+  assert.deepEqual(
+    redo_component_history(undo_component_history(h)).present,
+    authored,
+  );
+  for (const value of [
+    null,
+    undefined,
+    1,
+    {},
+    "x".repeat(COMPONENT_DESCRIPTION_LIMIT + 1),
+    "bad\u0000text",
+  ])
+    assert.throws(() =>
+      validate_component_document({
+        ...legacy,
+        construction_description: value,
+      }),
+    );
+  assert.equal(
+    validate_component_document({ ...legacy, construction_description: "" })
+      .construction_description,
+    "",
+  );
+  assert.equal(
+    validate_component_document({
+      ...legacy,
+      construction_description: "x".repeat(COMPONENT_DESCRIPTION_LIMIT),
+    }).construction_description.length,
+    COMPONENT_DESCRIPTION_LIMIT,
+  );
+});
 
 test("canonical document bytes ignore property order and validate without mutation", () => {
   const document = create_component_document(randomUUID(), "Canonical");

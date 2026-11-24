@@ -18,6 +18,7 @@ const shape = (value, keys) => {
 };
 export const component_reference_key = (reference) =>
   `${reference.id}:${reference.revision}`;
+export const COMPONENT_MATERIAL_LIMIT = 128;
 export function require_component_material(reference, materials, kind) {
   const descriptor = materials[component_reference_key(reference)];
   if (
@@ -188,7 +189,10 @@ export function apply_component_commands(document, commands, materials = {}) {
     ...valid.objects.map((item) => item.asset),
     ...valid.scatters.map((rule) => rule.asset),
   ].filter(Boolean);
-  if (new Set(references.map(component_reference_key)).size > 64)
+  if (
+    new Set(references.map(component_reference_key)).size >
+    COMPONENT_MATERIAL_LIMIT
+  )
     fail("construction_limit");
   // Permit removal/transform of unrelated items even if another pinned asset is
   // unavailable; newly authored/changed references still require live facts.

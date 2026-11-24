@@ -286,3 +286,49 @@ test("frozen seeded scatter regenerates identical footprints, respects exclusion
     /invalid_component_document/,
   );
 });
+
+test("components support 128 distinct material pins and reject 129 without partial edits", () => {
+  const make = (count) => {
+    const d = create_component_document(randomUUID(), "Unique rocks");
+    d.objects = Array.from({ length: count }, (_, i) => ({
+      id: randomUUID(),
+      asset: { id: "rock-" + i, revision: "a".repeat(64) },
+      position: [0, 0, 0],
+      rotation: [0, 0, 0],
+      scale: [1, 1, 1],
+      group_id: null,
+    }));
+    return d;
+  };
+  for (const count of [88, 128]) {
+    const d = make(count),
+      o = d.objects[0];
+    const next = apply_component_commands(d, [
+      {
+        type: "transform",
+        id: o.id,
+        position: o.position,
+        rotation: o.rotation,
+        scale: o.scale,
+      },
+    ]);
+    assert.equal(next.objects.length, count);
+  }
+  const d = make(129),
+    o = d.objects[0],
+    before = JSON.stringify(d);
+  assert.throws(
+    () =>
+      apply_component_commands(d, [
+        {
+          type: "transform",
+          id: o.id,
+          position: [1, 0, 0],
+          rotation: o.rotation,
+          scale: o.scale,
+        },
+      ]),
+    /construction_limit/,
+  );
+  assert.equal(JSON.stringify(d), before);
+});

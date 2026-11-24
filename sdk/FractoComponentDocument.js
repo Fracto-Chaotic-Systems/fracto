@@ -2,6 +2,11 @@
 import { validate_component_motion } from "./FractoComponentMotion.js";
 export const COMPONENT_SCHEMA_VERSION = 1;
 export const COMPONENT_HISTORY_LIMIT = 100;
+export const COMPONENT_DESCRIPTION_LIMIT = 65536;
+export const DEFAULT_COMPONENT_LIGHTING = Object.freeze({
+  direction_degrees: 45,
+  intensity: 3,
+});
 // Stable transport-independent bytes for proposal/base-document binding.
 export function component_document_json(document) {
   const sort = (value) =>
@@ -85,7 +90,18 @@ export function create_component_document(id, name) {
     objects: [],
     groups: [],
     scatters: [],
+    lighting: { ...DEFAULT_COMPONENT_LIGHTING },
   });
+}
+
+export function component_lighting(document) {
+  const lighting = Object.hasOwn(document, "lighting")
+    ? document.lighting
+    : DEFAULT_COMPONENT_LIGHTING;
+  fields(lighting, ["direction_degrees", "intensity"]);
+  number(lighting.direction_degrees, 0, 360);
+  number(lighting.intensity, 0.25, 6);
+  return { ...lighting };
 }
 
 export function validate_component_document(document) {
@@ -100,11 +116,25 @@ export function validate_component_document(document) {
     "groups",
     "scatters",
     ...(Object.hasOwn(document, "animation_speed") ? ["animation_speed"] : []),
+    ...(Object.hasOwn(document, "lighting") ? ["lighting"] : []),
+    ...(Object.hasOwn(document, "construction_description")
+      ? ["construction_description"]
+      : []),
   ]);
   // Optional v1 authoring property: preserve legacy canonical bytes/hashes when
   // omitted. Consumers interpret omission as 1x; zero explicitly pauses clips.
   if (Object.hasOwn(document, "animation_speed"))
     number(document.animation_speed, 0, 10);
+  component_lighting(document);
+  if (
+    Object.hasOwn(document, "construction_description") &&
+    (typeof document.construction_description !== "string" ||
+      document.construction_description.length > COMPONENT_DESCRIPTION_LIMIT ||
+      /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(
+        document.construction_description,
+      ))
+  )
+    fail();
   if (
     document.schema_version !== COMPONENT_SCHEMA_VERSION ||
     document.units !== "m" ||
@@ -165,6 +195,7 @@ export function validate_component_document(document) {
       "scale",
       "group_id",
       ...(Object.hasOwn(object, "motion") ? ["motion"] : []),
+      ...(Object.hasOwn(object, "animation_speed") ? ["animation_speed"] : []),
     ]);
     identify(object.id);
     asset(object.asset);
@@ -172,6 +203,10 @@ export function validate_component_document(document) {
     vector(object.position, 3, -10000, 10000);
     vector(object.rotation, 3, -Math.PI * 2, Math.PI * 2);
     vector(object.scale, 3, 0.001, 1000);
+    // Explicit clip clock in native seconds per real second. Omission inherits
+    // the component clock; authored patrol translation still uses that clock.
+    if (Object.hasOwn(object, "animation_speed"))
+      number(object.animation_speed, 0, 10);
     if (Object.hasOwn(object, "motion"))
       validate_component_motion(object.motion);
   });

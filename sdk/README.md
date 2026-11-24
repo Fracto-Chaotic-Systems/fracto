@@ -1,8 +1,19 @@
 # Fracto SDK
 
-`FractoConstructionMemory.js` validates explicit local preference/recipe libraries,
-revision-checked edits/deletes, keyword matching and identity-free planner guidance.
-Storage belongs to the UI; the SDK performs no I/O.
+Component documents optionally store `lighting: {direction_degrees, intensity}`.
+Direction is a finite azimuth from 0–360 degrees; intensity is a finite Three.js
+directional-light strength from 0.25–6, matching the materials viewer. New documents
+store 45° and 3 explicitly. `component_lighting` resolves the same defaults for
+older documents without adding fields or changing their canonical hashes.
+Lighting participates in document validation, save/load, variants and undo/redo.
+
+`FractoComponentVariant.js` derives isolated render previews from a base scene and
+role-targeted deltas. It currently supports multiply/replace for insect patrol
+speed and walk-clip rate. It checks the base component ID and saved revision,
+resolves roles through group IDs and rejects unsupported, duplicate or unsafe
+overrides. It returns a valid scene plus per-object clip-rate render options,
+without mutating inputs or extending the saved scene schema. Always derive from
+the base when switching variants; never apply a delta to a prior preview.
 
 `FractoConstructionMemory.js` validates explicit local preference/recipe libraries,
 revision-checked edits/deletes, keyword matching and identity-free planner guidance.
@@ -352,9 +363,28 @@ canonical bytes and proposal hashes. Zero pauses authored clips. It is component
 content, included in JSON persistence, hashes and snapshot undo/redo, rather than
 a camera or browser preference. Runtime consumers apply it to authored clip time.
 
+The optional v1 `construction_description` string carries the component's readable
+Markdown description, bounded by `COMPONENT_DESCRIPTION_LIMIT` (65,536 characters)
+and the total document limit. It is stored with the model and included in hashes
+and history. Omitted legacy fields remain omitted. Description edits do not
+generate geometry changes; renderer consumers treat this string as inert data.
+
 Authored objects can optionally include `motion:{algorithm:"facing-patrol-v1",
 speed_mps,distance_m}`. `FractoComponentMotion.js` validates this exact bounded
 shape and samples deterministic positions/facing from component time. Models walk
 along their local +Z heading and turn 180° before returning, rather than sliding
 backwards. Component animation speed scales this clock too; zero pauses both
 translation and clips. Missing motion preserves legacy documents and hashes.
+
+An object's optional `animation_speed` (0–10) overrides the component clock for
+that object's clips only. Omission inherits the component clock; an explicit 1
+means native 1× playback, independently of component speed or pause. Patrol
+translation still uses component time. The value is persisted, hashed and included
+in undo/redo; legacy objects remain unchanged. Variant clip-rate multipliers apply
+after selecting the object's explicit or inherited clock. Hiding the stage pauses
+all rendering regardless of these authored rates.
+
+`COMPONENT_MATERIAL_LIMIT` in `FractoComponentTools.js` bounds a component to 128
+distinct pinned material revisions, allowing complete unique-part collections
+such as the 84 extracted rocks. The UI uses that same limit and resolves pins
+four at a time; the 1,000-instance document bound remains in force.
