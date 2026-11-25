@@ -145,6 +145,11 @@ in the README for that feature or service.
   For the `fracto-dev` container, trigger its watcher with
   `docker compose -f compose.yaml -f compose.dev.yaml exec -T fracto-dev touch /app/servers/fracto-ui/vite.config.js`.
   Touching the file from Windows may not notify the container's watcher.
+- When a change also touches a server (root or any `servers/*` service other
+  than the UI), restart the affected services if the session can reach them.
+  If it can't, tell the user which services to restart. Claude's Linux shell
+  has no Docker access, so from there, give the user the refresh or restart
+  command instead of claiming it was run.
 - Follow established component and styling patterns unless there is a clear
   reason to introduce a new one.
 - Register every user-visible string in the appropriate AppText catalog;
