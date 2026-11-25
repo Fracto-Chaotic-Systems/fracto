@@ -1,5 +1,6 @@
 import {
   TILE_EDGE,
+  MIN_FLIGHT_TILE_LEVEL,
   validate_tile_code,
   validate_tile_data,
   tile_bounds,
@@ -13,12 +14,17 @@ const abort_error = () =>
   });
 const cache_error = (code) => Object.assign(new Error(code), { code });
 
-/** Per-game numerical cache. Transport is injected; no React, DOM or global cache. */
+/** Per-game numerical cache. Transport is injected; no React, DOM or global cache.
+ * Level-three root tiles load on demand like any other tile, but once decoded
+ * they stay resident until clear/destroy or a source change, so every point of
+ * the plane keeps a coarse fallback. The 32 roots are held outside the
+ * max_tiles/max_bytes budgets, which bound the deeper, evictable tiles.
+ */
 export function create_flight_tile_cache({
   load_tile,
   load_availability,
-  max_tiles = 64,
-  max_bytes = 64 * FLIGHT_TILE_BYTES,
+  max_tiles = 96,
+  max_bytes = 96 * FLIGHT_TILE_BYTES,
   concurrency = 4,
   max_pending = 256,
   max_availability = 1024,
@@ -48,7 +54,20 @@ export function create_flight_tile_cache({
     pending = new Map();
   let source_id = null,
     active = 0,
+    residents = 0,
     destroyed = false;
+  const resident = (code) => code.length === MIN_FLIGHT_TILE_LEVEL;
+  const full = () => {
+    const evictable = tiles.size - residents;
+    return (
+      evictable >= max_tiles || (evictable + 1) * FLIGHT_TILE_BYTES > max_bytes
+    );
+  };
+  const victim = () => {
+    for (const key of tiles.keys())
+      if (!pinned.has(key) && !resident(key)) return key;
+    return undefined;
+  };
   const touch = (map, key, value) => {
     map.delete(key);
     map.set(key, value);
@@ -89,6 +108,7 @@ export function create_flight_tile_cache({
       throw cache_error("INVALID_TILE_SOURCE");
     if (source_id !== null && source_id !== identity) {
       tiles.clear();
+      residents = 0;
       pinned.clear();
       available.clear();
       for (const other of pending.values()) if (other !== entry) cancel(other);
@@ -146,16 +166,13 @@ export function create_flight_tile_cache({
       if (entry.kind === "tile") {
         const code = entry.codes[0],
           tile = decode(response, code);
-        while (
-          !tiles.has(code) &&
-          (tiles.size >= max_tiles ||
-            (tiles.size + 1) * FLIGHT_TILE_BYTES > max_bytes)
-        ) {
-          const victim = [...tiles.keys()].find((key) => !pinned.has(key));
-          if (victim === undefined)
+        while (!tiles.has(code) && !resident(code) && full()) {
+          const evicted = victim();
+          if (evicted === undefined)
             throw cache_error("FLIGHT_TILE_CACHE_BUDGET");
-          tiles.delete(victim);
+          tiles.delete(evicted);
         }
+        if (resident(code) && !tiles.has(code)) residents++;
         touch(tiles, code, tile);
         remember(code, true);
         settle(entry, null, tile);
@@ -228,6 +245,7 @@ export function create_flight_tile_cache({
   };
   const clear = () => {
     tiles.clear();
+    residents = 0;
     pinned.clear();
     available.clear();
     source_id = null;
@@ -250,11 +268,7 @@ export function create_flight_tile_cache({
       const tile = tiles.get(code);
       if (tile) return touch(tiles, code, tile);
       if (known(code) === false) return null;
-      if (
-        (tiles.size >= max_tiles ||
-          (tiles.size + 1) * FLIGHT_TILE_BYTES > max_bytes) &&
-        pinned.size === tiles.size
-      )
+      if (!resident(code) && full() && victim() === undefined)
         throw cache_error("FLIGHT_TILE_CACHE_BUDGET");
       return request("tile", [code], signal);
     },
@@ -289,6 +303,7 @@ export function create_flight_tile_cache({
       return {
         source_id,
         tiles: tiles.size,
+        resident: residents,
         pinned: pinned.size,
         bytes: tiles.size * FLIGHT_TILE_BYTES,
         availability: available.size,
