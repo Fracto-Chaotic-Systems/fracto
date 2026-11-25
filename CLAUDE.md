@@ -44,6 +44,10 @@ Development ports are offset by 100 (e.g. admin 3105).
 - Never send personal information across any API (see guidelines).
 - UI changes in the `fracto-dev` container: touch `vite.config.js` *inside* the
   container to trigger the watcher (command in the guidelines).
+- **Running git from Claude's Linux shell:** working files use CRLF, and
+  Windows git converts them via `core.autocrlf=true`, which the shell lacks.
+  Use `git -c core.autocrlf=true …` there, or dozens of files look modified
+  when they aren't.
 - Startup fast-forwards every repo and aborts on tracked/staged changes,
   detached heads or divergent branches.
 
