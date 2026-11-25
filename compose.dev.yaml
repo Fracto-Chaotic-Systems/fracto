@@ -77,6 +77,8 @@ services:
       - ./handlers:/app/handlers:ro
       - ./scripts:/app/scripts:ro
       - ./database:/app/database:ro
+      # Untracked Claude session notes, shown on the Admin Reference page.
+      - ./memory:/app/memory:ro
       - ./sdk:/app/sdk:ro
       - ./social:/app/social
       - ./servers/fracto-admin-server:/app/servers/fracto-admin-server

@@ -106,12 +106,12 @@ a trusted, isolated development network.
 ### Published Play background
 
 Deploy the updated asset service, its complete
-`components/published/grass-strip/d8e227c70918a9be7a1db2ba1f7f759de1ae7d8a9e9cd0d9c79bbf7df326716c/`
+`components/published/grass-strip/bd9af53adc6de4a1be2b1bf8a789ef99fa5bd6399dcedf35b0db1d5a655caf69/`
 directory, and the matching UI build. The UI pins this release in
 `GamesPlayGrassRelease.js`. The existing `/api/asset/` Nginx route serves it:
 
 ```text
-http://LAB-HOST:3000/api/asset/component-runtime/grass-strip/d8e227c70918a9be7a1db2ba1f7f759de1ae7d8a9e9cd0d9c79bbf7df326716c/manifest.json
+http://LAB-HOST:3000/api/asset/component-runtime/grass-strip/bd9af53adc6de4a1be2b1bf8a789ef99fa5bd6399dcedf35b0db1d5a655caf69/manifest.json
 http://LAB-HOST:3000/motions/slow-strip-patrol.json
 ```
 
@@ -119,8 +119,10 @@ Play loads the component snapshot, calibrated materials and files from this
 immutable package. No component-table row, authoring catalog reconciliation or
 compatibility API location is required for background playback. A missing package
 is a deployment error, not a reason to restore an authoring record. There is no
-database/catalog fallback. The first load downloads about 62 MB of assets, which
-then receive immutable browser caching. Editing an authoring scene has no effect
+database/catalog fallback. The optimized package totals about 41 MB; visible
+sections load first and nearby sections preload as the camera moves. Files receive
+immutable browser caching. Deploy the matching UI's bundled Meshopt decoder with
+the compressed release. Editing an authoring scene has no effect
 until an accepted revision is published and the consuming UI binding is updated.
 See the asset service's `components/README.md` for explicit publication commands.
 
