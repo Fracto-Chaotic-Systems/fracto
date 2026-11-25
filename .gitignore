@@ -163,3 +163,6 @@ codex.txt
 
 # Local temporary files, previews, diagnostics and scratch data
 /tmp/
+
+# Claude session memory (machine-local, distributed outside git; see CLAUDE.md)
+memory/

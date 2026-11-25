@@ -2,11 +2,14 @@
 
 Working notes for Claude sessions on this project. Durable engineering rules
 live in [PROJECT_GUIDELINES.md](PROJECT_GUIDELINES.md); this file does not
-restate them. Progress and session memory live in [memory/](memory/README.md).
+restate them. Progress and session memory live in [memory/](memory/README.md), which is
+**not tracked by git** (so memory updates never block startup's fast-forward
+check). It is distributed to other machines outside git.
 
 @PROJECT_GUIDELINES.md
 @memory/STATUS.md
 @memory/BACKLOG.md
+@memory/THREADS.md
 
 ## What this is
 
@@ -59,15 +62,23 @@ See `package.json` for the full list and `scripts/README.md` for details.
 
 ## Memory protocol (keep this up to date)
 
-At the **start** of a session: read `memory/STATUS.md` and `memory/BACKLOG.md`
-(imported above) and skim the top of `memory/LOG.md`.
+Work is split across several chats ("threads"). They share context only
+through these files, so anything not written here is invisible to the others.
 
-At the **end** of any session that changed something:
-1. Add a dated entry at the top of `memory/LOG.md` (what changed, which repo,
-   commit hashes, anything left unfinished).
-2. Update `memory/STATUS.md` if the state of an area changed.
-3. Add/close items in `memory/BACKLOG.md`.
-4. If a durable rule was decided, put it in `PROJECT_GUIDELINES.md`, not here.
+**Start of a chat:** read `memory/STATUS.md`, `memory/BACKLOG.md`,
+`memory/THREADS.md` and the latest entries of `memory/LOG.md`. Find this
+chat's thread row, or add one with its scope. Check cross-thread requests
+addressed to this thread.
 
-Keep STATUS and BACKLOG short — they load into every session. History belongs
-in LOG.
+**During the chat, after each meaningful change (don't wait for the end):**
+1. Re-read the file, then add a dated, thread-tagged entry at the top of
+   `memory/LOG.md` (what changed, repo, commit hashes, loose ends).
+2. Update this thread's row in `memory/THREADS.md`.
+3. Update `memory/STATUS.md` / `memory/BACKLOG.md` if an area's state changed.
+4. Put durable rules in `PROJECT_GUIDELINES.md`, not here.
+
+Edit only your own rows and entries. Keep STATUS, BACKLOG and THREADS short,
+because they're read every session. History belongs in LOG.
+
+If the folder can't be reached (desktop app closed, or access not granted),
+say so. Don't proceed as if the memory files were empty.
