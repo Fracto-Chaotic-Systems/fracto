@@ -87,3 +87,33 @@ test("variant preview rejects other bases, missing targets, duplicates and unsup
     assert.throws(() => preview_component_variant(base, changed, 12));
   }
 });
+
+test("variant can replace its insect route without changing the base or accepting executable algorithms", () => {
+  const { base, variant } = fixture();
+  variant.overrides.push({
+    target: { role: "walking_insects", property: "motion.algorithm" },
+    operation: "replace",
+    value: "facing-wander-v1",
+  });
+  const preview = preview_component_variant(base, variant, 12);
+  assert.equal(
+    preview.document.objects[0].motion.algorithm,
+    "facing-wander-v1",
+  );
+  assert.equal(
+    preview.document.objects[1].motion.algorithm,
+    "facing-patrol-v1",
+  );
+  assert.equal(base.objects[0].motion.algorithm, "facing-patrol-v1");
+  for (const override of [
+    { operation: "multiply", value: 8 },
+    { operation: "replace", value: "script" },
+  ]) {
+    const bad = structuredClone(variant);
+    Object.assign(bad.overrides.at(-1), override);
+    assert.throws(
+      () => preview_component_variant(base, bad, 12),
+      /invalid_component_variant/,
+    );
+  }
+});

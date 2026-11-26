@@ -29,7 +29,8 @@ Lighting participates in document validation, save/load, variants and undo/redo.
 
 `FractoComponentVariant.js` derives isolated render previews from a base scene and
 role-targeted deltas. It currently supports multiply/replace for insect patrol
-speed and walk-clip rate. It checks the base component ID and saved revision,
+  speed and walk-clip rate, plus replacement of `motion.algorithm` with one of
+  the supported fixed algorithms. It checks the base component ID and saved revision,
 resolves roles through group IDs and rejects unsupported, duplicate or unsafe
 overrides. It returns a valid scene plus per-object clip-rate render options,
 without mutating inputs or extending the saved scene schema. Always derive from
@@ -393,7 +394,15 @@ Authored objects can optionally include `motion:{algorithm:"facing-patrol-v1",
 speed_mps,distance_m}`. `FractoComponentMotion.js` validates this exact bounded
 shape and samples deterministic positions/facing from component time. Models walk
 along their local +Z heading and turn 180° before returning, rather than sliding
-backwards. Component animation speed scales this clock too; zero pauses both
+  backwards. `facing-wander-v1` uses the same speed/distance fields but follows
+  an ID-seeded circuit of varied-heading straight segments inside a local ellipse:
+  forward span is `distance_m`, lateral radius is `distance_m/4`, centered halfway
+  along the original heading. Chords stay inside that convex shelter region;
+  positions are continuous at corners and the cycle seam, and facing matches
+  segment velocity. Cached normalized paths are independent of frame order and
+  sampling history. `component_motion_bounds` exposes a world-space envelope for
+  either algorithm so streaming includes sideways travel. Component animation
+  speed scales this clock too; zero pauses both
 translation and clips. Missing motion preserves legacy documents and hashes.
 
 An object's optional `animation_speed` (0–10) overrides the component clock for

@@ -32,12 +32,17 @@ export function preview_component_variant(base, variant, revision) {
     touched.add(key);
     if (
       !["multiply", "replace"].includes(override.operation) ||
-      !Number.isFinite(override.value) ||
-      override.value < 0
+      (property === "motion.algorithm"
+        ? override.operation !== "replace" ||
+          !["facing-patrol-v1", "facing-wander-v1"].includes(override.value)
+        : !Number.isFinite(override.value) || override.value < 0)
     )
       fail();
     for (const object of objects) {
-      if (property === "motion.speed_mps") {
+      if (property === "motion.algorithm") {
+        if (!object.motion) fail();
+        object.motion.algorithm = override.value;
+      } else if (property === "motion.speed_mps") {
         if (!object.motion) fail();
         object.motion.speed_mps =
           override.operation === "multiply"

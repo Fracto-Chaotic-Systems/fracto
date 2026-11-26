@@ -1,5 +1,10 @@
 # Fracto tests
 
+`sdk_component_motion.test.js` checks both legacy straight patrols and bounded
+heading-varied insect routes: forward-facing velocity, constant speed, continuity,
+deterministic seeking, distinct paths and streaming envelopes.
+`sdk_component_variant.test.js` covers safe motion-algorithm replacement in deltas.
+
 `sdk_component_runtime.test.js` checks the published runtime transport contract,
 canonical release identity, complete dependency closure and safe resource paths.
 
