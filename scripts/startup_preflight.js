@@ -108,10 +108,10 @@ export const validate_local_tile_source = async () => {
 // Retain the old helper name for scripts and integrations that used it.
 export const validate_local_tile_release_pairing = validate_local_tile_source
 
-const database_options = () => {
-   const config_path = path.join(ROOT_DIRECTORY, 'config', 'mysql.json')
+const database_options = (config_file, override_database) => {
+   const config_path = path.join(ROOT_DIRECTORY, config_file)
    if (!fs.existsSync(config_path)) {
-      throw new Error('Database configuration is missing: config/mysql.json')
+      throw new Error(`Database configuration is missing: ${config_file}`)
    }
 
    let config
@@ -125,7 +125,7 @@ const database_options = () => {
    const port = process.env.FRACTO_MYSQL_PORT
       ? Number(process.env.FRACTO_MYSQL_PORT)
       : (config.port || 3306)
-   const database = process.env.FRACTO_MYSQL_DATABASE || config.database
+   const database = (override_database && process.env.FRACTO_MYSQL_DATABASE) || config.database
 
    if (!host) throw new Error('Database configuration must specify a host')
    if (!Number.isInteger(port) || port <= 0 || port > 65535) {
@@ -144,8 +144,11 @@ const database_options = () => {
    }
 }
 
-export const validate_database = async () => {
-   const options = database_options()
+export const validate_database = async ({
+   config_file = 'config/mysql.json',
+   override_database = true,
+} = {}) => {
+   const options = database_options(config_file, override_database)
    let connection
    try {
       connection = await mysql.createConnection(options)
@@ -160,7 +163,7 @@ export const validate_database = async () => {
          throw new Error(`Database connection timed out at ${endpoint}; verify Docker networking and firewall access`)
       }
       if (error.code === 'ER_ACCESS_DENIED_ERROR') {
-         throw new Error(`Database rejected credentials for ${options.user} at ${endpoint}; check config/mysql.json`)
+         throw new Error(`Database rejected credentials for ${options.user} at ${endpoint}; check ${config_file}`)
       }
       if (error.code === 'ER_BAD_DB_ERROR') {
          throw new Error(`Database ${options.database} does not exist at ${endpoint}; run the database initialization step`)
@@ -221,6 +224,15 @@ export const validate_startup = async () => {
    try {
       const database = await validate_database()
       console.log(`Database preflight passed for ${database}.`)
+      if (ALL_SERVICES.some(service => service.name === 'fracto-data-server')) {
+         // Match the data service's health probe: it owns its credentials and
+         // database name, while host/port may be overridden by Docker settings.
+         const service_database = await validate_database({
+            config_file: 'servers/fracto-data-server/config/mysql.json',
+            override_database: false,
+         })
+         console.log(`fracto-data-server database preflight passed for ${service_database}.`)
+      }
    } catch (error) {
       throw new Error(`Startup preflight failed:\n- ${error.message}`)
    }

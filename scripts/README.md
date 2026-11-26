@@ -548,7 +548,10 @@ exception still applies); untracked files are preserved by the reset.
 ### `startup_preflight.js`
 
 Checks service package files, ports, entry points, dependencies, and the MySQL
-connection (`SELECT 1`) without opening service ports. In local tile-source
+connections (`SELECT 1`) for both root `config/mysql.json` and the data service's
+`servers/fracto-data-server/config/mysql.json` without opening service ports.
+Valid root credentials do not establish that the data service can connect.
+In local tile-source
 mode it also checks that the mounted corpus is readable/searchable, verifies
 the `LNN` layout and paired compiled-index metadata, and decodes an indexed
 representative tile before the root supervisor opens any listener:
@@ -558,7 +561,9 @@ npm run start:check
 ```
 
 It honors `FRACTO_MYSQL_HOST`, `FRACTO_MYSQL_PORT`, and
-`FRACTO_MYSQL_DATABASE`. Database and local tile-source errors identify the
+`FRACTO_MYSQL_DATABASE` for the root connection. The data-service connection
+honors the host and port overrides but uses its own configured user, password,
+and database, matching its runtime health probe. Database and local tile-source errors identify the
 failed check and likely fix. Local-source startup skips creation of the
 writable demand-cache directory; tile reads fail closed without network or
 demand-cache writes.

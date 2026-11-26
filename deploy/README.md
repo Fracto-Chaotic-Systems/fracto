@@ -120,6 +120,15 @@ sudo chown root:1000 config/*.json
 sudo chmod 640 config/*.json
 ```
 
+Also provision `servers/fracto-data-server/config/mysql.json`. The data service
+reads this separate file; the root credentials do not configure it. Set its
+user, password, and database to the intended application account (for example,
+`fracto_app`), and give it the same UID/GID 1000 read access described above.
+When both connections use the same account and schema, the two files can have
+the same contents. Startup preflight tests both connections. An access-denied
+error naming `root` while root preflight succeeds as `fracto_app` indicates
+that the service's file still contains different credentials.
+
 Set the production OIDC values and local-source settings from the preceding
 sections, then run:
 

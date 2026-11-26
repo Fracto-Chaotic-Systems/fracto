@@ -5,7 +5,7 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
 
-function fixture(t, check) {
+function fixture(t, check, { data_config, database_stub } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fracto-service-check-"));
   t.after(() => {
     assert.equal(path.dirname(root), path.resolve(os.tmpdir()));
@@ -28,7 +28,7 @@ function fixture(t, check) {
   write(
     "constants.js",
     `
-    export const ALL_SERVICES = [{name: 'fixture-service', port: 3002}];
+    export const ALL_SERVICES = [{name: 'fixture-service', port: 3002}${data_config ? ", {name: 'fracto-data-server', port: 3003}" : ""}];
     export const SERVICE_NAME_UI = 'fixture-ui';
   `,
   );
@@ -46,7 +46,7 @@ function fixture(t, check) {
   );
   write(
     "node_modules/mysql2/promise.js",
-    "export default { createConnection() { throw new Error('DATABASE_CHECK_REACHED'); } };",
+    database_stub || "export default { createConnection() { throw new Error('DATABASE_CHECK_REACHED'); } };",
   );
   write(
     "servers/fixture-service/package.json",
@@ -62,14 +62,20 @@ function fixture(t, check) {
     "throw new Error('SERVICE_MUST_NOT_START');",
   );
   fs.mkdirSync(path.join(root, "servers/fixture-service/node_modules"));
+  if (data_config) {
+    write("servers/fracto-data-server/package.json", '{"type":"module"}');
+    write("servers/fracto-data-server/index.js", "throw new Error('SERVICE_MUST_NOT_START');");
+    write("servers/fracto-data-server/config/mysql.json", JSON.stringify(data_config));
+    fs.mkdirSync(path.join(root, "servers/fracto-data-server/node_modules"));
+  }
   if (check !== null) write("servers/fixture-service/scripts/check.js", check);
-  return () =>
+  return (environment = {}) =>
     spawnSync(process.execPath, ["scripts/startup_preflight.js"], {
       cwd: root,
       encoding: "utf8",
       timeout: 10000,
       windowsHide: true,
-      env: { ...process.env, FRACTO_TILE_SOURCE_MODE: "remote" },
+      env: { ...process.env, FRACTO_TILE_SOURCE_MODE: "remote", ...environment },
     });
 }
 
@@ -86,6 +92,37 @@ test("a failed service-owned startup check stops root preflight before database 
     result.stdout + result.stderr,
     /DATABASE_CHECK_REACHED|SERVICE_MUST_NOT_START/,
   );
+});
+
+test("root credentials passing does not hide rejected data-service credentials", (t) => {
+  const result = fixture(t, null, {
+    data_config: { host: "fixture.invalid", user: "root", password: "service-secret", database: "fracto" },
+    database_stub: `export default { async createConnection(options) {
+      if (options.user === 'root') throw Object.assign(new Error('denied'), { code: 'ER_ACCESS_DENIED_ERROR' });
+      return { async query() {}, async end() {} };
+    } };`,
+  })();
+  assert.equal(result.status, 1, result.stderr);
+  assert.match(result.stdout, /Database preflight passed for fixture@/);
+  assert.match(result.stderr, /Database rejected credentials for root/);
+  assert.match(result.stderr, /check servers\/fracto-data-server\/config\/mysql.json/);
+  assert.doesNotMatch(result.stdout + result.stderr, /service-secret|SERVICE_MUST_NOT_START/);
+});
+
+test("data-service preflight uses its own database and credentials with host and port overrides", (t) => {
+  const result = fixture(t, null, {
+    data_config: { host: "service.invalid", user: "fracto_app", password: "service-secret", database: "service_db" },
+    database_stub: `export default { async createConnection(options) {
+      if (options.user === 'fracto_app' && (
+        options.database !== 'service_db' || options.password !== 'service-secret' ||
+        options.host !== 'host.docker.internal' || options.port !== 3307
+      )) throw new Error('WRONG_SERVICE_OPTIONS');
+      return { async query() {}, async end() {} };
+    } };`,
+  })({ FRACTO_MYSQL_HOST: "host.docker.internal", FRACTO_MYSQL_PORT: "3307", FRACTO_MYSQL_DATABASE: "root_db" });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /fracto-data-server database preflight passed for fracto_app@host.docker.internal:3307\/service_db/);
+  assert.doesNotMatch(result.stdout + result.stderr, /service-secret/);
 });
 
 test("a successful declared check allows root preflight to continue", (t) => {
