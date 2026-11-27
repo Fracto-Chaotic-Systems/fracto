@@ -77,6 +77,14 @@ services:
       - ./handlers:/app/handlers:ro
       - ./scripts:/app/scripts:ro
       - ./database:/app/database:ro
+      # Development launch applies migrations from this container. SQL backups
+      # stay outside the image and must be provisioned on the host.
+      - type: bind
+        source: ./backup
+        target: /app/backup
+        read_only: true
+        bind:
+          create_host_path: false
       # Untracked Claude session notes, shown on the Admin Reference page.
       - ./memory:/app/memory:ro
       - ./sdk:/app/sdk:ro

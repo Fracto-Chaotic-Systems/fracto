@@ -593,7 +593,10 @@ static mode. Both Vite and static mode run from the UI service directory.
   image and apply pending database migrations (root and service-owned, read from
   the working tree) in a one-off `fracto-dev` container running
   `scripts/migrate_database.js`, like `cold_boot`'s `database-init` step. A
-  failed migration stops the launch.
+  failed migration stops the launch. The host `backup/` directory is mounted
+  read-only at `/app/backup`; provision its SQL files before launching. Backups
+  are excluded from the image, and an empty directory does not satisfy the
+  migration runner's SQL backup requirement.
 - `cold_boot.bat`: after a host restart, refreshes Git, rebuilds the image,
   optionally refreshes the tile index, and starts production with Compose.
 - `ensure_exclusive.bat` / `ensure_exclusive.sh`: check for the other Docker
