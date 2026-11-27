@@ -15,6 +15,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
+    "test:managed-upgrade-plan": "node --test test/managed_upgrade_plan.test.js",
     "test:component-runtime": "node --test test/sdk_component_runtime.test.js servers/fracto-asset-server/test/component_runtime.test.js servers/fracto-asset-server/test/optimize_glb.test.js servers/fracto-ui/test/component_runtime_package.test.js servers/fracto-ui/test/component_section_content.test.js servers/fracto-ui/test/component_stage_reveal.test.js servers/fracto-ui/test/live_grass_optimization.test.js servers/fracto-ui/test/games_play_grass.test.js",
     "test:path-motion": "node --test test/sdk_path_motion.test.js servers/fracto-ui/test/games_play_grass.test.js",
     "test:construction-evaluation": "node --test --test-concurrency=2 servers/fracto-ai-server/construction/evaluation.test.js servers/fracto-ai-server/construction/wooded_path.test.js servers/fracto-ai-server/construction/dense_grass_strip.test.js servers/fracto-ui/test/component_build_evaluation.test.js servers/fracto-ui/test/component_planner_hook.test.js servers/fracto-data-server/tests/component_documents.test.js servers/fracto-asset-server/test/construction_resources.test.js",
