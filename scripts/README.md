@@ -589,7 +589,11 @@ static mode. Both Vite and static mode run from the UI service directory.
 
 - `launch-production.bat` / `launch-production.sh`: build and start production.
 - `launch-development.bat` / `launch-development.sh`: start the Vite-based
-  development stack on ports 3101–3107.
+  development stack on ports 3101–3107. Before starting, they build the dev
+  image and apply pending database migrations (root and service-owned, read from
+  the working tree) in a one-off `fracto-dev` container running
+  `scripts/migrate_database.js`, like `cold_boot`'s `database-init` step. A
+  failed migration stops the launch.
 - `cold_boot.bat`: after a host restart, refreshes Git, rebuilds the image,
   optionally refreshes the tile index, and starts production with Compose.
 - `ensure_exclusive.bat` / `ensure_exclusive.sh`: check for the other Docker
