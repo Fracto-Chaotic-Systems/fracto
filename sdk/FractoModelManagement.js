@@ -20,7 +20,9 @@ export function normalize_model_name(value) {
 }
 export function validate_model_management(body) {
   if (!body || typeof body !== "object" || Array.isArray(body)) fail();
-  const folder = ["rename-folder", "delete-folder"].includes(body.action);
+  const folder = ["rename-folder", "delete-folder", "move-folder"].includes(
+    body.action,
+  );
   if (!folder && !["rename-model", "delete-model"].includes(body.action))
     fail();
   const allowed = folder
@@ -29,6 +31,7 @@ export function validate_model_management(body) {
         "category",
         "folder_path",
         ...(body.action === "rename-folder" ? ["name"] : []),
+        ...(body.action === "move-folder" ? ["parent"] : []),
       ]
     : [
         "action",
@@ -43,6 +46,18 @@ export function validate_model_management(body) {
     const folder_path = normalize_model_folder(body.folder_path);
     if (!folder_path) fail();
     if (body.action === "delete-folder") return { ...body, folder_path };
+    if (body.action === "move-folder") {
+      // Moves keep the folder's own name under a new parent ("" is the root).
+      if (typeof body.parent !== "string") fail();
+      const parent = normalize_model_folder(body.parent);
+      const name = folder_path.split("/").at(-1);
+      const target = normalize_model_folder(
+        parent ? `${parent}/${name}` : name,
+      );
+      if (target !== folder_path && folder_contains(folder_path, parent))
+        throw new Error("invalid_folder");
+      return { ...body, folder_path, parent, target };
+    }
     const name = normalize_model_folder(body.name);
     if (!name || name.includes("/")) fail();
     const parts = folder_path.split("/");

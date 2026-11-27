@@ -150,6 +150,44 @@ test("model management validates action-specific bounded inputs and exact folder
     "plants/flowers",
   );
   assert.equal(folder_contains("plants", "plants2"), false);
+  const moved = validate_model_management({
+    action: "move-folder",
+    category: "material",
+    folder_path: "plants/herbs",
+    parent: " terrain ",
+  });
+  assert.equal(moved.parent, "terrain");
+  assert.equal(moved.target, "terrain/herbs");
+  assert.equal(
+    validate_model_management({
+      action: "move-folder",
+      category: "material",
+      folder_path: "plants/herbs",
+      parent: "",
+    }).target,
+    "herbs",
+  );
+  // Same parent is a no-op target; a folder cannot move into itself or below it.
+  assert.equal(
+    validate_model_management({
+      action: "move-folder",
+      category: "material",
+      folder_path: "plants/herbs",
+      parent: "plants",
+    }).target,
+    "plants/herbs",
+  );
+  for (const parent of ["plants/herbs", "plants/herbs/basil"])
+    assert.throws(
+      () =>
+        validate_model_management({
+          action: "move-folder",
+          category: "material",
+          folder_path: "plants/herbs",
+          parent,
+        }),
+      /invalid_folder/,
+    );
   for (const body of [
     { action: "delete-folder", category: "material", folder_path: "" },
     { action: "delete-folder", category: "material", folder_path: "../plants" },
@@ -179,6 +217,20 @@ test("model management validates action-specific bounded inputs and exact folder
       name: "unexpected",
     },
     { action: "delete-folder", category: "unknown", folder_path: "plants" },
+    { action: "move-folder", category: "material", folder_path: "plants" },
+    {
+      action: "move-folder",
+      category: "material",
+      folder_path: "plants",
+      parent: "../escape",
+    },
+    {
+      action: "move-folder",
+      category: "material",
+      folder_path: "plants",
+      parent: "terrain",
+      name: "extra",
+    },
   ])
     assert.throws(() => validate_model_management(body));
 });
