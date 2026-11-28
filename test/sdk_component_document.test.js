@@ -305,3 +305,69 @@ test("history restores whole batches, clears branched redo and bounds retained e
   assert.equal(history.past.length, 100);
   assert.equal(edit_component_history(history, history.present), history);
 });
+
+test("object flame cardinality persists, accepts only the fire pattern colors and leaves legacy objects unchanged", () => {
+  const base = create_component_document(randomUUID(), "Torch wall");
+  base.objects = [
+    {
+      id: randomUUID(),
+      asset: { id: "fire-torch", revision: "b".repeat(64) },
+      position: [0, 3, 0.33],
+      rotation: [0, 0, 0.5],
+      scale: [1, 1, 1],
+      group_id: null,
+    },
+  ];
+  const legacy = component_document_json(base),
+    changed = structuredClone(base);
+  changed.objects[0].flame_cardinality = 13;
+  assert.equal(
+    JSON.parse(component_document_json(changed)).objects[0].flame_cardinality,
+    13,
+  );
+  assert.equal(
+    Object.hasOwn(
+      validate_component_document(base).objects[0],
+      "flame_cardinality",
+    ),
+    false,
+  );
+  assert.equal(component_document_json(base), legacy);
+  for (const value of [1, 3, 5, 7, 9, 11, 13, 15])
+    validate_component_document({
+      ...base,
+      objects: [{ ...base.objects[0], flame_cardinality: value }],
+    });
+  for (const value of [0, 2, 17, 1.5, "1", null, -1])
+    assert.throws(() =>
+      validate_component_document({
+        ...base,
+        objects: [{ ...base.objects[0], flame_cardinality: value }],
+      }),
+    );
+});
+
+test("optional ambient lighting validates, roundtrips and leaves legacy lighting unchanged", () => {
+  const base = create_component_document(randomUUID(), "Interior");
+  assert.equal(Object.hasOwn(component_lighting(base), "ambient"), false);
+  const dim = {
+    ...base,
+    lighting: { ...base.lighting, intensity: 0.4, ambient: 0.3 },
+  };
+  assert.deepEqual(component_lighting(dim), {
+    direction_degrees: 45,
+    intensity: 0.4,
+    ambient: 0.3,
+  });
+  assert.deepEqual(
+    JSON.parse(component_document_json(dim)).lighting.ambient,
+    0.3,
+  );
+  for (const ambient of [-0.1, 4.5, NaN, "1", null])
+    assert.throws(() =>
+      validate_component_document({
+        ...base,
+        lighting: { ...base.lighting, ambient },
+      }),
+    );
+});

@@ -69,6 +69,11 @@ const FIRE_DEFAULTS = {
   width: null,
   light: true,
   sparks: true,
+  // The fire's light casts shadows (e.g. a torch handle on its wall).
+  shadows: true,
+  // Light position from the anchor in the model's units: x and z along the
+  // model's own axes, y along world up. Null means straight up 0.35 × size.
+  light_offset: null,
 };
 const FIRE_KEYS = ["type", "anchor", "size", ...Object.keys(FIRE_DEFAULTS)];
 
@@ -78,7 +83,11 @@ function validate_fire(effect) {
   const value = { ...FIRE_DEFAULTS, ...effect };
   const size = number(value.size, 0.000001, 100000);
   if (!FIRE_CARDINALITIES.includes(value.cardinality)) fail();
-  if (typeof value.light !== "boolean" || typeof value.sparks !== "boolean")
+  if (
+    typeof value.light !== "boolean" ||
+    typeof value.sparks !== "boolean" ||
+    typeof value.shadows !== "boolean"
+  )
     fail();
   return {
     type: "fire",
@@ -90,6 +99,11 @@ function validate_fire(effect) {
     speed: number(value.speed, 0, 4),
     light: value.light,
     sparks: value.sparks,
+    shadows: value.shadows,
+    light_offset:
+      value.light_offset === null
+        ? null
+        : vector(value.light_offset, 3, -100000, 100000),
   };
 }
 

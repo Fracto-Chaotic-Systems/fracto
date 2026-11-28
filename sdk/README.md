@@ -65,6 +65,8 @@ and bounded snapshot undo/redo. `component_document_json` validates and serializ
 recursively sorted object keys for proposal base/preview hashes; array order is
 preserved. It owns no persistence or rendering. The component
 construction plan lives in the UI's `src/pages/games/COMPONENT_CONSTRUCTION_PLAN.md`.
+Objects may set an optional `flame_cardinality` (1, 3 … 15) to recolor the fire of
+their material (see `FractoMaterialEffects.js`).
 
 `FractoEnvironmentCatalog.js` defines pure environment provenance projections,
 catalog edit validation and the bounded service registration contract. It owns

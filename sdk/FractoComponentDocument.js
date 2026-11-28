@@ -1,5 +1,6 @@
 // Pure authoring contract. Services own persistence; editor guides/cameras are not content.
 import { validate_component_motion } from "./FractoComponentMotion.js";
+import { FIRE_CARDINALITIES } from "./FractoMaterialEffects.js";
 export const COMPONENT_SCHEMA_VERSION = 1;
 export const COMPONENT_HISTORY_LIMIT = 100;
 export const COMPONENT_DESCRIPTION_LIMIT = 65536;
@@ -7,6 +8,8 @@ export const DEFAULT_COMPONENT_LIGHTING = Object.freeze({
   direction_degrees: 45,
   intensity: 3,
 });
+// Stage sky (ambient) light used when a document's lighting omits `ambient`.
+export const DEFAULT_COMPONENT_AMBIENT = 2;
 // Stable transport-independent bytes for proposal/base-document binding.
 export function component_document_json(document) {
   const sort = (value) =>
@@ -98,9 +101,16 @@ export function component_lighting(document) {
   const lighting = Object.hasOwn(document, "lighting")
     ? document.lighting
     : DEFAULT_COMPONENT_LIGHTING;
-  fields(lighting, ["direction_degrees", "intensity"]);
+  // Optional `ambient` (0–4) dims or brightens the stage's sky light, e.g. for
+  // interiors lit by fire; omitted keeps the default and legacy bytes.
+  fields(lighting, [
+    "direction_degrees",
+    "intensity",
+    ...(Object.hasOwn(lighting, "ambient") ? ["ambient"] : []),
+  ]);
   number(lighting.direction_degrees, 0, 360);
   number(lighting.intensity, 0.25, 6);
+  if (Object.hasOwn(lighting, "ambient")) number(lighting.ambient, 0, 4);
   return { ...lighting };
 }
 
@@ -196,6 +206,9 @@ export function validate_component_document(document) {
       "group_id",
       ...(Object.hasOwn(object, "motion") ? ["motion"] : []),
       ...(Object.hasOwn(object, "animation_speed") ? ["animation_speed"] : []),
+      ...(Object.hasOwn(object, "flame_cardinality")
+        ? ["flame_cardinality"]
+        : []),
     ]);
     identify(object.id);
     asset(object.asset);
@@ -209,6 +222,13 @@ export function validate_component_document(document) {
       number(object.animation_speed, 0, 10);
     if (Object.hasOwn(object, "motion"))
       validate_component_motion(object.motion);
+    // Optional per-placement flame color: the orbital pattern cardinality that
+    // overrides the saved color of every fire effect on this object's material.
+    if (
+      Object.hasOwn(object, "flame_cardinality") &&
+      !FIRE_CARDINALITIES.includes(object.flame_cardinality)
+    )
+      fail();
   });
   let instances = document.objects.length;
   document.scatters.forEach((scatter) => {

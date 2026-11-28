@@ -47,7 +47,13 @@ test("fire effect fills defaults; color defaults to cardinality 1", () => {
     speed: 1,
     light: true,
     sparks: true,
+    shadows: true,
+    light_offset: null,
   });
+  const [offset] = validate_material_effects([
+    { type: "fire", anchor: [0, 0, 0], size: 1, light_offset: [0, 30, -35] },
+  ]);
+  assert.deepEqual(offset.light_offset, [0, 30, -35]);
 });
 
 test("supported flame colors are the odd orbital pattern cardinalities 1-15", () => {
@@ -88,6 +94,9 @@ test("unsupported cardinalities and invalid fire fields are rejected", () => {
     { ...base, intensity: 5 },
     { ...base, speed: -1 },
     { ...base, light: "yes" },
+    { ...base, shadows: 1 },
+    { ...base, light_offset: [0, 1] },
+    { ...base, light_offset: [0, "1", 0] },
     { ...base, color: "orange" },
     { type: "smoke", anchor: [0, 0, 0], size: 1 },
   ])

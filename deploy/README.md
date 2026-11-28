@@ -1,5 +1,9 @@
 # Deployment examples
 
+Before any production deployment, work through
+[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md) and run
+`npm run deploy:checklist`; items are added there as soon as they are discovered.
+
 For instrument export, use the coordinated source, persistent-volume, proxy and
 operator acceptance instructions in [INSTRUMENT_TRANSFER.md](INSTRUMENT_TRANSFER.md).
 

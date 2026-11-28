@@ -233,6 +233,12 @@ in the README for that feature or service.
   color semantics, and make anomalous data-layer conditions visible.
 - Mark temporary fallback code with a clear TODO describing exactly when it
   should be removed, and summarize such cleanup work in the relevant README.
+- Record anything that must be done before a production deployment in
+  `deploy/DEPLOYMENT_CHECKLIST.md` as soon as it is known (placeholder assets,
+  unresolved licenses, unconfirmed scale, known compliance gaps). Asset-specific
+  items also go in the asset's `asset.json` `deployment_todo` list;
+  `npm run deploy:checklist` (and `npm test`) fails if one is missing from the
+  checklist. Review the checklist before every deployment.
 - Avoid destructive operations by default. Schema changes and initial database
   snapshots use versioned, idempotent migrations; routine editorial record edits
   use the data service registered request API with validated keys/fields and
