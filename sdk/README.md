@@ -47,6 +47,9 @@ footprint exclusion checks. Both are shared by manual tools and future agents.
 
 `FractoMaterialMetadata.js` defines portable dimensions, conversion, orientation,
 anchor, footprint and tile-size facts with explicit unknowns.
+`FractoMaterialEffects.js` validates a material's visual `effects` (v1: `fire`, anchored
+in model source units). Flame colors are orbital pattern colors: `cardinality` 1, 3 … 15
+selects the `FractoColors.pattern_hue` hue (`FIRE_CARDINALITIES`, `FIRE_PALETTES`).
 `FractoMaterialSearch.js` supplies bounded queries and deterministic lexical
 ranking/pagination over allowlisted projections. Both are pure; services own
 catalog reads, membership, revisions and persistence.
